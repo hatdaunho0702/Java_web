@@ -1,0 +1,29 @@
+:root {
+  /* ── CUSTOMER SITE ── */
+  --primary: #FF6B35;          /* Cam nổi bật */
+  --primary-dark: #E55A25;
+  --secondary: #2D3748;        /* Xám đậm */
+  --accent: #38B2AC;           /* Teal nhấn */
+  --bg-light: #F7FAFC;
+  --text-main: #1A202C;
+  --text-muted: #718096;
+  --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --border-radius: 12px;
+  --transition: all 0.25s ease;
+
+  /* ── ADMIN PANEL ── */
+  --admin-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --admin-sidebar-bg: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  --admin-sidebar-width: 260px;
+  --admin-accent: #667eea;
+  --admin-accent-light: #764ba2;
+  --admin-card-bg: #ffffff;
+  --admin-text: #2D3748;
+
+  /* ── TRẠNG THÁI ĐƠN HÀNG ── */
+  --status-pending: #ECC94B;
+  --status-confirmed: #4299E1;
+  --status-shipping: #ED8936;
+  --status-completed: #48BB78;
+  --status-cancelled: #FC8181;
+}

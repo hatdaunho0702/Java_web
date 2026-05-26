@@ -1,0 +1,409 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* ── NAVBAR CUSTOMIZATIONS ── */
+.custom-navbar {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  transition: var(--transition);
+}
+
+.brand-logo {
+  font-weight: 800;
+  color: var(--primary);
+  font-size: 1.5rem;
+  letter-spacing: -0.5px;
+}
+.brand-logo:hover {
+  color: var(--primary-dark);
+}
+
+.search-bar-container {
+  max-width: 450px;
+  width: 100%;
+}
+
+.search-bar-input {
+  border-radius: 25px !important;
+  border: 1.5px solid #e2e8f0;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  transition: var(--transition);
+}
+
+.search-bar-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
+}
+
+.nav-icon-btn {
+  position: relative;
+  background: none;
+  border: none;
+  color: var(--secondary);
+  font-size: 1.35rem;
+  padding: 8px;
+  border-radius: 50%;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-icon-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--primary);
+}
+
+.cart-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #e53e3e;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: bold;
+  height: 18px;
+  width: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+/* ── HERO SECTION ── */
+.hero-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f5576c 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
+  border-radius: 24px;
+  padding: 60px 40px;
+  color: white;
+  margin-top: 24px;
+  margin-bottom: 40px;
+  box-shadow: 0 10px 30px rgba(118, 75, 162, 0.2);
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.hero-title {
+  font-weight: 800;
+  font-size: 3rem;
+  line-height: 1.2;
+}
+
+.hero-cta-btn {
+  background-color: white;
+  color: #764ba2;
+  font-weight: 700;
+  padding: 12px 30px;
+  border-radius: 30px;
+  border: 2px solid white;
+  transition: var(--transition);
+}
+
+.hero-cta-btn:hover {
+  background-color: transparent;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* ── CATEGORY PILLS ── */
+.category-pill {
+  border-radius: 25px;
+  padding: 10px 24px;
+  background-color: white;
+  color: var(--secondary);
+  border: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.category-pill:hover {
+  background-color: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+.category-pill.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(118, 75, 162, 0.25);
+}
+
+/* ── PRODUCT CARD ── */
+.product-card {
+  border-radius: var(--border-radius);
+  border: none;
+  background-color: white;
+  box-shadow: var(--card-shadow);
+  transition: var(--transition);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+.product-card-img-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 75%; /* 4:3 Ratio */
+  overflow: hidden;
+  background-color: #f7fafc;
+}
+
+.product-card-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: var(--transition);
+}
+
+.product-card:hover .product-card-img {
+  transform: scale(1.06);
+}
+
+.sale-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background-color: #e53e3e;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(229, 62, 62, 0.3);
+  z-index: 2;
+}
+
+.product-card-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.product-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-bottom: 8px;
+  line-height: 1.4;
+  height: 2.8rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.product-rating {
+  color: #f6ad55;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.price-container {
+  margin-top: auto;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.original-price {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  font-size: 0.85rem;
+}
+
+.sale-price {
+  color: #e53e3e;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.regular-price {
+  color: var(--text-main);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.add-to-cart-btn {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 10px 16px;
+  width: 100%;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.add-to-cart-btn:hover {
+  background-color: var(--primary-dark);
+  color: white;
+}
+
+/* ── PROMOTIONAL BANNER ── */
+.promo-banner {
+  background: linear-gradient(135deg, #FF6B35 0%, #f72585 100%);
+  border-radius: 20px;
+  padding: 40px;
+  color: white;
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.2);
+  margin-bottom: 40px;
+}
+
+/* ── SKELETON LOADER ── */
+.skeleton {
+  background: linear-gradient(90deg, #edf2f7 25%, #e2e8f0 50%, #edf2f7 75%);
+  background-size: 200% 100%;
+  animation: loadingSkeleton 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes loadingSkeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+  height: 380px;
+  background-color: white;
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+}
+.skeleton-img {
+  height: 180px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+.skeleton-title {
+  height: 20px;
+  width: 80%;
+  margin-bottom: 10px;
+}
+.skeleton-text {
+  height: 14px;
+  width: 60%;
+  margin-bottom: 20px;
+}
+.skeleton-btn {
+  height: 40px;
+  width: 100%;
+}
+
+/* ── TOAST NOTIFICATIONS ── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1090;
+}
+
+.custom-toast {
+  background-color: white;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  margin-top: 10px;
+  overflow: hidden;
+  min-width: 320px;
+  animation: toastSlideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-indicator {
+  width: 6px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+}
+
+.toast-success .toast-indicator { background-color: #48BB78; }
+.toast-error .toast-indicator { background-color: #FC8181; }
+.toast-warning .toast-indicator { background-color: #ECC94B; }
+.toast-info .toast-indicator { background-color: #4299E1; }
+
+.toast-content {
+  padding: 16px 16px 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toast-message {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--secondary);
+}
+
+.toast-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-left: auto;
+  transition: var(--transition);
+}
+.toast-close-btn:hover {
+  color: var(--text-main);
+}

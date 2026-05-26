@@ -1,0 +1,79 @@
+### Variables
+@baseUrl = http://localhost:8080
+@adminToken = THAY_BANG_FIREBASE_TOKEN_THAT
+
+### 1. Lấy danh sách sản phẩm
+GET {{baseUrl}}/api/products
+Accept: application/json
+
+### 2. Chi tiết sản phẩm
+GET {{baseUrl}}/api/products/samsung-galaxy-s24-ultra
+Accept: application/json
+
+### 3. Lọc theo giá
+GET {{baseUrl}}/api/products?minPrice=10000000&maxPrice=30000000&sort=price_asc
+Accept: application/json
+
+### 4. Danh mục dạng cây
+GET {{baseUrl}}/api/categories
+Accept: application/json
+
+### 5. Validate coupon
+POST {{baseUrl}}/api/coupon/validate
+Content-Type: application/json
+
+{
+  "code": "WELCOME10",
+  "orderTotal": 2000000
+}
+
+### 6. Sync user (cần token thật)
+POST {{baseUrl}}/api/auth/sync-user
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "displayName": "Nguyen Van A",
+  "photoUrl": ""
+}
+
+### 7. Xem giỏ hàng (cần token)
+GET {{baseUrl}}/api/cart
+Authorization: Bearer {{adminToken}}
+
+### 8. Thêm vào giỏ
+POST {{baseUrl}}/api/cart
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 2
+}
+
+### 9. Đặt hàng
+POST {{baseUrl}}/api/orders
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "addressId": null,
+  "recipientName": "Nguyen Van A",
+  "recipientPhone": "0901234567",
+  "shippingAddress": "123 Nguyen Trai, Q1, TP.HCM",
+  "paymentMethod": "COD",
+  "couponCode": "WELCOME10",
+  "note": "Giao gio hanh chinh"
+}
+
+### 10. Lịch sử đơn hàng
+GET {{baseUrl}}/api/orders
+Authorization: Bearer {{adminToken}}
+
+### 11. Dashboard admin
+GET {{baseUrl}}/api/admin/dashboard/summary
+Authorization: Bearer {{adminToken}}
+
+### 12. Low stock
+GET {{baseUrl}}/api/admin/dashboard/low-stock?threshold=5
+Authorization: Bearer {{adminToken}}

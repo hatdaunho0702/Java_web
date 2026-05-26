@@ -1,0 +1,46 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:sqlserver://localhost:1433;databaseName=QL_CuaHangDienMay;encrypt=true;trustServerCertificate=true}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+  application:
+    name: nhom5
+  profiles:
+    active: dev
+
+server:
+  port: 8081
+
+firebase:
+  service-account-path: classpath:firebase-service-account.json
+
+upload:
+  dir: ./uploads/images
+
+inventory:
+  low-stock-threshold: 5
+
+app:
+  storage:
+    product-image-dir: ${upload.dir}
+  inventory:
+    low-stock-threshold: ${inventory.low-stock-threshold}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
