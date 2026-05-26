@@ -1,0 +1,37 @@
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
+
+>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết đơn hàng — Admin</title>
+  </head>
+  <body>
+    <div class="page-content">
+      <div class="admin-card p-4" th:if="${order != null}">
+        <div class="section-title mb-3">
+          Đơn <span th:text="${order.orderCode}">#</span>
+        </div>
+        <p class="mb-1">
+          <strong>Khách:</strong> <span th:text="${order.recipientName}"></span>
+        </p>
+        <p class="mb-1">
+          <strong>Điện thoại:</strong>
+          <span th:text="${order.recipientPhone}"></span>
+        </p>
+        <p class="mb-1">
+          <strong>Địa chỉ:</strong>
+          <span th:text="${order.shippingAddress}"></span>
+        </p>
+        <p class="mb-0">
+          <strong>Trạng thái:</strong> <span th:text="${order.status}"></span>
+        </p>
+      </div>
+      <div class="admin-card p-4" th:unless="${order != null}">
+        Không tìm thấy đơn hàng.
+      </div>
+    </div>
+  </body>
+</html>

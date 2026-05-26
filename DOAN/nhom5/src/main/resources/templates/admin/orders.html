@@ -1,0 +1,55 @@
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
+
+>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn hàng — Admin</title>
+  </head>
+  <body>
+    <div class="page-content">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <span>Danh sách đơn hàng</span>
+          <div class="btn-group btn-group-sm">
+            <button
+              class="btn btn-outline-secondary"
+              th:each="status : ${statusList}"
+              th:text="${status}"
+            ></button>
+          </div>
+        </div>
+        <table class="table admin-table mb-0">
+          <thead>
+            <tr>
+              <th>Mã</th>
+              <th>Khách</th>
+              <th>Tổng</th>
+              <th>Trạng thái</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="order : ${orders.content}">
+              <td th:text="${order.orderCode}"></td>
+              <td th:text="${order.recipientName}"></td>
+              <td
+                th:text="${#numbers.formatDecimal(order.totalAmount,0,'COMMA',0,'POINT') + 'đ'}"
+              ></td>
+              <td th:text="${order.status}"></td>
+              <td>
+                <a
+                  th:href="@{/admin/orders/{id}(id=${order.id})}"
+                  class="btn btn-sm btn-outline-secondary"
+                  >Chi tiết</a
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

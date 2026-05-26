@@ -1,0 +1,25 @@
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
+
+>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh mục — Admin</title>
+  </head>
+  <body>
+    <div class="page-content">
+      <div class="admin-card p-4">
+        <div class="section-title mb-3">Quản lý <span>danh mục</span></div>
+        <div class="row g-3">
+          <div class="col-md-4" th:each="cat : ${categories}">
+            <div class="border rounded-3 p-3 bg-white" th:text="${cat.name}">
+              Danh mục
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

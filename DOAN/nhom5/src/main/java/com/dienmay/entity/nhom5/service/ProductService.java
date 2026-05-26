@@ -30,7 +30,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -93,9 +92,45 @@ public class ProductService {
         return productRepository.findAll(spec, pageable).map(this::toProductResponse);
     }
 
+    public Page<ProductResponse> getAdminProducts(String keyword, Long categoryId, Boolean isActive, Pageable pageable) {
+        Specification<Product> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (keyword != null && !keyword.isBlank()) {
+                predicates.add(cb.like(
+                        cb.lower(root.get("name")),
+                        "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%"
+                ));
+            }
+
+            if (categoryId != null) {
+                predicates.add(cb.equal(root.get("category").get("id"), categoryId));
+            }
+
+            if (isActive != null) {
+                predicates.add(cb.equal(root.get("isActive"), isActive));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return productRepository.findAll(spec, pageable).map(this::toProductResponse);
+    }
+
+    public ProductDetailResponse getProductById(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + id));
+        return toProductDetailResponse(product);
+    }
+
     public ProductDetailResponse getProductBySlug(String slug) {
         Product product = productRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm với slug: " + slug));
+
+        return toProductDetailResponse(product);
+    }
+
+    private ProductDetailResponse toProductDetailResponse(Product product) {
 
         List<String> imageUrls = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId())
                 .stream()

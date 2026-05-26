@@ -1,0 +1,79 @@
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
+
+>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form sản phẩm — Admin</title>
+  </head>
+  <body>
+    <div class="page-content">
+      <div class="admin-card p-4">
+        <div class="section-title mb-4">Form <span>sản phẩm</span></div>
+        <form>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Tên</label
+              ><input class="form-control" th:value="${product.name}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Slug</label
+              ><input class="form-control" th:value="${product.slug}" />
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Mô tả</label
+              ><textarea
+                class="form-control"
+                rows="4"
+                th:text="${product.description}"
+              ></textarea>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Danh mục</label
+              ><select class="form-select">
+                <option
+                  th:each="cat : ${categories}"
+                  th:value="${cat.id}"
+                  th:text="${cat.name}"
+                ></option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Thương hiệu</label
+              ><select class="form-select">
+                <option
+                  th:each="brand : ${brands}"
+                  th:value="${brand.id}"
+                  th:text="${brand.name}"
+                ></option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Tồn kho</label
+              ><input class="form-control" th:value="${product.stockQty}" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Giá gốc</label
+              ><input
+                class="form-control"
+                th:value="${product.originalPrice}"
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Giá sale</label
+              ><input class="form-control" th:value="${product.salePrice}" />
+            </div>
+          </div>
+          <div class="mt-4 d-flex gap-2">
+            <button type="button" class="btn btn-gradient">Lưu</button>
+            <a th:href="@{/admin/products}" class="btn btn-outline-secondary"
+              >Hủy</a
+            >
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

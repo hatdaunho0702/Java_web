@@ -1,0 +1,58 @@
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
+
+>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sản phẩm — Admin</title>
+  </head>
+  <body>
+    <div class="page-content">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="section-title mb-0">Quản lý <span>sản phẩm</span></div>
+        <a th:href="@{/admin/products/new}" class="btn btn-gradient"
+          >+ Thêm sản phẩm</a
+        >
+      </div>
+      <div class="admin-card">
+        <table class="table admin-table mb-0">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Tên</th>
+              <th>Giá</th>
+              <th>Tồn kho</th>
+              <th>Trạng thái</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="p,iter : ${products.content}">
+              <td th:text="${iter.index + 1}"></td>
+              <td th:text="${p.name}"></td>
+              <td
+                th:text="${#numbers.formatDecimal(p.originalPrice,0,'COMMA',0,'POINT') + 'đ'}"
+              ></td>
+              <td th:text="${p.stockQty}"></td>
+              <td>
+                <span
+                  class="badge-status badge-PENDING"
+                  th:text="${p.avgRating}"
+                ></span>
+              </td>
+              <td>
+                <a
+                  th:href="@{/admin/products/{id}/edit(id=${p.id})}"
+                  class="btn btn-sm btn-outline-secondary"
+                  >Sửa</a
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

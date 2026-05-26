@@ -1,0 +1,24 @@
+:root {
+  --primary: #ff6b35;
+  --primary-dark: #e55a25;
+  --secondary: #2d3748;
+  --accent: #38b2ac;
+  --bg-light: #f7fafc;
+  --text-main: #1a202c;
+  --text-muted: #718096;
+  --border-color: #e2e8f0;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --radius: 12px;
+  --radius-lg: 24px;
+  --transition: all 0.25s ease;
+  --gradient-main: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-pink: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --admin-bg: #f0f2f5;
+  --admin-sidebar: linear-gradient(
+    180deg,
+    #1a1a2e 0%,
+    #16213e 50%,
+    #0f3460 100%
+  );
+  --admin-sidebar-w: 260px;
+}

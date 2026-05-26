@@ -1,0 +1,62 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/base :: layout(~{::title}, ~{::main})}"
+
+>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết sản phẩm — ĐiệnMáy Pro</title>
+  </head>
+  <body>
+    <main class="container py-5">
+      <div class="row g-4" th:if="${product != null}">
+        <div class="col-lg-5">
+          <div class="admin-card p-4 text-center">
+            <div style="font-size: 120px">📱</div>
+            <img
+              th:if="${product.thumbnailUrl != null}"
+              th:src="@{${product.thumbnailUrl}}"
+              th:alt="${product.name}"
+              class="img-fluid rounded mt-3"
+            />
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="section-title" th:text="${product.name}">
+            Tên sản phẩm
+          </div>
+          <div class="product-rating mb-3">
+            ★★★★★ <span th:text="'(' + ${product.avgRating} + ')'">(0)</span>
+          </div>
+          <div class="mb-3">
+            <div
+              class="price-sale"
+              th:if="${product.salePrice != null}"
+              th:text="${#numbers.formatDecimal(product.salePrice,0,'COMMA',0,'POINT') + 'đ'}"
+            ></div>
+            <div
+              class="price-normal"
+              th:unless="${product.salePrice != null}"
+              th:text="${#numbers.formatDecimal(product.originalPrice,0,'COMMA',0,'POINT') + 'đ'}"
+            ></div>
+          </div>
+          <p th:text="${product.description}">Mô tả sản phẩm</p>
+          <div class="d-flex gap-2 mt-4">
+            <button
+              class="btn-add-cart"
+              th:data-product-id="${product.id}"
+              onclick="addToCart(this.dataset.productId)"
+            >
+              🛒 Thêm vào giỏ
+            </button>
+            <a th:href="@{/products}" class="btn btn-outline-secondary"
+              >Quay lại</a
+            >
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

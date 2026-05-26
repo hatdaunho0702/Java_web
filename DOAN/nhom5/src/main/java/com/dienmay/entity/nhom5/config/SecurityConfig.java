@@ -24,6 +24,23 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
+            .requestMatchers(
+                "/",
+            "/products",
+                "/login",
+                "/cart",
+                "/checkout",
+            "/orders",
+                "/orders/**",
+                "/products/**",
+                "/admin/**",
+                "/css/**",
+                "/js/**",
+                "/assets/**",
+                "/images/**",
+                "/webjars/**"
+            )
+            .permitAll()
             .requestMatchers(HttpMethod.GET,
                 "/api/products/**",
                 "/api/categories/**",
