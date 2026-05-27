@@ -26,8 +26,8 @@ public class CartService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
-    public List<CartResponse> getCart(Long userId) {
-        return cartItemRepository.findByUserId(userId)
+    public List<CartResponse> getCart(String userId) {
+        return cartItemRepository.findByUser_Uid(userId)
                 .stream()
                 .map(item -> {
                     BigDecimal unitPrice = item.getProduct().getSalePrice() != null
@@ -49,7 +49,7 @@ public class CartService {
     }
 
     @Transactional
-    public void addToCart(Long userId, Long productId, int quantity) {
+    public void addToCart(String userId, Long productId, int quantity) {
         if (quantity <= 0) {
             throw new BadRequestException("Số lượng phải lớn hơn 0");
         }
@@ -65,7 +65,7 @@ public class CartService {
             throw new BadRequestException("Số lượng yêu cầu vượt quá tồn kho");
         }
 
-        CartItem cartItem = cartItemRepository.findByUserIdAndProductId(userId, productId).orElse(null);
+        CartItem cartItem = cartItemRepository.findByUser_UidAndProductId(userId, productId).orElse(null);
         if (cartItem != null) {
             int newQty = cartItem.getQuantity() + quantity;
             if (newQty > product.getStockQty()) {
@@ -76,7 +76,7 @@ public class CartService {
             return;
         }
 
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUid(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
         cartItemRepository.save(CartItem.builder()
@@ -88,7 +88,7 @@ public class CartService {
     }
 
     @Transactional
-    public void updateCartItem(Long userId, Long cartItemId, int quantity) {
+    public void updateCartItem(String userId, Long cartItemId, int quantity) {
         if (quantity <= 0) {
             throw new BadRequestException("Số lượng phải lớn hơn 0");
         }
@@ -96,7 +96,7 @@ public class CartService {
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm trong giỏ"));
 
-        if (!cartItem.getUser().getId().equals(userId)) {
+        if (!cartItem.getUser().getUid().equals(userId)) {
             throw new BadRequestException("Bạn không có quyền sửa giỏ hàng này");
         }
 
@@ -109,12 +109,17 @@ public class CartService {
     }
 
     @Transactional
-    public void removeCartItem(Long userId, Long cartItemId) {
+    public void removeCartItem(String userId, Long cartItemId) {
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm trong giỏ"));
-        if (!cartItem.getUser().getId().equals(userId)) {
+        if (!cartItem.getUser().getUid().equals(userId)) {
             throw new BadRequestException("Bạn không có quyền xóa sản phẩm trong giỏ này");
         }
         cartItemRepository.delete(cartItem);
+    }
+
+    @Transactional
+    public void clearCart(String userId) {
+        cartItemRepository.deleteByUser_Uid(userId);
     }
 }

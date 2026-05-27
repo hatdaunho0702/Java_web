@@ -23,7 +23,7 @@ import lombok.ToString;
 @Entity
 @Table(
         name = "reviews",
-        uniqueConstraints = @UniqueConstraint(name = "uq_review", columnNames = {"product_id", "user_id", "order_id"})
+    uniqueConstraints = @UniqueConstraint(name = "uq_review", columnNames = {"product_id", "user_uid", "order_id"})
 )
 @Data
 @Builder
@@ -43,7 +43,7 @@ public class Review {
     private Product product;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_uid", referencedColumnName = "uid", nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private User user;

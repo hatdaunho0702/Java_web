@@ -6,15 +6,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Đăng nhập — ĐiệnMáy Pro</title>
+    <title>Đăng ký — ĐiệnMáy Pro</title>
   </head>
   <body>
     <main class="container py-5">
       <div class="login-panel">
         <div class="text-center mb-4">
           <div style="font-size: 44px">⚡</div>
-          <h3 class="fw-bold mb-1">Đăng nhập</h3>
-          <p class="text-muted mb-0">Firebase Auth + Lưu trữ SQLite Local</p>
+          <h3 class="fw-bold mb-1">Đăng ký</h3>
+          <p class="text-muted mb-0">Tạo tài khoản hệ thống đám mây Firebase</p>
         </div>
         <div
           id="error-message"
@@ -40,7 +40,7 @@
             border: 1px solid #86efac;
           "
         ></div>
-        <form id="loginForm">
+        <form id="registerForm">
           <div class="mb-3">
             <label class="form-label">Email</label>
             <input
@@ -61,22 +61,41 @@
               required
             />
           </div>
+          <div class="mb-3">
+            <label class="form-label">Họ và tên</label>
+            <input
+              id="fullName"
+              type="text"
+              class="form-control"
+              placeholder="Nguyen Van A"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Số điện thoại</label>
+            <input
+              id="phone"
+              type="tel"
+              class="form-control"
+              placeholder="0901234567"
+            />
+          </div>
           <button
             type="submit"
             class="btn-add-cart w-100"
-            id="login-submit-btn"
+            id="register-submit-btn"
           >
-            Đăng nhập
+            Đăng ký
           </button>
         </form>
         <div class="text-center mt-3">
           <p class="small text-muted">
-            Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a>
+            Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a>
           </p>
         </div>
       </div>
 
-      <script th:src="@{/js/pages/login.js}" type="module"></script>
+      <script th:src="@{/js/pages/register.js}" type="module"></script>
     </main>
   </body>
 </html>

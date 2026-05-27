@@ -9,9 +9,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
-    List<CartItem> findByUserId(Long userId);
+    List<CartItem> findByUser_Uid(String uid);
 
-    Optional<CartItem> findByUserIdAndProductId(Long userId, Long productId);
+    Optional<CartItem> findByUser_UidAndProductId(String uid, Long productId);
 
-    void deleteByUserId(Long userId);
+    void deleteByUser_Uid(String uid);
 }

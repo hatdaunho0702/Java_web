@@ -1,3 +1,5 @@
+import { getToken } from "./auth.js";
+
 function showToast(message, type = "success") {
   const icons = { success: "✅", error: "❌", warning: "⚠️", info: "ℹ️" };
   const div = document.createElement("div");
@@ -43,14 +45,45 @@ nextSunday.setDate(nextSunday.getDate() + (7 - nextSunday.getDay()));
 nextSunday.setHours(23, 59, 59, 0);
 startCountdown(nextSunday);
 
-function addToCart(productId) {
+async function addToCart(productId) {
   const badge = document.getElementById("cartCount");
-  if (badge) {
-    badge.textContent = String(
-      (parseInt(badge.textContent || "0", 10) || 0) + 1,
-    );
+  let token = null;
+  try {
+    token = await getToken();
+  } catch (e) {
+    token = null;
   }
-  showToast(`Đã thêm sản phẩm #${productId} vào giỏ hàng!`, "success");
+
+  if (!token) {
+    showToast("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng", "warning");
+    window.location.href = "/login";
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/cart", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ productId: productId, quantity: 1 }),
+    });
+
+    if (res.ok) {
+      if (badge) {
+        badge.textContent = String(
+          (parseInt(badge.textContent || "0", 10) || 0) + 1,
+        );
+      }
+      showToast("Đã thêm sản phẩm vào giỏ hàng", "success");
+    } else {
+      const json = await res.json().catch(() => ({}));
+      showToast(json.message || "Không thể thêm sản phẩm", "error");
+    }
+  } catch (err) {
+    showToast("Lỗi khi kết nối tới server", "error");
+  }
 }
 
 function quickView(slug) {
@@ -75,3 +108,23 @@ window.showToast = showToast;
 window.addToCart = addToCart;
 window.quickView = quickView;
 window.changeQty = changeQty;
+
+// Delegate clicks for dynamically rendered add-to-cart buttons and quick view
+document.addEventListener("click", (ev) => {
+  const addBtn = ev.target.closest && ev.target.closest(".btn-add-cart");
+  if (addBtn) {
+    const pid = addBtn.dataset.productId;
+    if (pid) {
+      addToCart(pid);
+    }
+    return;
+  }
+
+  const qv = ev.target.closest && ev.target.closest(".btn-quick-view");
+  if (qv) {
+    const slug = qv.dataset.slug;
+    if (slug) {
+      quickView(slug);
+    }
+  }
+});

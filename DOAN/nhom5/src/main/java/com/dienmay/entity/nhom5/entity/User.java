@@ -29,12 +29,8 @@ import lombok.ToString;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
-
-    @Column(name = "firebase_uid", length = 128, unique = true)
-    private String firebaseUid;
+    @Column(name = "uid", length = 128, nullable = false, unique = true, updatable = false)
+    private String uid;
 
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
@@ -96,5 +92,21 @@ public class User {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private List<InventoryLog> inventoryLogs = new ArrayList<>();
+
+    public String getId() {
+        return uid;
+    }
+
+    public void setId(String id) {
+        this.uid = id;
+    }
+
+    public String getFirebaseUid() {
+        return uid;
+    }
+
+    public void setFirebaseUid(String firebaseUid) {
+        this.uid = firebaseUid;
+    }
 }
 

@@ -27,14 +27,12 @@ Content-Type: application/json
   "orderTotal": 2000000
 }
 
-### 6. Sync user (cần token thật)
-POST {{baseUrl}}/api/auth/sync-user
-Authorization: Bearer {{adminToken}}
+### 6. Login bằng Firebase token (cần idToken thật)
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
-  "displayName": "Nguyen Van A",
-  "photoUrl": ""
+  "idToken": "{{adminToken}}"
 }
 
 ### 7. Xem giỏ hàng (cần token)

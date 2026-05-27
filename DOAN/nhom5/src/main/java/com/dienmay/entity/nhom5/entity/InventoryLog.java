@@ -52,7 +52,7 @@ public class InventoryLog {
     private String note;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "created_by")
+    @JoinColumn(name = "created_by", referencedColumnName = "uid")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private User createdBy;

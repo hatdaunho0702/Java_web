@@ -30,7 +30,7 @@ public class UserAddress {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_uid", referencedColumnName = "uid", nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private User user;

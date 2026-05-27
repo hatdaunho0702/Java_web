@@ -1,22 +1,25 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/dien_may_db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&characterEncoding=UTF-8}
-    username: ${SPRING_DATASOURCE_USERNAME:root}
+    url: ${SPRING_DATASOURCE_URL:jdbc:sqlite:${SQLITE_DB_PATH:dien_may_db.db}}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
     password: ${SPRING_DATASOURCE_PASSWORD:}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.sqlite.JDBC
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html
     encoding: UTF-8
     cache: false
   jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+  sql:
+    init:
+      mode: never
   servlet:
     multipart:
       max-file-size: 10MB
@@ -30,7 +33,14 @@ server:
   port: 8080
 
 firebase:
-  service-account-path: classpath:firebase-service-account.json
+  api-key: ${FIREBASE_WEB_API_KEY:AIzaSyDjcZpFjc51LWcOUL6w8ebsMiR0zGs_8F8}
+  auth-domain: ${FIREBASE_AUTH_DOMAIN:cuahangdienmay-9e28c.firebaseapp.com}
+  project-id: ${FIREBASE_PROJECT_ID:cuahangdienmay-9e28c}
+  storage-bucket: ${FIREBASE_STORAGE_BUCKET:cuahangdienmay-9e28c.firebasestorage.app}
+  messaging-sender-id: ${FIREBASE_MESSAGING_SENDER_ID:965631598853}
+  app-id: ${FIREBASE_APP_ID:1:965631598853:web:2bd0bc786fad1807b1576c}
+  measurement-id: ${FIREBASE_MEASUREMENT_ID:G-FFTW8YRE7B}
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:classpath:cuahangdienmay-9e28c-firebase-adminsdk-fbsvc-34dc57014a.json}
 
 upload:
   dir: ./uploads/images

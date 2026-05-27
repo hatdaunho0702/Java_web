@@ -106,11 +106,6 @@ public class PageController {
         return "pages/order-detail";
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "pages/login";
-    }
-
     private BigDecimal parsePrice(String value) {
         if (value == null || value.isBlank()) {
             return null;

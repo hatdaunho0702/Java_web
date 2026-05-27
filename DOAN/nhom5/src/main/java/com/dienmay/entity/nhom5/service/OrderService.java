@@ -62,12 +62,12 @@ public class OrderService {
     private int lowStockThreshold;
 
     @Transactional
-    public OrderResponse placeOrder(Long userId, PlaceOrderRequest request) {
+    public OrderResponse placeOrder(String userId, PlaceOrderRequest request) {
         if (request == null || request.getItems() == null || request.getItems().isEmpty()) {
             throw new BadRequestException("Đơn hàng phải có ít nhất một sản phẩm");
         }
 
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUid(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
         List<OrderLine> lines = new ArrayList<>();
@@ -192,7 +192,7 @@ public class OrderService {
             couponRepository.save(coupon);
         }
 
-        cartItemRepository.deleteByUserId(userId);
+        cartItemRepository.deleteByUser_Uid(userId);
 
         orderStatusHistoryRepository.save(OrderStatusHistory.builder()
                 .order(order)
@@ -212,11 +212,11 @@ public class OrderService {
     }
 
     @Transactional
-    public void cancelOrder(Long orderId, Long userId) {
+    public void cancelOrder(Long orderId, String userId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng"));
 
-        if (!order.getUser().getId().equals(userId)) {
+        if (!order.getUser().getUid().equals(userId)) {
             throw new BadRequestException("Bạn không có quyền hủy đơn hàng này");
         }
         if (order.getStatus() != OrderStatus.PENDING) {
@@ -255,7 +255,7 @@ public class OrderService {
     }
 
     @Transactional
-    public void updateOrderStatus(Long orderId, OrderStatus newStatus, Long adminId) {
+    public void updateOrderStatus(Long orderId, OrderStatus newStatus, String adminId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng"));
 
@@ -264,7 +264,7 @@ public class OrderService {
             throw new BadRequestException("Không thể chuyển trạng thái từ " + oldStatus + " sang " + newStatus);
         }
 
-        User admin = userRepository.findById(adminId)
+        User admin = userRepository.findByUid(adminId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản quản trị"));
 
         order.setStatus(newStatus);

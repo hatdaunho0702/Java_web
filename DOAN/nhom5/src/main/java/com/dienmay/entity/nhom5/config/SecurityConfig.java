@@ -22,56 +22,63 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers(
-                "/",
-            "/products",
-                "/login",
-                "/cart",
-                "/checkout",
-            "/orders",
-                "/orders/**",
-                "/products/**",
-                "/admin/**",
-                "/css/**",
-                "/js/**",
-                "/assets/**",
-                "/images/**",
-                "/uploads/**",
-                "/webjars/**"
-            )
-            .permitAll()
-            .requestMatchers(HttpMethod.GET,
-                "/api/products/**",
-                "/api/categories/**",
-                "/api/brands/**")
-            .permitAll()
-            .requestMatchers(
-                "/swagger-ui/**",
-                "/swagger-ui.html",
-                "/v3/api-docs/**")
-            .permitAll()
-            .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .anyRequest().authenticated()
-        )
-        .exceptionHandling(ex -> ex
-            .authenticationEntryPoint((request, response, e) -> {
-                response.setContentType("application/json;charset=UTF-8");
-                response.setStatus(401);
-                response.getWriter().write(
-                    "{\"error\":\"Unauthorized\",\"message\":\"Vui lòng đăng nhập\"}"
-                );
-            })
-            .accessDeniedHandler((request, response, e) -> {
-                response.setContentType("application/json;charset=UTF-8");
-                response.setStatus(403);
-                response.getWriter().write(
-                    "{\"error\":\"Forbidden\",\"message\":\"Không có quyền truy cập\"}"
-                );
-            })
-        )
-        .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class);
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/",
+                                "/products",
+                                "/login",
+                                "/register",
+                                "/logout",
+                                "/cart",
+                                "/checkout",
+                                "/orders",
+                                "/orders/**",
+                                "/products/**",
+                                "/admin/**",
+                                "/css/**",
+                                "/js/**",
+                                "/assets/**",
+                                "/images/**",
+                                "/uploads/**",
+                                "/webjars/**"
+                        )
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/products/**",
+                                "/api/categories/**",
+                                "/api/brands/**",
+                                "/api/auth/firebase-config")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/auth/login",
+                                "/api/auth/register")
+                        .permitAll()
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**")
+                        .permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, e) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(401);
+                            response.getWriter().write(
+                                    "{\"error\":\"Unauthorized\",\"message\":\"Vui lòng đăng nhập\"}"
+                            );
+                        })
+                        .accessDeniedHandler((request, response, e) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(403);
+                            response.getWriter().write(
+                                    "{\"error\":\"Forbidden\",\"message\":\"Không có quyền truy cập\"}"
+                            );
+                        })
+                )
+                .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

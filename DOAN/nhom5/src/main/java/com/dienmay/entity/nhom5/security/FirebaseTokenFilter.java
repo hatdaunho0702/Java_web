@@ -1,8 +1,7 @@
 package com.dienmay.entity.nhom5.security;
 
-import com.dienmay.entity.nhom5.entity.Role;
 import com.dienmay.entity.nhom5.entity.User;
-import com.dienmay.entity.nhom5.repository.UserRepository;
+import com.dienmay.entity.nhom5.service.AuthService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import jakarta.servlet.FilterChain;
@@ -10,11 +9,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -23,8 +22,24 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class FirebaseTokenFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String[] AUTH_ENDPOINT_PREFIXES = {
+            "/api/auth/firebase-config",
+            "/api/auth/login",
+            "/api/auth/register"
+    };
 
-    private final UserRepository userRepository;
+    private final AuthService authService;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        for (String endpoint : AUTH_ENDPOINT_PREFIXES) {
+            if (path.startsWith(endpoint)) {
+                return true;
+            }
+        }
+        return SecurityContextHolder.getContext().getAuthentication() != null;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -44,18 +59,9 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             FirebaseToken decoded = FirebaseAuth.getInstance().verifyIdToken(token);
             String firebaseUid = decoded.getUid();
 
-            User user = userRepository.findByFirebaseUid(firebaseUid).orElse(null);
-            if (user == null) {
-                writeJsonResponse(
-                        response,
-                        HttpServletResponse.SC_UNAUTHORIZED,
-                        "Unauthorized",
-                        "Tài khoản không tồn tại trong hệ thống"
-                );
-                return;
-            }
+            User user = authService.loadUserByUid(firebaseUid);
 
-            if (!Boolean.TRUE.equals(user.getIsActive())) {
+                if (!Boolean.TRUE.equals(user.getIsActive())) {
                 writeJsonResponse(
                         response,
                         HttpServletResponse.SC_FORBIDDEN,
@@ -65,11 +71,13 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                 return;
             }
 
-            List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(mapRoleToAuthority(user.getRole())));
-
-            UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(firebaseUid, null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(auth);
+                CustomUserDetails principal = CustomUserDetails.fromUser(user);
+                UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication(auth);
+                SecurityContextHolder.setContext(context);
+                new HttpSessionSecurityContextRepository().saveContext(context, request, response);
 
             filterChain.doFilter(request, response);
         } catch (Exception ex) {
@@ -81,16 +89,6 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                     "Token không hợp lệ hoặc đã hết hạn"
             );
         }
-    }
-
-    private String mapRoleToAuthority(Role role) {
-        if (role == Role.ADMIN) {
-            return "ROLE_ADMIN";
-        }
-        if (role == Role.STAFF) {
-            return "ROLE_STAFF";
-        }
-        return "ROLE_CUSTOMER";
     }
 
     private void writeJsonResponse(HttpServletResponse response, int status, String error, String message)

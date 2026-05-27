@@ -1,5 +1,7 @@
 package com.dienmay.entity.nhom5.security;
 
+import com.dienmay.entity.nhom5.entity.Role;
+import com.dienmay.entity.nhom5.entity.User;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
@@ -8,17 +10,36 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 public class CustomUserDetails implements UserDetails {
 
-    private final String username;
-    private final String role;
+    private final User user;
 
-    public CustomUserDetails(String username, String role) {
-        this.username = username;
-        this.role = role;
+    public CustomUserDetails(User user) {
+        this.user = user;
+    }
+
+    public static CustomUserDetails fromUser(User user) {
+        return new CustomUserDetails(user);
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public String getUid() {
+        return user.getUid();
+    }
+
+    public String getEmail() {
+        return user.getEmail();
+    }
+
+    public Role getRole() {
+        return user.getRole();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
+        Role role = user.getRole() == null ? Role.CUSTOMER : user.getRole();
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
@@ -28,7 +49,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return username;
+        return user.getUid();
     }
 
     @Override
@@ -48,6 +69,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.getIsActive() == null || user.getIsActive();
     }
 }

@@ -14,7 +14,11 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     Page<Review> findByProductId(Long productId, Pageable pageable);
 
-    boolean existsByProductIdAndUserIdAndOrderId(Long p, Long u, Long o);
+    boolean existsByProductIdAndUser_UidAndOrderId(Long productId, String uid, Long orderId);
+
+    Page<Review> findByUser_Uid(String uid, Pageable pageable);
+
+    boolean existsByUser_UidAndProductIdAndOrderId(String uid, Long productId, Long orderId);
 
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.product.id = :productId AND r.status = :status")
     Double findAverageRatingByProductIdAndStatus(

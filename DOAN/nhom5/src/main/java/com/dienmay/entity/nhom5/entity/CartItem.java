@@ -21,7 +21,7 @@ import lombok.ToString;
 @Entity
 @Table(
         name = "cart_items",
-        uniqueConstraints = @UniqueConstraint(name = "uq_cart", columnNames = {"user_id", "product_id"})
+    uniqueConstraints = @UniqueConstraint(name = "uq_cart", columnNames = {"user_uid", "product_id"})
 )
 @Data
 @Builder
@@ -35,7 +35,7 @@ public class CartItem {
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_uid", referencedColumnName = "uid", nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private User user;

@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+.env
+src/main/resources/firebase-service-account.json
+src/main/resources/cuahangdienmay-9e28c-firebase-adminsdk-fbsvc-34dc57014a.json
+*firebase-adminsdk*.json
+src/main/resources/application-dev.yml

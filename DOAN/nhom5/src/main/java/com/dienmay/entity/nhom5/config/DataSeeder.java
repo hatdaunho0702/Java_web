@@ -127,7 +127,7 @@ public class DataSeeder implements ApplicationRunner {
 
     private void seedAdminUser() {
         User admin = User.builder()
-                .firebaseUid("admin-seed-uid")
+                                .uid("admin-seed-uid")
                 .fullName("Admin Hệ Thống")
                 .email("admin@dienmaydemo.vn")
                 .phone("0901234567")

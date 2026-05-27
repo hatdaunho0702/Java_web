@@ -2,11 +2,10 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   th:replace="~{layout/base :: layout(~{::title}, ~{::main})}"
-
 >
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trang chủ — ĐiệnMáy Pro</title>
   </head>
   <body>
@@ -171,7 +170,7 @@
                   <button
                     class="btn-add-cart"
                     th:data-product-id="${p.id}"
-                    onclick="addToCart(this.dataset.productId)"
+                    onclick="addToCart(this.getAttribute('data-product-id'))"
                   >
                     🛒 Thêm vào giỏ
                   </button>
@@ -220,6 +219,74 @@
           </div>
         </div>
       </section>
+
+      <div
+        id="cart-feedback"
+        class="mb-3"
+        style="
+          display: none;
+          background: #eef2ff;
+          color: #3730a3;
+          border-radius: 8px;
+          padding: 12px;
+          border: 1px solid #c7d2fe;
+        "
+      ></div>
+
+      <script>
+        function showCartFeedback(message, isError = false) {
+          const box = document.getElementById("cart-feedback");
+          if (!box) {
+            return;
+          }
+          box.style.display = "block";
+          box.style.background = isError ? "#fee2e2" : "#dcfce7";
+          box.style.color = isError ? "#dc2626" : "#16a34a";
+          box.style.borderColor = isError ? "#fca5a5" : "#86efac";
+          box.innerHTML = message;
+          setTimeout(() => {
+            box.style.display = "none";
+          }, 5000);
+        }
+
+        async function addToCart(productId) {
+          const token = localStorage.getItem("firebase_token");
+          if (!token) {
+            showCartFeedback(
+              "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!",
+              true,
+            );
+            return;
+          }
+          try {
+            const response = await fetch("/api/cart", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token,
+              },
+              body: JSON.stringify({
+                productId: parseInt(productId),
+                quantity: 1,
+              }),
+            });
+            const result = await response.json();
+            if (response.ok) {
+              showCartFeedback(
+                "🛒 " + (result.message || "Đã thêm vào giỏ hàng!"),
+              );
+            } else {
+              showCartFeedback(
+                "Lỗi: " + (result.message || "Không thể thêm vào giỏ"),
+                true,
+              );
+            }
+          } catch (error) {
+            console.error("Error adding to cart:", error);
+            showCartFeedback("Không thể kết nối đến máy chủ.", true);
+          }
+        }
+      </script>
     </main>
   </body>
 </html>
