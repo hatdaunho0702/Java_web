@@ -19,8 +19,15 @@ public class ProductDetailResponse {
     private BigDecimal originalPrice;
     private BigDecimal salePrice;
     private Integer stockQty;
+    private boolean active;
     private String thumbnailUrl;
     private Double avgRating;
+    private Double averageRating;
+    private Integer reviewCount;
+    private String categoryName;
+    private String brandName;
     private List<String> imageUrls;
     private List<ProductSpecDto> specs;
+    private List<ReviewDto> reviews;
+    private List<ProductResponse> related;
 }

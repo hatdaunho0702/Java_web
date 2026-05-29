@@ -5,6 +5,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 let authPromise = null;
+let authReadyPromise = null;
 
 async function getAuthInstance() {
   if (!authPromise) {
@@ -13,8 +14,22 @@ async function getAuthInstance() {
   return await authPromise;
 }
 
+async function waitForAuthReady() {
+  const auth = await getAuthInstance();
+  if (!authReadyPromise) {
+    authReadyPromise = new Promise((resolve) => {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        unsubscribe();
+        resolve(user);
+      });
+    });
+  }
+  return await authReadyPromise;
+}
+
 export async function getToken() {
   const auth = await getAuthInstance();
+  await waitForAuthReady();
   const user = auth.currentUser;
   if (!user) {
     return null;
@@ -100,9 +115,14 @@ function bindNavbarAuthState() {
             ?.style.setProperty("display", "block");
         }
         const info = JSON.parse(localStorage.getItem("userInfo") || "{}");
-        document.getElementById("adminName")?.textContent = info.email || "";
-        document.getElementById("topbarAdminName")?.textContent =
-          info.email || "";
+        const adminNameEl = document.getElementById("adminName");
+        if (adminNameEl) {
+          adminNameEl.textContent = info.email || "";
+        }
+        const topbarAdminNameEl = document.getElementById("topbarAdminName");
+        if (topbarAdminNameEl) {
+          topbarAdminNameEl.textContent = info.email || "";
+        }
       });
     })
     .catch((error) => {
@@ -113,5 +133,7 @@ function bindNavbarAuthState() {
 bindNavbarAuthState();
 
 window.logout = logout;
+window.getToken = getToken;
+window.waitForAuthReady = waitForAuthReady;
 window.requireAuth = requireAuth;
 window.requireAdmin = requireAdmin;

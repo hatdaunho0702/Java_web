@@ -10,10 +10,10 @@
   </head>
   <body>
     <main class="container py-5">
-      <div class="login-panel">
+      <div class="login-panel" style="max-width: 720px; margin: 0 auto">
         <div class="text-center mb-4">
           <div style="font-size: 44px">⚡</div>
-          <h3 class="fw-bold mb-1">Đăng nhập</h3>
+          <h3 class="fw-bold mb-1">Đăng nhập / Đăng ký</h3>
           <p class="text-muted mb-0">Firebase Auth + Lưu trữ SQLite Local</p>
         </div>
         <div
@@ -40,6 +40,22 @@
             border: 1px solid #86efac;
           "
         ></div>
+        <div
+          style="
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 16px;
+          "
+        >
+          <button id="tabLogin" class="btn btn-sm btn-outline-primary">
+            Đăng nhập
+          </button>
+          <button id="tabRegister" class="btn btn-sm btn-outline-secondary">
+            Đăng ký
+          </button>
+        </div>
+
         <form id="loginForm">
           <div class="mb-3">
             <label class="form-label">Email</label>
@@ -53,13 +69,26 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Mật khẩu</label>
-            <input
-              id="password"
-              type="password"
-              class="form-control"
-              placeholder="••••••••"
-              required
-            />
+            <div style="display: flex; gap: 8px">
+              <input
+                id="password"
+                type="password"
+                class="form-control"
+                placeholder="••••••••"
+                required
+              />
+              <button
+                id="togglePassword"
+                type="button"
+                class="btn btn-outline-secondary"
+              >
+                Hiện
+              </button>
+            </div>
+          </div>
+          <div class="mb-3 form-check">
+            <input id="rememberMe" type="checkbox" class="form-check-input" />
+            <label class="form-check-label">Ghi nhớ đăng nhập</label>
           </div>
           <button
             type="submit"
@@ -68,15 +97,71 @@
           >
             Đăng nhập
           </button>
+          <div class="text-center mt-3">hoặc</div>
+          <div class="d-grid gap-2 mt-2">
+            <button
+              type="button"
+              id="googleLoginBtn"
+              class="btn btn-outline-secondary"
+            >
+              Đăng nhập với Google
+            </button>
+          </div>
         </form>
+
+        <form id="registerForm" style="display: none; margin-top: 16px">
+          <div class="mb-3">
+            <label class="form-label">Họ và tên</label>
+            <input id="regName" type="text" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input id="regEmail" type="email" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Số điện thoại</label>
+            <input
+              id="regPhone"
+              type="text"
+              class="form-control"
+              pattern="[0-9]{10}"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Mật khẩu</label>
+            <input
+              id="regPassword"
+              type="password"
+              class="form-control"
+              minlength="6"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Xác nhận mật khẩu</label>
+            <input
+              id="regConfirm"
+              type="password"
+              class="form-control"
+              required
+            />
+          </div>
+          <button
+            id="register-submit-btn"
+            type="submit"
+            class="btn btn-primary w-100"
+          >
+            Đăng ký
+          </button>
+        </form>
+
         <div class="text-center mt-3">
-          <p class="small text-muted">
-            Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a>
-          </p>
+          <a href="#" id="forgotPasswordLink">Quên mật khẩu?</a>
         </div>
       </div>
 
       <script th:src="@{/js/pages/login.js}" type="module"></script>
+      <script th:src="@{/js/pages/register.js}" type="module"></script>
     </main>
   </body>
 </html>

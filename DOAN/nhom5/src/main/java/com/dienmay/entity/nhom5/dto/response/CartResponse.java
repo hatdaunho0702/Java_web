@@ -15,8 +15,8 @@ public class CartResponse {
     private Long productId;
     private String productName;
     private String thumbnailUrl;
-    private Integer quantity;
+    private int quantity;
     private BigDecimal unitPrice;
     private BigDecimal subtotal;
-    private Integer stockQty;
+    private int stockQty;
 }

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
@@ -67,5 +68,11 @@ public class GlobalExceptionHandler {
             "Đã xảy ra lỗi, vui lòng thử lại",
             LocalDateTime.now()
         ));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<?> handleNoResource(NoResourceFoundException ex) {
+        // Silent 404 for static resource requests (favicon etc.)
+        return ResponseEntity.notFound().build();
     }
 }

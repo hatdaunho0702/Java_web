@@ -1,16 +1,192 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
-
 >
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Người dùng — Admin</title>
   </head>
   <body>
     <div class="page-content">
-      <div class="admin-card p-4">Khung quản lý người dùng đã sẵn sàng.</div>
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <span>Danh sách người dùng</span>
+          <div style="display: flex; gap: 8px; align-items: center">
+            <input
+              id="filterKeyword"
+              class="form-control form-control-sm"
+              placeholder="Tìm theo email hoặc tên"
+            />
+            <button class="btn btn-sm btn-primary" id="btnSearch">Tìm</button>
+          </div>
+        </div>
+        <table class="table admin-table mb-0">
+          <thead>
+            <tr>
+              <th>Avatar</th>
+              <th>Tên</th>
+              <th>Email</th>
+              <th>Ngày tạo</th>
+              <th>Trạng thái</th>
+              <th>Tổng đơn</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr id="tplRow" style="display: none">
+              <td class="col-avatar"></td>
+              <td class="col-name"></td>
+              <td class="col-email"></td>
+              <td class="col-created"></td>
+              <td class="col-status"></td>
+              <td class="col-count"></td>
+              <td class="col-action"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modal simple -->
+      <div
+        id="ordersModal"
+        style="
+          display: none;
+          position: fixed;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          background: white;
+          padding: 16px;
+          border: 1px solid #ddd;
+          z-index: 9999;
+          max-height: 70vh;
+          overflow: auto;
+          width: 80%;
+        "
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+          "
+        >
+          <h4>Danh sách đơn hàng</h4>
+          <button
+            id="closeOrdersModal"
+            class="btn btn-sm btn-outline-secondary"
+          >
+            Đóng
+          </button>
+        </div>
+        <div id="ordersList"></div>
+      </div>
     </div>
+
+    <script>
+      async function fetchUsers(page = 0, size = 20) {
+        const keyword = document.getElementById("filterKeyword").value;
+        const qs = new URLSearchParams({ page, size });
+        if (keyword) qs.set("keyword", keyword);
+        const res = await fetch("/api/admin/users?" + qs.toString(), {
+          credentials: "same-origin",
+        });
+        if (!res.ok) {
+          alert("Không thể tải danh sách người dùng");
+          return;
+        }
+        const pageData = await res.json();
+        const tbody = document.querySelector("table.admin-table tbody");
+        tbody.querySelectorAll("tr:not(#tplRow)").forEach((el) => el.remove());
+        const tpl = document.getElementById("tplRow");
+        for (const u of pageData.content) {
+          const tr = tpl.cloneNode(true);
+          tr.style.display = "";
+          tr.id = "";
+          tr.querySelector(".col-avatar").innerHTML = u.avatarUrl
+            ? '<img src="' +
+              u.avatarUrl +
+              '" style="width:40px;height:40px;border-radius:50%">'
+            : "";
+          const nameEl = document.createElement("a");
+          nameEl.href = "#";
+          nameEl.textContent = u.fullName || "(no name)";
+          nameEl.addEventListener("click", async (e) => {
+            e.preventDefault();
+            await showUserOrders(u.uid);
+          });
+          tr.querySelector(".col-name").appendChild(nameEl);
+          tr.querySelector(".col-email").textContent = u.email || "";
+          tr.querySelector(".col-created").textContent = u.createdAt
+            ? new Date(u.createdAt).toLocaleString()
+            : "";
+          const statusEl = tr.querySelector(".col-status");
+          statusEl.textContent = u.isActive ? "Active" : "Locked";
+          statusEl.className =
+            "col-status badge " +
+            (u.isActive ? "badge-success" : "badge-danger");
+          tr.querySelector(".col-count").textContent = u.orderCount || 0;
+
+          const actionTd = tr.querySelector(".col-action");
+          const btn = document.createElement("button");
+          btn.className =
+            "btn btn-sm " + (u.isActive ? "btn-warning" : "btn-success");
+          btn.textContent = u.isActive ? "Khóa" : "Mở khóa";
+          btn.addEventListener("click", async () => {
+            if (
+              !confirm(
+                (u.isActive ? "Khóa" : "Mở khóa") +
+                  " tài khoản " +
+                  (u.fullName || u.email) +
+                  "?",
+              )
+            )
+              return;
+            const url =
+              "/api/admin/users/" + u.uid + (u.isActive ? "/lock" : "/unlock");
+            const r = await fetch(url, { method: "PUT" });
+            if (r.ok) {
+              alert("Thành công");
+              fetchUsers(page, size);
+            } else {
+              alert("Lỗi");
+            }
+          });
+          actionTd.appendChild(btn);
+
+          tbody.appendChild(tr);
+        }
+      }
+
+      async function showUserOrders(uid) {
+        const res = await fetch("/api/admin/users/" + uid + "/orders");
+        if (!res.ok) {
+          alert("Không tải được đơn hàng");
+          return;
+        }
+        const data = await res.json();
+        const container = document.getElementById("ordersList");
+        container.innerHTML = "";
+        for (const o of data.content) {
+          const div = document.createElement("div");
+          div.style.borderBottom = "1px solid #eee";
+          div.style.padding = "8px 0";
+          div.innerHTML = `<strong>${o.orderCode}</strong> — ${o.status || ""} — ${o.totalAmount || ""}đ`;
+          container.appendChild(div);
+        }
+        document.getElementById("ordersModal").style.display = "block";
+      }
+      document
+        .getElementById("closeOrdersModal")
+        .addEventListener("click", () => {
+          document.getElementById("ordersModal").style.display = "none";
+        });
+      document
+        .getElementById("btnSearch")
+        .addEventListener("click", () => fetchUsers());
+      window.addEventListener("load", () => fetchUsers());
+    </script>
   </body>
 </html>

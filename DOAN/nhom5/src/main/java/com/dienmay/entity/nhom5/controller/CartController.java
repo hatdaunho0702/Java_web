@@ -2,13 +2,21 @@ package com.dienmay.entity.nhom5.controller;
 
 import com.dienmay.entity.nhom5.dto.response.CartResponse;
 import com.dienmay.entity.nhom5.entity.User;
+import com.dienmay.entity.nhom5.exception.BadRequestException;
 import com.dienmay.entity.nhom5.exception.ResourceNotFoundException;
 import com.dienmay.entity.nhom5.repository.UserRepository;
 import com.dienmay.entity.nhom5.service.CartService;
 import com.dienmay.entity.nhom5.security.CustomUserDetails;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,72 +29,121 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/cart")
+@RequiredArgsConstructor
 public class CartController {
 
     private final CartService cartService;
     private final UserRepository userRepository;
 
-    public CartController(CartService cartService, UserRepository userRepository) {
-        this.cartService = cartService;
-        this.userRepository = userRepository;
-    }
-
-    private User resolveCurrentUser() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal == null) {
-            throw new ResourceNotFoundException("Không tìm thấy user hiện tại");
+    private String getCurrentFirebaseUidOrNull() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal == null || "anonymousUser".equals(principal)) {
+            return null;
         }
         if (principal instanceof CustomUserDetails customUserDetails) {
-            return customUserDetails.getUser();
+            return customUserDetails.getUser().getUid();
         }
         if (principal instanceof String firebaseUid) {
-            return userRepository.findByUid(firebaseUid)
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+            return firebaseUid;
         }
-        throw new ResourceNotFoundException("Không tìm thấy user hiện tại");
+        return null;
+    }
+
+    private String getCurrentUserUid() {
+        String firebaseUid = getCurrentFirebaseUidOrNull();
+        if (firebaseUid == null) {
+            throw new BadRequestException("Vui lòng đăng nhập");
+        }
+        User user = userRepository.findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
+        return user.getId();
     }
 
     @GetMapping
     public ResponseEntity<List<CartResponse>> getCart() {
-        User user = resolveCurrentUser();
-        return ResponseEntity.ok(cartService.getCart(user.getUid()));
+        String firebaseUid = getCurrentFirebaseUidOrNull();
+        if (firebaseUid == null) {
+            return ResponseEntity.ok(List.of());
+        }
+        String userUid = userRepository.findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"))
+                .getId();
+        return ResponseEntity.ok(cartService.getCart(userUid));
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> addToCart(@RequestBody AddToCartRequest req) {
-        User user = resolveCurrentUser();
-        cartService.addToCart(user.getUid(), req.productId, req.quantity == null ? 1 : req.quantity);
-        return ResponseEntity.ok(Map.of("message", "Đã thêm vào giỏ hàng"));
+    public ResponseEntity<Map<String, Object>> addToCart(@Valid @RequestBody CartItemRequest req) {
+        String userUid = getCurrentUserUid();
+        cartService.addToCart(userUid, req.getProductId(), req.getQuantity());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message", "Đã thêm vào giỏ hàng", "success", true));
     }
 
     @PutMapping("/{cartItemId}")
-    public ResponseEntity<Map<String, String>> updateCartItem(@PathVariable Long cartItemId,
-            @RequestBody UpdateCartRequest req) {
-        User user = resolveCurrentUser();
-        cartService.updateCartItem(user.getUid(), cartItemId, req.quantity);
-        return ResponseEntity.ok(Map.of("message", "Cập nhật số lượng thành công"));
+    public ResponseEntity<Map<String, Object>> updateCartItem(
+            @PathVariable Long cartItemId,
+            @RequestBody Map<String, Integer> body) {
+        String userUid = getCurrentUserUid();
+        Integer qty = body.get("quantity");
+        if (qty == null || qty < 1) {
+            throw new BadRequestException("Số lượng phải lớn hơn hoặc bằng 1");
+        }
+        cartService.updateCartItem(userUid, cartItemId, qty);
+        return ResponseEntity.ok(Map.of("message", "Đã cập nhật", "success", true));
     }
 
     @DeleteMapping("/{cartItemId}")
-    public ResponseEntity<Map<String, String>> removeCartItem(@PathVariable Long cartItemId) {
-        User user = resolveCurrentUser();
-        cartService.removeCartItem(user.getUid(), cartItemId);
-        return ResponseEntity.ok(Map.of("message", "Đã xóa sản phẩm khỏi giỏ hàng"));
+    public ResponseEntity<Void> removeCartItem(@PathVariable Long cartItemId) {
+        String userUid = getCurrentUserUid();
+        cartService.removeCartItem(userUid, cartItemId);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping
-    public ResponseEntity<Map<String, String>> clearCart() {
-        User user = resolveCurrentUser();
-        cartService.clearCart(user.getUid());
-        return ResponseEntity.ok(Map.of("message", "Đã xóa toàn bộ giỏ hàng"));
+    public ResponseEntity<Map<String, Object>> clearCart() {
+        String userUid = getCurrentUserUid();
+        cartService.clearCart(userUid);
+        return ResponseEntity.ok(Map.of("message", "Đã xóa toàn bộ giỏ hàng", "success", true));
     }
 
-    public static class AddToCartRequest {
-        public Long productId;
-        public Integer quantity;
+    @GetMapping("/count")
+    public ResponseEntity<Map<String, Integer>> countCart() {
+        String firebaseUid = getCurrentFirebaseUidOrNull();
+        if (firebaseUid == null) {
+            return ResponseEntity.ok(Map.of("count", 0));
+        }
+        String userUid = userRepository.findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"))
+                .getId();
+        return ResponseEntity.ok(Map.of("count", cartService.countCartItems(userUid)));
     }
 
-    public static class UpdateCartRequest {
-        public Integer quantity;
+    public static class CartItemRequest {
+        @NotNull(message = "productId là bắt buộc")
+        private Long productId;
+
+        @Min(value = 1, message = "quantity tối thiểu là 1")
+        @Max(value = 99, message = "quantity tối đa là 99")
+        private int quantity;
+
+        public Long getProductId() {
+            return productId;
+        }
+
+        public void setProductId(Long productId) {
+            this.productId = productId;
+        }
+
+        public int getQuantity() {
+            return quantity;
+        }
+
+        public void setQuantity(int quantity) {
+            this.quantity = quantity;
+        }
     }
 }

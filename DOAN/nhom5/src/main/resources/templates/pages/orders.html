@@ -2,21 +2,94 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   th:replace="~{layout/base :: layout(~{::title}, ~{::main})}"
-
 >
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Đơn hàng — ĐiệnMáy Pro</title>
   </head>
   <body>
     <main class="container py-5">
       <div class="section-title mb-3">Lịch sử <span>đơn hàng</span></div>
-      <div class="admin-card p-4 text-center">
-        <p class="mb-0">
-          Khu vực hiển thị đơn hàng của khách sẽ được gắn dữ liệu ở bước sau.
-        </p>
-      </div>
+      <div id="orders-list"></div>
+
+      <script type="module">
+        import { getFirebaseAuth } from "/js/firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        const statusLabel = {
+          PENDING: "⏳ Chờ xác nhận",
+          CONFIRMED: "✅ Đã xác nhận",
+          SHIPPING: "🚚 Đang giao",
+          COMPLETED: "🎉 Hoàn thành",
+          CANCELLED: "❌ Đã hủy",
+        };
+
+        onAuthStateChanged(await getFirebaseAuth(), async (user) => {
+          if (!user) {
+            window.location.href = "/login?redirect=/orders";
+            return;
+          }
+          const token = await user.getIdToken();
+          try {
+            const res = await fetch("/api/orders?page=0&size=50", {
+              headers: { Authorization: "Bearer " + token },
+            });
+            const data = await res.json();
+            renderOrders(data.content || []);
+          } catch (err) {
+            console.error(err);
+            window.showToast?.("Lỗi tải đơn hàng", "error");
+          }
+        });
+
+        function renderOrders(orders) {
+          if (!orders.length) {
+            document.getElementById("orders-list").innerHTML = `
+              <div class="text-center py-5">
+                <div style="font-size:60px">📦</div>
+                <h5>Chưa có đơn hàng nào</h5>
+                <a href="/products" class="btn-gradient px-4 py-2 mt-2">Mua sắm ngay</a>
+              </div>`;
+            return;
+          }
+          document.getElementById("orders-list").innerHTML = orders
+            .map(
+              (order) => `
+            <div class="admin-card mb-3 p-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong>#${order.orderCode}</strong>
+                <span class="badge-status badge-${order.status}">${statusLabel[order.status]}</span>
+              </div>
+              <div class="text-muted" style="font-size:13px">${new Date(order.createdAt).toLocaleDateString("vi-VN")}</div>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <strong style="color:var(--primary)">${order.totalAmount.toLocaleString("vi-VN")}đ</strong>
+                <div class="d-flex gap-2">
+                  ${order.status === "PENDING" ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelOrder(${order.id})">Hủy đơn</button>` : ""}
+                  <a href="/orders/${order.id}" class="btn btn-sm btn-gradient">Chi tiết</a>
+                </div>
+              </div>
+            </div>`,
+            )
+            .join("");
+        }
+
+        window.cancelOrder = async function (orderId) {
+          if (!confirm("Bạn chắc chắn muốn hủy đơn?")) return;
+          const auth = await getFirebaseAuth();
+          const token = await auth.currentUser.getIdToken();
+          try {
+            await fetch(`/api/orders/${orderId}/cancel`, {
+              method: "PATCH",
+              headers: { Authorization: "Bearer " + token },
+            });
+            window.showToast?.("Đã hủy đơn hàng", "success");
+            location.reload();
+          } catch (e) {
+            window.showToast?.("Không thể hủy đơn", "error");
+          }
+        };
+      </script>
     </main>
   </body>
 </html>

@@ -1,5 +1,9 @@
 import { getFirebaseAuth } from "/js/firebase-config.js";
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const form = document.getElementById("loginForm");
 const submitButton = document.getElementById("login-submit-btn");
@@ -151,5 +155,67 @@ if (form) {
     } finally {
       setLoading(false);
     }
+  });
+}
+
+// Google login
+const googleBtn = document.getElementById("googleLoginBtn");
+if (googleBtn) {
+  googleBtn.addEventListener("click", async () => {
+    try {
+      const auth = await getFirebaseAuth();
+      const provider = new GoogleAuthProvider();
+      const cred = await signInWithPopup(auth, provider);
+      const token = await cred.user.getIdToken(true);
+      const resp = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: token }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        alert(err.message || "Đăng nhập Google thất bại");
+        return;
+      }
+      const data = await resp.json();
+      localStorage.setItem("firebase_token", token);
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Google login error", err);
+      alert("Đăng nhập Google thất bại");
+    }
+  });
+}
+
+// Toggle password
+const togglePassword = document.getElementById("togglePassword");
+if (togglePassword) {
+  togglePassword.addEventListener("click", () => {
+    const pwd = document.getElementById("password");
+    if (!pwd) return;
+    if (pwd.type === "password") {
+      pwd.type = "text";
+      togglePassword.textContent = "Ẩn";
+    } else {
+      pwd.type = "password";
+      togglePassword.textContent = "Hiện";
+    }
+  });
+}
+
+// Tabs
+const tabLogin = document.getElementById("tabLogin");
+const tabRegister = document.getElementById("tabRegister");
+if (tabLogin && tabRegister) {
+  tabLogin.addEventListener("click", (e) => {
+    e.preventDefault();
+    document.getElementById("loginForm").style.display = "block";
+    document.getElementById("registerForm").style.display = "none";
+  });
+  tabRegister.addEventListener("click", (e) => {
+    e.preventDefault();
+    document.getElementById("loginForm").style.display = "none";
+    document.getElementById("registerForm").style.display = "block";
   });
 }

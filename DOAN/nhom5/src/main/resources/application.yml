@@ -12,11 +12,11 @@ spring:
   jpa:
     database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
-      ddl-auto: none
-    show-sql: true
+      ddl-auto: validate
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
   sql:
     init:
       mode: never
@@ -28,9 +28,24 @@ spring:
     name: nhom5
   profiles:
     active: dev
+  mvc:
+    favicon:
+      enabled: false
+  session:
+    store-type: none
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
 
 server:
   port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 firebase:
   api-key: ${FIREBASE_WEB_API_KEY:AIzaSyDjcZpFjc51LWcOUL6w8ebsMiR0zGs_8F8}
@@ -59,3 +74,11 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    com.dienmay: DEBUG
+    org.hibernate.SQL: WARN
+  charset:
+    console: UTF-8

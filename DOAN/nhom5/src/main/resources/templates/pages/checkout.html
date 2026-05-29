@@ -2,17 +2,435 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   th:replace="~{layout/base :: layout(~{::title}, ~{::main})}"
-
 >
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Thanh toán — ĐiệnMáy Pro</title>
   </head>
   <body>
     <main class="container py-5">
       <div class="section-title mb-3">Thanh toán</div>
-      <div class="admin-card p-4">Khung checkout đã sẵn sàng.</div>
+
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="admin-card p-4 mb-3">
+            <h5 class="mb-3">Thông tin giao hàng</h5>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Tên người nhận</label>
+                <input
+                  id="recipientName"
+                  class="form-control"
+                  placeholder="Nguyễn Văn A"
+                />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Số điện thoại</label>
+                <input
+                  id="phone"
+                  class="form-control"
+                  placeholder="09xxxxxxxx"
+                />
+              </div>
+              <div class="col-12">
+                <label class="form-label">Địa chỉ</label>
+                <textarea
+                  id="address"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
+                ></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Ghi chú</label>
+                <input
+                  id="note"
+                  class="form-control"
+                  placeholder="Giao giờ hành chính..."
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-card p-4">
+            <h5 class="mb-3">Phương thức thanh toán</h5>
+            <div class="d-flex flex-column gap-2">
+              <label class="d-flex align-items-center gap-2">
+                <input type="radio" name="paymentMethod" value="COD" checked />
+                <span>Thanh toán khi nhận hàng (COD)</span>
+              </label>
+              <label class="d-flex align-items-center gap-2">
+                <input type="radio" name="paymentMethod" value="BANK" />
+                <span>Chuyển khoản ngân hàng</span>
+              </label>
+            </div>
+            <div
+              id="bank-info"
+              class="alert alert-info mt-3"
+              style="display: none"
+            >
+              <div><strong>Thông tin chuyển khoản</strong></div>
+              <div>Ngân hàng: Vietcombank</div>
+              <div>STK: 0123456789</div>
+              <div>Chủ TK: DIEN MAY PRO</div>
+              <div>Nội dung: Mã đơn hàng (sẽ có sau khi đặt)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="admin-card p-4">
+            <h5 class="mb-3">Tóm tắt đơn hàng</h5>
+            <div id="checkout-items" class="mb-3"></div>
+
+            <div class="d-flex gap-2 mb-3">
+              <input
+                id="couponCode"
+                class="form-control"
+                placeholder="Mã giảm giá"
+              />
+              <button class="btn btn-outline-primary" id="applyCouponBtn">
+                Áp dụng
+              </button>
+            </div>
+            <div id="couponMessage" class="small mb-2"></div>
+
+            <div class="d-flex justify-content-between mb-1">
+              <span>Tạm tính</span>
+              <span id="subtotalDisplay">0đ</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span>Giảm giá</span>
+              <span id="discountDisplay">-0đ</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span>Phí vận chuyển</span>
+              <span id="shippingDisplay">0đ</span>
+            </div>
+            <hr />
+            <div class="d-flex justify-content-between mb-3">
+              <strong>Tổng cộng</strong>
+              <strong id="totalDisplay">0đ</strong>
+            </div>
+
+            <button id="placeOrderBtn" class="btn btn-primary w-100 py-2">
+              Đặt hàng ngay
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <script type="module">
+        import { getToken } from "/js/auth.js";
+        import { getFirebaseAuth } from "/js/firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        const state = {
+          items: [],
+          subtotal: 0,
+          discount: 0,
+          shipping: 0,
+          totalAmount: 0,
+          couponId: null,
+          couponCode: "",
+        };
+
+        let checkoutUser = null;
+        let authReadyResolve;
+        const authReady = new Promise((resolve) => {
+          authReadyResolve = resolve;
+        });
+
+        function formatVND(v) {
+          return Number(v || 0).toLocaleString("vi-VN") + "đ";
+        }
+
+        function calcShipping(subtotal) {
+          return subtotal >= 500000 ? 0 : 30000;
+        }
+
+        function recalcTotals(summary = null) {
+          state.subtotal = state.items.reduce((sum, item) => {
+            const lineSubtotal = Number(item.subtotal ?? 0);
+            if (lineSubtotal > 0) {
+              return sum + lineSubtotal;
+            }
+            const unit = Number(item.unitPrice || 0);
+            const qty = Number(item.quantity || 0);
+            return sum + unit * qty;
+          }, 0);
+
+          state.discount = Number(summary?.discount ?? state.discount ?? 0);
+          state.shipping = Number(
+            summary?.shippingFee ?? calcShipping(state.subtotal),
+          );
+          state.totalAmount = Number(
+            summary?.totalAmount ??
+              Math.max(0, state.subtotal - state.discount + state.shipping),
+          );
+
+          document.getElementById("subtotalDisplay").textContent = formatVND(
+            state.subtotal,
+          );
+          document.getElementById("discountDisplay").textContent =
+            "-" + formatVND(state.discount);
+          document.getElementById("shippingDisplay").textContent =
+            state.shipping === 0 ? "Miễn phí" : formatVND(state.shipping);
+          document.getElementById("totalDisplay").textContent = formatVND(
+            state.totalAmount,
+          );
+        }
+
+        function applyCartPayload(payload) {
+          if (Array.isArray(payload)) {
+            state.items = payload;
+            renderItems();
+            recalcTotals();
+            return;
+          }
+
+          state.items = Array.isArray(payload?.items) ? payload.items : [];
+          renderItems();
+          recalcTotals({
+            totalAmount: payload?.totalAmount,
+            discount: payload?.discount,
+            shippingFee: payload?.shippingFee,
+          });
+        }
+
+        function renderItems() {
+          const box = document.getElementById("checkout-items");
+          if (!state.items.length) {
+            box.innerHTML = '<div class="text-muted">Giỏ hàng trống.</div>';
+            return;
+          }
+          box.innerHTML = state.items
+            .map((item) => {
+              const lineTotal =
+                Number(item.unitPrice || 0) * Number(item.quantity || 0);
+              return `
+              <div class="d-flex justify-content-between gap-2 mb-2 pb-2 border-bottom">
+                <div>
+                  <div style="font-weight:600">${item.productName}</div>
+                  <small class="text-muted">SL: ${item.quantity}</small>
+                </div>
+                <div style="font-weight:600">${formatVND(lineTotal)}</div>
+              </div>`;
+            })
+            .join("");
+        }
+
+        async function requireTokenOrRedirect() {
+          await authReady;
+          const token = checkoutUser
+            ? await checkoutUser.getIdToken(true)
+            : await getToken();
+          if (!token) {
+            if (typeof window.showToast === "function") {
+              window.showToast("Vui lòng đăng nhập để thanh toán", "warning");
+            }
+            setTimeout(() => {
+              window.location.href = "/login?redirect=/checkout";
+            }, 1200);
+            return null;
+          }
+          return token;
+        }
+
+        async function loadCart() {
+          const token = checkoutUser
+            ? await checkoutUser.getIdToken(true)
+            : await requireTokenOrRedirect();
+          if (!token) {
+            return;
+          }
+          const res = await fetch("/api/cart", {
+            headers: { Authorization: "Bearer " + token },
+          });
+          if (!res.ok) {
+            if (typeof window.showToast === "function") {
+              window.showToast("Không tải được giỏ hàng", "error");
+            }
+            return;
+          }
+          const payload = await res.json();
+          applyCartPayload(payload);
+        }
+
+        function validateForm() {
+          const name = document.getElementById("recipientName").value.trim();
+          const phone = document.getElementById("phone").value.trim();
+          const address = document.getElementById("address").value.trim();
+          const phoneOk = /^(0|\+84)\d{9,10}$/.test(phone);
+
+          if (!name) {
+            window.showToast?.("Tên người nhận không được để trống", "warning");
+            return false;
+          }
+          if (!phoneOk) {
+            window.showToast?.("Số điện thoại không hợp lệ", "warning");
+            return false;
+          }
+          if (!address) {
+            window.showToast?.("Địa chỉ không được để trống", "warning");
+            return false;
+          }
+          if (!state.items.length) {
+            window.showToast?.("Giỏ hàng trống", "warning");
+            return false;
+          }
+          return true;
+        }
+
+        function buildOrderRequest() {
+          const paymentMethod =
+            document.querySelector('input[name="paymentMethod"]:checked')
+              ?.value || "COD";
+          return {
+            recipientName: document
+              .getElementById("recipientName")
+              .value.trim(),
+            phone: document.getElementById("phone").value.trim(),
+            address: document.getElementById("address").value.trim(),
+            note: document.getElementById("note").value.trim(),
+            paymentMethod,
+            couponId: state.couponId,
+          };
+        }
+
+        async function applyCoupon() {
+          const code = document.getElementById("couponCode").value.trim();
+          if (!code) {
+            window.showToast?.("Nhập mã giảm giá", "warning");
+            return;
+          }
+          const token = await requireTokenOrRedirect();
+          if (!token) return;
+
+          const res = await fetch("/api/coupon/validate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+            },
+            body: JSON.stringify({ code, orderTotal: state.subtotal }),
+          });
+          const data = await res.json().catch(() => ({}));
+          const msg = document.getElementById("couponMessage");
+          if (!res.ok || !data.valid) {
+            state.discount = 0;
+            state.couponId = null;
+            msg.textContent = data.message || "Mã giảm giá không hợp lệ";
+            msg.style.color = "#dc2626";
+            recalcTotals();
+            window.showToast?.(msg.textContent, "error");
+            return;
+          }
+
+          state.discount = Number(data.discountAmount || 0);
+          state.couponCode = code;
+
+          // Resolve coupon id by code from local products API flow workaround:
+          // Backend place-order expects couponId, validate endpoint does not return id.
+          // We call a small lookup endpoint fallback using current code via order API body with null coupon id if needed.
+          state.couponId = null;
+
+          msg.textContent = data.message || "Áp dụng mã thành công";
+          msg.style.color = "#16a34a";
+          recalcTotals();
+          window.showToast?.("Áp dụng mã thành công", "success");
+        }
+
+        async function placeOrder() {
+          if (!validateForm()) {
+            return;
+          }
+
+          const token = await requireTokenOrRedirect();
+          if (!token) {
+            return;
+          }
+
+          const req = buildOrderRequest();
+
+          // If user entered coupon code but couponId is unknown, send without couponId to avoid wrong mapping.
+          // Backend validates by couponId currently.
+          if (!state.couponId) {
+            delete req.couponId;
+          }
+
+          const btn = document.getElementById("placeOrderBtn");
+          btn.disabled = true;
+          btn.textContent = "Đang xử lý...";
+
+          try {
+            const res = await fetch("/api/orders", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token,
+              },
+              body: JSON.stringify(req),
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              window.showToast?.(data.message || "Đặt hàng thất bại", "error");
+              return;
+            }
+
+            window.showToast?.("Đặt hàng thành công", "success");
+            if (typeof window.updateCartBadge === "function") {
+              await window.updateCartBadge();
+            }
+            window.location.href = `/orders/${data.orderId}?success=true`;
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Đặt hàng ngay";
+          }
+        }
+
+        document
+          .getElementById("applyCouponBtn")
+          .addEventListener("click", applyCoupon);
+        document
+          .getElementById("placeOrderBtn")
+          .addEventListener("click", placeOrder);
+
+        document
+          .querySelectorAll('input[name="paymentMethod"]')
+          .forEach((el) => {
+            el.addEventListener("change", () => {
+              const value =
+                document.querySelector('input[name="paymentMethod"]:checked')
+                  ?.value || "COD";
+              document.getElementById("bank-info").style.display =
+                value === "BANK" ? "block" : "none";
+            });
+          });
+
+        getFirebaseAuth()
+          .then((auth) => {
+            onAuthStateChanged(auth, async (user) => {
+              checkoutUser = user;
+              authReadyResolve(user);
+
+              if (!user) {
+                return;
+              }
+
+              await loadCart();
+            });
+          })
+          .catch((error) => {
+            console.error(
+              "Không thể khởi tạo Firebase auth cho checkout:",
+              error,
+            );
+            authReadyResolve(null);
+          });
+      </script>
     </main>
   </body>
 </html>

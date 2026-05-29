@@ -9,5 +9,4 @@ public class Nhom5Application {
 	public static void main(String[] args) {
 		SpringApplication.run(Nhom5Application.class, args);
 	}
-
 }

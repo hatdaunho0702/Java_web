@@ -62,8 +62,12 @@ public class DashboardService {
     }
 
     public List<ProductResponse> getTopSellingProducts(int limit) {
-        List<Product> products = productRepository.findByIsActiveTrueOrderBySoldQtyDesc(PageRequest.of(0, limit));
-        return products.stream().map(this::toProductResponse).toList();
+        // Thêm .getContent() để lấy List<Product> từ Page<Product> trước khi stream
+        return productRepository.findByIsActiveTrueOrderBySoldQtyDesc(PageRequest.of(0, limit))
+                .getContent()
+                .stream()
+                .map(this::toProductResponse)
+                .toList();
     }
 
     public List<ProductResponse> getLowStockProducts(int threshold) {

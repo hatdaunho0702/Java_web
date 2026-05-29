@@ -10,66 +10,14 @@
   </head>
   <body>
     <main>
-      <section class="hero-section">
+      <section class="hero-section" id="hero-slider">
         <div class="container">
-          <div class="row align-items-center g-4">
-            <div class="col-lg-6">
-              <span
-                class="badge rounded-pill"
-                style="
-                  background: rgba(255, 255, 255, 0.16);
-                  color: white;
-                  padding: 8px 16px;
-                "
-                >🔥 Siêu sale tháng 5</span
-              >
-              <h1 class="hero-title mt-3">
-                Công nghệ<br /><span style="color: #ffd700">đỉnh cao</span
-                ><br />Giá cực tốt
-              </h1>
-              <p class="hero-subtitle">
-                Hàng chính hãng, bảo hành toàn quốc, giao hàng trong 2 giờ tại
-                nội thành
-              </p>
-              <div class="d-flex gap-3 flex-wrap mt-3">
-                <a th:href="@{/products}" class="btn-hero-primary">Mua ngay</a>
-                <a
-                  th:href="@{/products(sort=popular)}"
-                  class="btn-hero-secondary"
-                  >Xem khuyến mãi</a
-                >
-              </div>
-            </div>
-            <div class="col-lg-6 d-none d-lg-block text-center">
-              <div class="hero-floating-card mx-auto" style="max-width: 320px">
-                <div
-                  style="
-                    font-size: 13px;
-                    color: var(--text-muted);
-                    margin-bottom: 12px;
-                  "
-                >
-                  🔥 Sản phẩm hot nhất tuần
-                </div>
-                <div style="font-size: 48px; margin-bottom: 12px">📱 💻 🖥️</div>
-                <div class="progress" style="height: 8px; border-radius: 4px">
-                  <div
-                    class="progress-bar"
-                    role="progressbar"
-                    style="width: 87%; background: var(--gradient-main)"
-                  ></div>
-                </div>
-                <div
-                  style="
-                    font-size: 13px;
-                    color: var(--text-muted);
-                    margin-top: 8px;
-                  "
-                >
-                  Đã bán 87% — Còn lại 130 sản phẩm
-                </div>
-              </div>
-            </div>
+          <div class="hero-floating-card" style="padding: 0; overflow: hidden">
+            <div class="row g-0 align-items-stretch" id="hero-content"></div>
+            <div
+              class="d-flex justify-content-center gap-2 py-3"
+              id="hero-dots"
+            ></div>
           </div>
         </div>
       </section>
@@ -78,106 +26,37 @@
         <div class="container">
           <div class="section-title">Danh mục <span>nổi bật</span></div>
           <div class="section-divider"></div>
-          <div class="row g-3">
-            <div class="col-6 col-md-4 col-lg-2" th:each="cat : ${categories}">
-              <a th:href="@{/products(categoryId=${cat.id})}" class="cat-card">
-                <div class="cat-icon" style="background: #eef2ff">
-                  <i class="bi bi-phone" style="color: #667eea"></i>
-                </div>
-                <div
-                  style="font-size: 14px; font-weight: 600"
-                  th:text="${cat.name}"
-                >
-                  Điện thoại
-                </div>
-              </a>
-            </div>
-          </div>
+          <div class="row g-3" id="featured-categories"></div>
         </div>
       </section>
 
       <section class="pb-5">
         <div class="container">
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="section-title">Sản phẩm <span>nổi bật</span></div>
+            <div class="section-title">Sản phẩm <span>mới về</span></div>
             <a
-              th:href="@{/products(sort=popular)}"
+              th:href="@{/products(sort=newest)}"
               style="color: var(--accent); font-weight: 600"
               >Xem tất cả →</a
             >
           </div>
           <div class="section-divider"></div>
-          <div class="row g-3">
-            <div
-              class="col-6 col-md-4 col-lg-3"
-              th:each="p : ${featuredProducts}"
+          <div class="row g-3" id="new-arrivals"></div>
+        </div>
+      </section>
+
+      <section class="pb-5">
+        <div class="container">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="section-title">Đang <span>giảm giá</span></div>
+            <a
+              th:href="@{/products(sort=price_asc)}"
+              style="color: var(--accent); font-weight: 600"
+              >Săn deal →</a
             >
-              <div class="product-card">
-                <div class="product-img-wrapper">
-                  <span class="badge-sale" th:if="${p.salePrice != null}"
-                    >SALE</span
-                  >
-                  <img
-                    th:if="${p.thumbnailUrl != null}"
-                    th:src="@{${p.thumbnailUrl}}"
-                    th:alt="${p.name}"
-                  />
-                  <div
-                    th:unless="${p.thumbnailUrl != null}"
-                    style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      height: 100%;
-                      font-size: 60px;
-                    "
-                  >
-                    📱
-                  </div>
-                  <button
-                    class="btn-quick-view"
-                    th:data-slug="${p.slug}"
-                    onclick="quickView(this.dataset.slug)"
-                  >
-                    👁 Xem nhanh
-                  </button>
-                </div>
-                <div class="product-body">
-                  <div class="product-brand">Nổi bật</div>
-                  <div class="product-name" th:text="${p.name}">
-                    Tên sản phẩm
-                  </div>
-                  <div class="product-rating">
-                    ★★★★★ <span th:text="'(' + ${p.avgRating} + ')'">(0)</span>
-                  </div>
-                  <div class="mb-2">
-                    <span
-                      class="price-original"
-                      th:if="${p.salePrice != null}"
-                      th:text="${#numbers.formatDecimal(p.originalPrice,0,'COMMA',0,'POINT') + 'đ'}"
-                    ></span>
-                    <div
-                      th:if="${p.salePrice != null}"
-                      class="price-sale"
-                      th:text="${#numbers.formatDecimal(p.salePrice,0,'COMMA',0,'POINT') + 'đ'}"
-                    ></div>
-                    <div
-                      th:unless="${p.salePrice != null}"
-                      class="price-normal"
-                      th:text="${#numbers.formatDecimal(p.originalPrice,0,'COMMA',0,'POINT') + 'đ'}"
-                    ></div>
-                  </div>
-                  <button
-                    class="btn-add-cart"
-                    th:data-product-id="${p.id}"
-                    onclick="addToCart(this.getAttribute('data-product-id'))"
-                  >
-                    🛒 Thêm vào giỏ
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
+          <div class="section-divider"></div>
+          <div class="row g-3" id="on-sale"></div>
         </div>
       </section>
 
@@ -193,13 +72,9 @@
               "
               >⚡ FLASH SALE</span
             >
-            <h3>Siêu sale cuối tuần<br />Giảm đến 50%</h3>
-            <p>Hàng ngàn sản phẩm công nghệ giảm giá sốc</p>
+            <h3>Siêu sale đến hết hôm nay<br />Giảm sâu toàn bộ ngành hàng</h3>
+            <p>Mỗi ngày một deal sốc, số lượng có hạn</p>
             <div class="d-flex gap-3 my-3 flex-wrap" id="countdown">
-              <div class="countdown-box">
-                <div class="countdown-val" id="cd-days">00</div>
-                <div class="countdown-lbl">Ngày</div>
-              </div>
               <div class="countdown-box">
                 <div class="countdown-val" id="cd-hours">00</div>
                 <div class="countdown-lbl">Giờ</div>
@@ -220,72 +95,231 @@
         </div>
       </section>
 
-      <div
-        id="cart-feedback"
-        class="mb-3"
-        style="
-          display: none;
-          background: #eef2ff;
-          color: #3730a3;
-          border-radius: 8px;
-          padding: 12px;
-          border: 1px solid #c7d2fe;
-        "
-      ></div>
+      <section class="pb-5">
+        <div class="container">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="section-title">Bán chạy <span>nhất</span></div>
+            <a
+              th:href="@{/products(sort=popular)}"
+              style="color: var(--accent); font-weight: 600"
+              >Top sản phẩm →</a
+            >
+          </div>
+          <div class="section-divider"></div>
+          <div class="row g-3" id="best-seller"></div>
+        </div>
+      </section>
 
-      <script>
-        function showCartFeedback(message, isError = false) {
-          const box = document.getElementById("cart-feedback");
-          if (!box) {
-            return;
-          }
-          box.style.display = "block";
-          box.style.background = isError ? "#fee2e2" : "#dcfce7";
-          box.style.color = isError ? "#dc2626" : "#16a34a";
-          box.style.borderColor = isError ? "#fca5a5" : "#86efac";
-          box.innerHTML = message;
-          setTimeout(() => {
-            box.style.display = "none";
-          }, 5000);
+      <script type="module">
+        const HERO_SLIDES = [
+          {
+            badge: "🔥 Khai trương mùa hè",
+            title: "Công nghệ mới\nGiá tốt mỗi ngày",
+            desc: "Laptop, điện thoại, tivi chính hãng. Giao nhanh trong ngày tại nội thành.",
+            cta1: { text: "Mua ngay", href: "/products" },
+            cta2: { text: "Xem ưu đãi", href: "/products?sort=popular" },
+            bg: "linear-gradient(120deg,#0f172a,#1d4ed8,#0ea5e9)",
+            emoji: "💻 📱 📺",
+          },
+          {
+            badge: "⚡ Flash Deal 24h",
+            title: "Giảm sâu đến 50%\nSố lượng có hạn",
+            desc: "Săn mã giảm giá, tích điểm thành viên và nhận ưu đãi độc quyền theo khung giờ.",
+            cta1: { text: "Săn deal", href: "/products?sort=price_asc" },
+            cta2: { text: "Hàng mới về", href: "/products?sort=newest" },
+            bg: "linear-gradient(120deg,#7f1d1d,#ea580c,#f59e0b)",
+            emoji: "🎧 ⌚ 🖥️",
+          },
+          {
+            badge: "🚚 Miễn phí vận chuyển",
+            title: "Đơn từ 500K\nGiao hàng toàn quốc",
+            desc: "Đổi trả 7 ngày, bảo hành tận nơi, hỗ trợ kỹ thuật 24/7.",
+            cta1: { text: "Khám phá", href: "/products" },
+            cta2: { text: "Danh mục", href: "/products" },
+            bg: "linear-gradient(120deg,#14532d,#0d9488,#0891b2)",
+            emoji: "🧊 🧺 📦",
+          },
+        ];
+
+        const iconPalette = [
+          "#eef2ff",
+          "#fef3c7",
+          "#ecfeff",
+          "#f0fdf4",
+          "#fff1f2",
+          "#f5f3ff",
+        ];
+        const iconGlyph = [
+          "bi-phone",
+          "bi-laptop",
+          "bi-tv",
+          "bi-speaker",
+          "bi-watch",
+          "bi-cpu",
+        ];
+
+        function formatVND(value) {
+          return Number(value || 0).toLocaleString("vi-VN") + "đ";
         }
 
-        async function addToCart(productId) {
-          const token = localStorage.getItem("firebase_token");
-          if (!token) {
-            showCartFeedback(
-              "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!",
-              true,
-            );
-            return;
+        function getDiscountPercent(product) {
+          const original = Number(product.originalPrice || 0);
+          const sale = Number(product.salePrice || 0);
+          if (!original || !sale || sale >= original) {
+            return 0;
           }
+          return Math.round(((original - sale) / original) * 100);
+        }
+
+        function productCard(product, badgeType) {
+          const price = Number(product.salePrice || product.originalPrice || 0);
+          const hasSale = !!product.salePrice;
+          const stock = Number(product.stockQty || 0);
+          const disabled = stock <= 0;
+          const salePercent = getDiscountPercent(product);
+          let badge = '<span class="badge-sale">Mới</span>';
+          if (disabled) {
+            badge =
+              '<span class="badge-sale" style="background:#64748b">Hết hàng</span>';
+          } else if (badgeType === "sale" && salePercent > 0) {
+            badge = `<span class=\"badge-sale\">-${salePercent}%</span>`;
+          }
+
+          return `
+            <div class="col-6 col-md-4 col-lg-3">
+              <div class="product-card" data-product-id="${product.id}">
+                <div class="product-img-wrapper">
+                  ${badge}
+                  ${
+                    product.thumbnailUrl
+                      ? `<img src="${product.thumbnailUrl}" alt="${product.name}">`
+                      : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:56px">📦</div>`
+                  }
+                  <button class="btn-quick-view" data-slug="${product.slug}">👁 Xem nhanh</button>
+                </div>
+                <div class="product-body">
+                  <div class="product-name">${product.name}</div>
+                  <div class="product-rating">★★★★★ <span>(${(product.avgRating || 0).toFixed(1)})</span></div>
+                  <div class="mb-2">
+                    ${hasSale ? `<span class=\"price-original\">${formatVND(product.originalPrice)}</span>` : ""}
+                    <div class="${hasSale ? "price-sale" : "price-normal"}">${formatVND(price)}</div>
+                    <small class="text-muted">Tồn kho: ${stock}</small>
+                  </div>
+                  <button class="btn-add-cart" data-product-id="${product.id}" ${disabled ? "disabled" : ""}>${disabled ? "Hết hàng" : "🛒 Thêm vào giỏ"}</button>
+                </div>
+              </div>
+            </div>`;
+        }
+
+        function renderHero(index) {
+          const slide = HERO_SLIDES[index];
+          const hero = document.getElementById("hero-content");
+          if (!hero) return;
+          hero.innerHTML = `
+            <div class="col-lg-8 p-4 p-lg-5" style="background:${slide.bg};color:white">
+              <span class="badge rounded-pill" style="background:rgba(255,255,255,.2);padding:8px 16px">${slide.badge}</span>
+              <h1 class="hero-title mt-3" style="white-space:pre-line">${slide.title}</h1>
+              <p class="hero-subtitle">${slide.desc}</p>
+              <div class="d-flex gap-3 flex-wrap mt-3">
+                <a href="${slide.cta1.href}" class="btn-hero-primary">${slide.cta1.text}</a>
+                <a href="${slide.cta2.href}" class="btn-hero-secondary">${slide.cta2.text}</a>
+              </div>
+            </div>
+            <div class="col-lg-4 d-none d-lg-flex align-items-center justify-content-center" style="background:rgba(15,23,42,.07)">
+              <div style="font-size:52px">${slide.emoji}</div>
+            </div>
+          `;
+
+          const dots = document.getElementById("hero-dots");
+          if (dots) {
+            dots.innerHTML = HERO_SLIDES.map(
+              (_, i) => `
+              <button type="button" data-idx="${i}" style="width:10px;height:10px;border-radius:999px;border:none;${i === index ? "background:var(--accent)" : "background:#cbd5e1"}"></button>
+            `,
+            ).join("");
+          }
+        }
+
+        async function loadFeatured() {
           try {
-            const response = await fetch("/api/cart", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: "Bearer " + token,
-              },
-              body: JSON.stringify({
-                productId: parseInt(productId),
-                quantity: 1,
-              }),
-            });
-            const result = await response.json();
-            if (response.ok) {
-              showCartFeedback(
-                "🛒 " + (result.message || "Đã thêm vào giỏ hàng!"),
-              );
-            } else {
-              showCartFeedback(
-                "Lỗi: " + (result.message || "Không thể thêm vào giỏ"),
-                true,
-              );
+            const res = await fetch("/api/products/featured");
+            if (!res.ok) {
+              throw new Error("Không thể tải dữ liệu trang chủ");
             }
-          } catch (error) {
-            console.error("Error adding to cart:", error);
-            showCartFeedback("Không thể kết nối đến máy chủ.", true);
+            const data = await res.json();
+
+            const catEl = document.getElementById("featured-categories");
+            catEl.innerHTML = (data.categories || [])
+              .map(
+                (cat, idx) => `
+              <div class="col-6 col-md-4 col-lg-2">
+                <a href="/products?categoryId=${cat.id}" class="cat-card">
+                  <div class="cat-icon" style="background:${iconPalette[idx % iconPalette.length]}">
+                    <i class="bi ${iconGlyph[idx % iconGlyph.length]}" style="color:#1d4ed8"></i>
+                  </div>
+                  <div style="font-size:14px;font-weight:600">${cat.name}</div>
+                </a>
+              </div>
+            `,
+              )
+              .join("");
+
+            document.getElementById("new-arrivals").innerHTML = (
+              data.newArrivals || []
+            )
+              .map((p) => productCard(p, "new"))
+              .join("");
+            document.getElementById("on-sale").innerHTML = (data.onSale || [])
+              .map((p) => productCard(p, "sale"))
+              .join("");
+            document.getElementById("best-seller").innerHTML = (
+              data.bestSeller || []
+            )
+              .map((p) => productCard(p, "best"))
+              .join("");
+          } catch (e) {
+            if (typeof window.showToast === "function") {
+              window.showToast(e.message || "Lỗi tải dữ liệu", "error");
+            }
           }
         }
+
+        function startDailyCountdown() {
+          const tick = () => {
+            const end = new Date();
+            end.setHours(23, 59, 59, 999);
+            const diff = Math.max(0, end.getTime() - Date.now());
+            const hours = Math.floor(diff / 3600000);
+            const mins = Math.floor((diff % 3600000) / 60000);
+            const secs = Math.floor((diff % 60000) / 1000);
+            const h = document.getElementById("cd-hours");
+            const m = document.getElementById("cd-mins");
+            const s = document.getElementById("cd-secs");
+            if (h) h.textContent = String(hours).padStart(2, "0");
+            if (m) m.textContent = String(mins).padStart(2, "0");
+            if (s) s.textContent = String(secs).padStart(2, "0");
+          };
+          tick();
+          setInterval(tick, 1000);
+        }
+
+        let heroIndex = 0;
+        renderHero(heroIndex);
+        setInterval(() => {
+          heroIndex = (heroIndex + 1) % HERO_SLIDES.length;
+          renderHero(heroIndex);
+        }, 4500);
+
+        document.addEventListener("click", (event) => {
+          const dot = event.target.closest("#hero-dots button");
+          if (dot) {
+            heroIndex = Number(dot.dataset.idx || 0);
+            renderHero(heroIndex);
+          }
+        });
+
+        await loadFeatured();
+        startDailyCountdown();
       </script>
     </main>
   </body>

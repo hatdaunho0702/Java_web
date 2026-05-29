@@ -1,8 +1,8 @@
 package com.dienmay.entity.nhom5.service;
 
-import com.dienmay.entity.nhom5.dto.request.OrderItemRequest;
 import com.dienmay.entity.nhom5.dto.request.PlaceOrderRequest;
 import com.dienmay.entity.nhom5.dto.response.OrderResponse;
+import com.dienmay.entity.nhom5.entity.CartItem;
 import com.dienmay.entity.nhom5.entity.Coupon;
 import com.dienmay.entity.nhom5.entity.CouponDiscountType;
 import com.dienmay.entity.nhom5.entity.InventoryLog;
@@ -63,43 +63,56 @@ public class OrderService {
 
     @Transactional
     public OrderResponse placeOrder(String userId, PlaceOrderRequest request) {
-        if (request == null || request.getItems() == null || request.getItems().isEmpty()) {
-            throw new BadRequestException("Đơn hàng phải có ít nhất một sản phẩm");
+        if (request == null) {
+            throw new BadRequestException("Dữ liệu đặt hàng không hợp lệ");
+        }
+        if (request.getRecipientName() == null || request.getRecipientName().isBlank()) {
+            throw new BadRequestException("Tên người nhận không được để trống");
+        }
+        if (request.getPhone() == null || request.getPhone().isBlank()) {
+            throw new BadRequestException("Số điện thoại không được để trống");
+        }
+        if (request.getAddress() == null || request.getAddress().isBlank()) {
+            throw new BadRequestException("Địa chỉ giao hàng không được để trống");
         }
 
         User user = userRepository.findByUid(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
+        List<CartItem> cartItems = cartItemRepository.findByUser_Uid(userId);
+        if (cartItems.isEmpty()) {
+            throw new BadRequestException("Giỏ hàng trống, không thể đặt hàng");
+        }
+
         List<OrderLine> lines = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
 
-        for (OrderItemRequest itemRequest : request.getItems()) {
-            if (itemRequest == null || itemRequest.getProductId() == null || itemRequest.getQuantity() == null || itemRequest.getQuantity() <= 0) {
-                throw new BadRequestException("Thông tin sản phẩm đặt hàng không hợp lệ");
+        for (CartItem cartItem : cartItems) {
+            Product product = cartItem.getProduct();
+            int quantity = cartItem.getQuantity() == null ? 0 : cartItem.getQuantity();
+            if (quantity <= 0) {
+                throw new BadRequestException("Số lượng sản phẩm trong giỏ hàng không hợp lệ");
             }
-
-            Product product = productRepository.findById(itemRequest.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm"));
 
             if (!Boolean.TRUE.equals(product.getIsActive())) {
                 throw new BadRequestException("Sản phẩm " + product.getName() + " đang tạm ngưng bán");
             }
 
-            if (product.getStockQty() < itemRequest.getQuantity()) {
+            if (product.getStockQty() < quantity) {
                 throw new BadRequestException("Sản phẩm " + product.getName() + " không đủ hàng");
             }
 
             BigDecimal unitPrice = product.getSalePrice() != null ? product.getSalePrice() : product.getOriginalPrice();
-            BigDecimal lineSubtotal = unitPrice.multiply(BigDecimal.valueOf(itemRequest.getQuantity()));
+            BigDecimal lineSubtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
 
-            lines.add(new OrderLine(product, itemRequest.getQuantity(), unitPrice, lineSubtotal));
+            lines.add(new OrderLine(product, quantity, unitPrice, lineSubtotal));
             subtotal = subtotal.add(lineSubtotal);
         }
 
         Coupon coupon = null;
         BigDecimal discountAmount = BigDecimal.ZERO;
-        if (request.getCouponCode() != null && !request.getCouponCode().isBlank()) {
-            coupon = couponRepository.findByCode(request.getCouponCode())
+        if (request.getCouponId() != null) {
+            coupon = couponRepository.findById(request.getCouponId())
                     .orElseThrow(() -> new BadRequestException("Mã giảm giá không tồn tại"));
             LocalDateTime now = LocalDateTime.now();
             if (!Boolean.TRUE.equals(coupon.getIsActive())) {
@@ -117,7 +130,10 @@ public class OrderService {
             discountAmount = calculateDiscount(coupon, subtotal);
         }
 
-        BigDecimal totalAmount = subtotal.subtract(discountAmount);
+        BigDecimal shippingFee = subtotal.compareTo(BigDecimal.valueOf(500000)) >= 0
+            ? BigDecimal.ZERO
+            : BigDecimal.valueOf(30000);
+        BigDecimal totalAmount = subtotal.subtract(discountAmount).add(shippingFee);
         if (totalAmount.compareTo(BigDecimal.ZERO) < 0) {
             totalAmount = BigDecimal.ZERO;
         }
@@ -127,14 +143,14 @@ public class OrderService {
                 .user(user)
                 .coupon(coupon)
                 .recipientName(request.getRecipientName())
-                .recipientPhone(request.getRecipientPhone())
-                .shippingAddress(request.getShippingAddress())
+            .recipientPhone(request.getPhone())
+            .shippingAddress(request.getAddress())
                 .subtotal(subtotal)
                 .discountAmount(discountAmount)
-                .shippingFee(BigDecimal.ZERO)
+            .shippingFee(shippingFee)
                 .totalAmount(totalAmount)
                 .status(OrderStatus.PENDING)
-                .paymentMethod(request.getPaymentMethod() == null ? PaymentMethod.COD : request.getPaymentMethod())
+            .paymentMethod(normalizePaymentMethod(request.getPaymentMethod()))
                 .paymentStatus(PaymentStatus.UNPAID)
                 .note(request.getNote())
                 .createdAt(LocalDateTime.now())
@@ -144,45 +160,48 @@ public class OrderService {
 
         List<OrderItem> orderItems = new ArrayList<>();
         for (OrderLine line : lines) {
-            int affectedRows = productRepository.decreaseStock(line.product().getId(), line.quantity());
-            if (affectedRows == 0) {
-                throw new BadRequestException("Sản phẩm " + line.product().getName() + " không đủ hàng");
+            // adjust stock using entity set/save (safer for SQLite)
+            Product prod = productRepository.findById(line.product().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm"));
+            int remaining = prod.getStockQty() - line.quantity();
+            if (remaining < 0) {
+            throw new BadRequestException("Sản phẩm " + prod.getName() + " không đủ hàng");
             }
-            productRepository.increaseSoldQty(line.product().getId(), line.quantity());
+            prod.setStockQty(remaining);
+            prod.setSoldQty((prod.getSoldQty() == null ? 0 : prod.getSoldQty()) + line.quantity());
+            productRepository.save(prod);
 
             OrderItem orderItem = OrderItem.builder()
-                    .order(order)
-                    .product(line.product())
-                    .productName(line.product().getName())
-                    .productImage(line.product().getThumbnailUrl())
-                    .unitPrice(line.unitPrice())
-                    .quantity(line.quantity())
-                    .subtotal(line.subtotal())
-                    .build();
+                .order(order)
+                .product(prod)
+                .productName(prod.getName())
+                .productImage(prod.getThumbnailUrl())
+                .unitPrice(line.unitPrice())
+                .quantity(line.quantity())
+                .subtotal(line.subtotal())
+                .build();
             orderItems.add(orderItem);
 
             inventoryLogRepository.save(InventoryLog.builder()
-                    .product(line.product())
-                    .changeQty(-line.quantity())
-                    .reason(InventoryReason.PURCHASE)
-                    .refId(order.getId())
-                    .note("Đặt hàng: " + order.getOrderCode())
-                    .createdBy(user)
-                    .createdAt(LocalDateTime.now())
-                    .build());
+                .product(prod)
+                .changeQty(-line.quantity())
+                .reason(InventoryReason.PURCHASE)
+                .refId(order.getId())
+                .note("Đặt hàng: " + order.getOrderCode())
+                .createdBy(user)
+                .createdAt(LocalDateTime.now())
+                .build());
 
-            Product latest = productRepository.findById(line.product().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm"));
-            if (latest.getStockQty() < lowStockThreshold) {
-                notificationRepository.save(Notification.builder()
-                        .type(NotificationType.LOW_STOCK)
-                        .title("Cảnh báo tồn kho thấp")
-                        .message("Sản phẩm " + latest.getName() + " sắp hết hàng")
-                        .targetRole(TargetRole.ADMIN)
-                        .isRead(false)
-                        .refId(latest.getId())
-                        .createdAt(LocalDateTime.now())
-                        .build());
+            if (prod.getStockQty() < lowStockThreshold) {
+            notificationRepository.save(Notification.builder()
+                .type(NotificationType.LOW_STOCK)
+                .title("Cảnh báo tồn kho thấp")
+                .message("Sản phẩm " + prod.getName() + " sắp hết hàng")
+                .targetRole(TargetRole.ADMIN)
+                .isRead(false)
+                .refId(prod.getId())
+                .createdAt(LocalDateTime.now())
+                .build());
             }
         }
         orderItemRepository.saveAll(orderItems);
@@ -204,11 +223,21 @@ public class OrderService {
                 .build());
 
         return OrderResponse.builder()
-                .id(order.getId())
+                .orderId(order.getId())
                 .orderCode(order.getOrderCode())
                 .status(order.getStatus().name())
-                .totalAmount(order.getTotalAmount())
+                .total(order.getTotalAmount())
                 .build();
+    }
+
+    private PaymentMethod normalizePaymentMethod(PaymentMethod paymentMethod) {
+        if (paymentMethod == null) {
+            return PaymentMethod.COD;
+        }
+        if (paymentMethod == PaymentMethod.BANK || paymentMethod == PaymentMethod.VNPAY || paymentMethod == PaymentMethod.MOMO) {
+            return PaymentMethod.BANK;
+        }
+        return paymentMethod;
     }
 
     @Transactional
@@ -230,11 +259,14 @@ public class OrderService {
 
         List<OrderItem> items = orderItemRepository.findByOrderId(orderId);
         for (OrderItem item : items) {
-            productRepository.increaseStock(item.getProduct().getId(), item.getQuantity());
-            productRepository.decreaseSoldQty(item.getProduct().getId(), item.getQuantity());
+            Product product = productRepository.findById(item.getProduct().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm"));
+            product.setStockQty(product.getStockQty() + item.getQuantity());
+            product.setSoldQty(Math.max(0, (product.getSoldQty() == null ? 0 : product.getSoldQty()) - item.getQuantity()));
+            productRepository.save(product);
 
             inventoryLogRepository.save(InventoryLog.builder()
-                    .product(item.getProduct())
+                .product(product)
                     .changeQty(item.getQuantity())
                     .reason(InventoryReason.RETURN)
                     .refId(order.getId())

@@ -30,6 +30,7 @@ public class SecurityConfig {
                                 "/login",
                                 "/register",
                                 "/logout",
+                                "/favicon.ico",
                                 "/cart",
                                 "/checkout",
                                 "/orders",
@@ -48,12 +49,17 @@ public class SecurityConfig {
                                 "/api/products/**",
                                 "/api/categories/**",
                                 "/api/brands/**",
+                                "/api/cart",
+                                "/api/cart/count",
                                 "/api/auth/firebase-config")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/login",
                                 "/api/auth/register")
                         .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/cart/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/cart/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/cart/**").authenticated()
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

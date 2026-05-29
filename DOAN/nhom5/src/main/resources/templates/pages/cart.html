@@ -14,204 +14,303 @@
   </head>
   <body>
     <main class="container py-5">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="section-title mb-3">Giỏ hàng <span>của bạn</span></div>
-        <button
-          class="btn btn-sm btn-outline-danger"
-          id="clear-all-btn"
-          onclick="clearCart()"
-          style="display: none; margin-bottom: 1rem"
-        >
-          Xóa toàn bộ giỏ
-        </button>
-      </div>
+      <div id="cart-content" class="admin-card p-4"></div>
 
-      <div class="admin-card p-4 text-center" id="cart-placeholder">
-        <p class="mb-0" id="placeholder-message">
-          Trang giỏ hàng đã được tạo khung. Kết nối dữ liệu cart ở bước tiếp
-          theo.
-        </p>
-      </div>
+      <script type="module">
+        import { getFirebaseAuth } from "/js/firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-      <div class="row g-4" id="cart-data-container" style="display: none">
-        <div class="col-lg-8">
-          <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-body p-0" id="cart-items-list"></div>
-          </div>
-        </div>
+        function formatVnd(value) {
+          return Number(value || 0).toLocaleString("vi-VN") + "đ";
+        }
 
-        <div class="col-lg-4">
-          <div class="card border-0 shadow-sm p-4 bg-light rounded-3">
-            <h5 class="fw-bold mb-3">Tóm tắt đơn hàng</h5>
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted">Tạm tính:</span>
-              <span class="fw-semibold" id="subtotal-val">0đ</span>
-            </div>
-            <div class="d-flex justify-content-between mb-3">
-              <span class="text-muted">Phí vận chuyển:</span>
-              <span class="text-success fw-semibold">Miễn phí</span>
-            </div>
-            <hr />
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <span class="fw-bold fs-5">Tổng tiền:</span>
-              <span class="fw-bold fs-4 text-danger" id="total-val">0đ</span>
-            </div>
-            <a
-              class="btn btn-primary w-100 py-2.5 fw-bold rounded-2"
-              th:href="@{/checkout}"
-            >
-              TIẾN HÀNH THANH TOÁN
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <script>
-        const token = localStorage.getItem("firebase_token");
-
-        document.addEventListener("DOMContentLoaded", () => {
-          if (!token) {
-            document.getElementById("placeholder-message").innerText =
-              "Vui lòng đăng nhập để xem giỏ hàng của bạn.";
-            return;
+        function showToastSafe(message, type = "info") {
+          if (typeof window.showToast === "function") {
+            window.showToast(message, type);
           }
-          fetchCartData();
-        });
+        }
 
-        async function fetchCartData() {
-          try {
-            document.getElementById("placeholder-message").innerText =
-              "Đang kết nối và tải dữ liệu giỏ hàng...";
-            const response = await fetch("/api/cart", {
-              method: "GET",
-              headers: { Authorization: "Bearer " + token },
-            });
-            if (response.ok) {
-              const data = await response.json();
-              renderCartView(data);
-            } else {
-              document.getElementById("placeholder-message").innerText =
-                "Không thể tải giỏ hàng từ máy chủ.";
+        async function getAuthToken() {
+          const auth = await getFirebaseAuth();
+          const user = auth.currentUser;
+          if (!user) {
+            return null;
+          }
+          return await user.getIdToken(true);
+        }
+
+        async function loadCart() {
+          const auth = await getFirebaseAuth();
+          onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+              document.getElementById("cart-content").innerHTML = `
+                <div class="text-center py-5">
+                  <div style="font-size:80px">🛒</div>
+                  <h4>Giỏ hàng trống</h4>
+                  <p class="text-muted">Vui lòng đăng nhập để xem giỏ hàng</p>
+                  <a href="/login" class="btn btn-primary px-4 py-2">Đăng nhập</a>
+                </div>`;
+              return;
             }
-          } catch (error) {
-            console.error(error);
-            document.getElementById("placeholder-message").innerText =
-              "Lỗi kết nối mạng, vui lòng tải lại trang.";
-          }
-        }
 
-        function renderCartView(items) {
-          const placeholder = document.getElementById("cart-placeholder");
-          const container = document.getElementById("cart-data-container");
-          const itemsList = document.getElementById("cart-items-list");
-          const clearBtn = document.getElementById("clear-all-btn");
+            try {
+              const token = await user.getIdToken(true);
+              const res = await fetch("/api/cart", {
+                headers: { Authorization: "Bearer " + token },
+              });
 
-          if (!items || items.length === 0) {
-            placeholder.style.display = "block";
-            document.getElementById("placeholder-message").innerText =
-              "Giỏ hàng của bạn đang trống!";
-            container.style.display = "none";
-            clearBtn.style.display = "none";
-            return;
-          }
+              if (!res.ok) {
+                throw new Error("Lỗi tải giỏ hàng");
+              }
 
-          placeholder.style.display = "none";
-          container.style.display = "flex";
-          clearBtn.style.display = "block";
-          itemsList.innerHTML = "";
+              const items = await res.json();
 
-          let cartSubtotal = 0;
-          items.forEach((item) => {
-            const basePrice =
-              item.salePrice != null ? item.salePrice : item.originalPrice;
-            const rowTotal = basePrice * item.quantity;
-            cartSubtotal += rowTotal;
+              if (!items || items.length === 0) {
+                document.getElementById("cart-content").innerHTML = `
+                  <div class="text-center py-5">
+                    <div style="font-size:80px">🛒</div>
+                    <h4>Giỏ hàng của bạn đang trống</h4>
+                    <a href="/products" class="btn btn-primary px-4 py-2 mt-3">
+                      Tiếp tục mua sắm
+                    </a>
+                  </div>`;
+                return;
+              }
 
-            const itemHtml = `
-                    <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
-                        <div class="d-flex align-items-center gap-3">
-                            <div style="width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; background: #fafafa; border-radius: 6px;">
-                                ${item.productThumbnailUrl || item.thumbnailUrl ? `<img src="${item.productThumbnailUrl || item.thumbnailUrl}" style="max-width:100%; max-height:100%;">` : `<span style="font-size:24px;">📱</span>`}
-                            </div>
-                            <div>
-                                <h6 class="mb-0 fw-bold text-dark">${item.productName || "Sản phẩm công nghệ"}</h6>
-                                <small class="text-danger fw-semibold">${formatMoney(basePrice)}đ</small>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="input-group input-group-sm" style="width: 100px;">
-                                <button class="btn btn-outline-secondary" onclick="updateItemQuantity(${item.id}, ${item.quantity - 1})">-</button>
-                                <input type="text" class="form-control text-center bg-white" value="${item.quantity}" readonly>
-                                <button class="btn btn-outline-secondary" onclick="updateItemQuantity(${item.id}, ${item.quantity + 1})">+</button>
-                            </div>
-                            <span class="fw-bold text-dark text-end" style="min-width: 90px;">${formatMoney(rowTotal)}đ</span>
-                            <button class="btn btn-sm btn-link text-muted" onclick="deleteCartItem(${item.id})">
-                                <i class="bi bi-trash3-fill text-danger fs-6"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            itemsList.insertAdjacentHTML("beforeend", itemHtml);
+              renderCartTable(items, token);
+            } catch (err) {
+              document.getElementById("cart-content").innerHTML =
+                '<div class="alert alert-danger">Lỗi tải giỏ hàng</div>';
+            }
           });
-
-          document.getElementById("subtotal-val").innerText =
-            formatMoney(cartSubtotal) + "đ";
-          document.getElementById("total-val").innerText =
-            formatMoney(cartSubtotal) + "đ";
         }
 
-        async function updateItemQuantity(cartItemId, qty) {
-          if (qty < 1) {
-            deleteCartItem(cartItemId);
+        function renderCartTable(items, token) {
+          let subtotal = 0;
+          const rows = items
+            .map((item) => {
+              const unitPrice = Number(item.unitPrice || 0);
+              const lineTotal = unitPrice * Number(item.quantity || 0);
+              subtotal += lineTotal;
+              const imgOrEmoji = item.thumbnailUrl
+                ? `<img src="${item.thumbnailUrl}" style="width:70px;height:70px;object-fit:cover;border-radius:8px">`
+                : `<div style="width:70px;height:70px;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:32px">📦</div>`;
+
+              return `
+                <tr id="row-${item.cartItemId}">
+                  <td>
+                    <div class="d-flex align-items-center gap-3">
+                      ${imgOrEmoji}
+                      <div>
+                        <div style="font-weight:600">${item.productName}</div>
+                        <small class="text-muted">Còn ${item.stockQty} trong kho</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-center">${formatVnd(unitPrice)}</td>
+                  <td class="text-center">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                      <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(${item.cartItemId}, ${item.quantity - 1}, ${item.stockQty})">-</button>
+                      <span id="qty-${item.cartItemId}" style="min-width:30px;text-align:center;font-weight:600">${item.quantity}</span>
+                      <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(${item.cartItemId}, ${item.quantity + 1}, ${item.stockQty})">+</button>
+                    </div>
+                  </td>
+                  <td class="text-center" id="sub-${item.cartItemId}" style="font-weight:700;color:var(--primary)">
+                    ${formatVnd(lineTotal)}
+                  </td>
+                  <td class="text-center">
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeItem(${item.cartItemId})">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </td>
+                </tr>`;
+            })
+            .join("");
+
+          const discount = 0;
+          const shipping = subtotal >= 500000 ? 0 : 30000;
+          const total = subtotal + shipping - discount;
+
+          document.getElementById("cart-content").innerHTML = `
+            <div class="row g-4">
+              <div class="col-lg-8">
+                <div class="admin-card">
+                  <div class="admin-card-header d-flex justify-content-between align-items-center">
+                    <span>🛒 Giỏ hàng của bạn</span>
+                    <span class="badge bg-primary">${items.length} sản phẩm</span>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table admin-table mb-0">
+                      <thead>
+                        <tr>
+                          <th>Sản phẩm</th>
+                          <th class="text-center">Đơn giá</th>
+                          <th class="text-center">Số lượng</th>
+                          <th class="text-center">Thành tiền</th>
+                          <th class="text-center">Xóa</th>
+                        </tr>
+                      </thead>
+                      <tbody>${rows}</tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-lg-4">
+                <div class="admin-card">
+                  <div class="admin-card-header">📋 Tóm tắt đơn hàng</div>
+                  <div class="p-4">
+                    <div class="d-flex gap-2 mb-3">
+                      <input type="text" id="couponInput" class="form-control" placeholder="Nhập mã giảm giá">
+                      <button class="btn btn-primary px-3" onclick="applyCoupon()">Áp dụng</button>
+                    </div>
+                    <div id="coupon-msg" class="mb-3" style="font-size:13px"></div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Tạm tính:</span>
+                      <span id="subtotal-display">${formatVnd(subtotal)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Giảm giá:</span>
+                      <span id="discount-display" style="color:var(--primary)">-0đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Phí vận chuyển:</span>
+                      <span id="shipping-display">${shipping === 0 ? "Miễn phí" : formatVnd(shipping)}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                      <strong>Tổng thanh toán:</strong>
+                      <strong id="total-display" style="font-size:20px;color:var(--primary)">${formatVnd(total)}</strong>
+                    </div>
+                    <a href="/checkout" class="btn btn-primary d-block text-center py-3" style="border-radius:10px;font-size:16px">
+                      Tiến hành thanh toán →
+                    </a>
+                    <a href="/products" class="d-block text-center mt-2 text-muted" style="font-size:14px">
+                      ← Tiếp tục mua sắm
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+
+          window._cartToken = token;
+        }
+
+        window.changeQty = async function (cartItemId, newQty, stockQty) {
+          if (newQty < 1) {
+            if (confirm("Xóa sản phẩm này khỏi giỏ hàng?")) {
+              removeItem(cartItemId);
+            }
             return;
           }
+
+          if (newQty > stockQty) {
+            showToastSafe(
+              "Chỉ còn " + stockQty + " sản phẩm trong kho",
+              "warning",
+            );
+            return;
+          }
+
           try {
-            await fetch(`/api/cart/${cartItemId}`, {
+            const token = window._cartToken || (await getAuthToken());
+            const res = await fetch("/api/cart/" + cartItemId, {
               method: "PUT",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: "Bearer " + token,
               },
-              body: JSON.stringify({ quantity: qty }),
+              body: JSON.stringify({ quantity: newQty }),
             });
-            fetchCartData();
-          } catch (e) {
-            console.error(e);
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err.message || "Không thể cập nhật giỏ hàng");
+            }
+            await loadCart();
+            if (typeof window.updateCartBadge === "function") {
+              await window.updateCartBadge();
+            }
+            showToastSafe("Đã cập nhật", "success");
+          } catch (err) {
+            showToastSafe(err.message || "Lỗi cập nhật", "error");
           }
-        }
+        };
 
-        async function deleteCartItem(cartItemId) {
-          if (!confirm("Bạn muốn bỏ mặt hàng này khỏi giỏ?")) return;
-          try {
-            await fetch(`/api/cart/${cartItemId}`, {
-              method: "DELETE",
-              headers: { Authorization: "Bearer " + token },
-            });
-            fetchCartData();
-          } catch (e) {
-            console.error(e);
-          }
-        }
-
-        async function clearCart() {
-          if (
-            !confirm("Xác nhận xóa toàn bộ sản phẩm trong giỏ hàng hiện tại?")
-          )
+        window.removeItem = async function (cartItemId) {
+          if (!confirm("Xóa sản phẩm này khỏi giỏ hàng?")) {
             return;
+          }
           try {
-            await fetch("/api/cart", {
+            const token = window._cartToken || (await getAuthToken());
+            const res = await fetch("/api/cart/" + cartItemId, {
               method: "DELETE",
               headers: { Authorization: "Bearer " + token },
             });
-            fetchCartData();
-          } catch (e) {
-            console.error(e);
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err.message || "Không thể xóa sản phẩm");
+            }
+            document.getElementById("row-" + cartItemId)?.remove();
+            await loadCart();
+            if (typeof window.updateCartBadge === "function") {
+              await window.updateCartBadge();
+            }
+            showToastSafe("Đã xóa khỏi giỏ hàng", "success");
+          } catch (err) {
+            showToastSafe(err.message || "Lỗi khi xóa", "error");
           }
-        }
+        };
 
-        function formatMoney(n) {
-          return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
+        window.applyCoupon = async function () {
+          const code = document.getElementById("couponInput")?.value?.trim();
+          if (!code) {
+            showToastSafe("Nhập mã giảm giá", "warning");
+            return;
+          }
+
+          const subtotalEl = document.getElementById("subtotal-display");
+          const subtotalVal = Number(
+            subtotalEl.textContent.replace(/[^\d]/g, "") || "0",
+          );
+
+          try {
+            const token = window._cartToken || (await getAuthToken());
+            const res = await fetch("/api/coupon/validate", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token,
+              },
+              body: JSON.stringify({ code: code, orderTotal: subtotalVal }),
+            });
+            const data = await res.json();
+            const msgEl = document.getElementById("coupon-msg");
+
+            if (data.valid) {
+              msgEl.innerHTML =
+                '<span style="color:green">✅ ' + data.message + "</span>";
+              const discountVal = Number(data.discountAmount || 0);
+              document.getElementById("discount-display").textContent =
+                "-" + formatVnd(discountVal);
+              const shipping = subtotalVal >= 500000 ? 0 : 30000;
+              const total = subtotalVal - discountVal + shipping;
+              document.getElementById("total-display").textContent =
+                formatVnd(total);
+              showToastSafe("Áp dụng mã thành công!", "success");
+            } else {
+              msgEl.innerHTML =
+                '<span style="color:red">❌ ' +
+                (data.message || "Mã không hợp lệ") +
+                "</span>";
+              showToastSafe(data.message || "Mã không hợp lệ", "error");
+            }
+          } catch (err) {
+            showToastSafe("Lỗi khi kiểm tra mã", "error");
+          }
+        };
+
+        loadCart();
       </script>
     </main>
   </body>

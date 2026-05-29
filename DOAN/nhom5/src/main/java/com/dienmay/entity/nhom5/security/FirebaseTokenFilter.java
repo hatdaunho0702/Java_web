@@ -2,6 +2,9 @@ package com.dienmay.entity.nhom5.security;
 
 import com.dienmay.entity.nhom5.entity.User;
 import com.dienmay.entity.nhom5.service.AuthService;
+import org.springframework.core.env.Environment;
+import java.util.List;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import jakarta.servlet.FilterChain;
@@ -29,6 +32,7 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
     };
 
     private final AuthService authService;
+    private final Environment env;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -47,6 +51,8 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+        // Production: only accept Firebase ID Token in Authorization header
+
         String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
             filterChain.doFilter(request, response);
@@ -61,7 +67,7 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
 
             User user = authService.loadUserByUid(firebaseUid);
 
-                if (!Boolean.TRUE.equals(user.getIsActive())) {
+            if (!Boolean.TRUE.equals(user.getIsActive())) {
                 writeJsonResponse(
                         response,
                         HttpServletResponse.SC_FORBIDDEN,
@@ -71,13 +77,15 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                 return;
             }
 
-                CustomUserDetails principal = CustomUserDetails.fromUser(user);
-                UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
-                SecurityContext context = SecurityContextHolder.createEmptyContext();
-                context.setAuthentication(auth);
-                SecurityContextHolder.setContext(context);
-                new HttpSessionSecurityContextRepository().saveContext(context, request, response);
+            // Set principal as the Firebase UID (String) and map role -> authority
+            List<SimpleGrantedAuthority> authorities = List.of(
+                    new SimpleGrantedAuthority("ROLE_" + (user.getRole() != null ? user.getRole().name() : "USER"))
+            );
+
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(firebaseUid, null, authorities);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            new HttpSessionSecurityContextRepository().saveContext(SecurityContextHolder.getContext(), request, response);
 
             filterChain.doFilter(request, response);
         } catch (Exception ex) {

@@ -1,7 +1,6 @@
 package com.dienmay.entity.nhom5.dto.request;
 
 import com.dienmay.entity.nhom5.entity.PaymentMethod;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,11 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlaceOrderRequest {
-    private String couponCode;
+    private Long couponId;
     private String recipientName;
-    private String recipientPhone;
-    private String shippingAddress;
+    private String phone;
+    private String address;
     private PaymentMethod paymentMethod;
     private String note;
-    private List<OrderItemRequest> items;
 }

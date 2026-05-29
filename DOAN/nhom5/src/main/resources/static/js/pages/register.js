@@ -117,10 +117,20 @@ if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     console.log("Register submit triggered");
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const fullName = document.getElementById("fullName").value.trim();
-    const phone = document.getElementById("phone")?.value?.trim() || "";
+    const email = (
+      document.getElementById("regEmail") || document.getElementById("email")
+    ).value.trim();
+    const password = (
+      document.getElementById("regPassword") ||
+      document.getElementById("password")
+    ).value;
+    const fullName = (
+      document.getElementById("regName") || document.getElementById("fullName")
+    ).value.trim();
+    const phone =
+      (
+        document.getElementById("regPhone") || document.getElementById("phone")
+      )?.value?.trim() || "";
 
     if (!validateRegisterForm(email, password, fullName, phone)) {
       return;

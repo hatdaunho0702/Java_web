@@ -36,4 +36,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
         @Query("SELECT o.status, COUNT(o) FROM Order o GROUP BY o.status")
         List<Object[]> countOrdersByStatusGroup();
+
+    @Query("""
+        SELECT o FROM Order o
+        WHERE (:status IS NULL OR o.status = :status)
+          AND (:keyword IS NULL OR LOWER(o.orderCode) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(o.recipientName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+        ORDER BY o.createdAt DESC
+        """)
+    org.springframework.data.domain.Page<Order> adminSearch(
+        @org.springframework.data.repository.query.Param("status") OrderStatus status,
+        @org.springframework.data.repository.query.Param("keyword") String keyword,
+        org.springframework.data.domain.Pageable pageable
+    );
 }

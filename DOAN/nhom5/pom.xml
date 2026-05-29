@@ -23,6 +23,8 @@
     <java.version>17</java.version>
     <!-- Versions -->
     <lombok.version>1.18.38</lombok.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <firebase-admin.version>9.9.0</firebase-admin.version>
     <modelmapper.version>3.2.4</modelmapper.version>
     <cloudinary.version>1.39.0</cloudinary.version>
@@ -168,6 +170,14 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
+    </dependency>
+
+    <!-- Prevent commons-logging conflicts by providing a single implementation -->
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.2</version>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>

@@ -1,25 +1,32 @@
 package com.dienmay.entity.nhom5.service;
 
 import com.dienmay.entity.nhom5.dto.request.CreateProductRequest;
+import com.dienmay.entity.nhom5.dto.request.CreateReviewRequest;
 import com.dienmay.entity.nhom5.dto.request.ProductFilterRequest;
 import com.dienmay.entity.nhom5.dto.request.ProductSpecRequest;
 import com.dienmay.entity.nhom5.dto.response.ProductDetailResponse;
 import com.dienmay.entity.nhom5.dto.response.ProductResponse;
+import com.dienmay.entity.nhom5.dto.response.ReviewDto;
 import com.dienmay.entity.nhom5.dto.response.ProductSpecDto;
 import com.dienmay.entity.nhom5.entity.Brand;
 import com.dienmay.entity.nhom5.entity.Category;
+import com.dienmay.entity.nhom5.entity.OrderItem;
 import com.dienmay.entity.nhom5.entity.Product;
 import com.dienmay.entity.nhom5.entity.ProductImage;
 import com.dienmay.entity.nhom5.entity.ProductSpec;
+import com.dienmay.entity.nhom5.entity.Review;
 import com.dienmay.entity.nhom5.entity.ReviewStatus;
+import com.dienmay.entity.nhom5.entity.User;
 import com.dienmay.entity.nhom5.exception.BadRequestException;
 import com.dienmay.entity.nhom5.exception.ResourceNotFoundException;
 import com.dienmay.entity.nhom5.repository.BrandRepository;
 import com.dienmay.entity.nhom5.repository.CategoryRepository;
+import com.dienmay.entity.nhom5.repository.OrderItemRepository;
 import com.dienmay.entity.nhom5.repository.ProductImageRepository;
 import com.dienmay.entity.nhom5.repository.ProductRepository;
 import com.dienmay.entity.nhom5.repository.ProductSpecRepository;
 import com.dienmay.entity.nhom5.repository.ReviewRepository;
+import com.dienmay.entity.nhom5.repository.UserRepository;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import java.io.IOException;
@@ -30,14 +37,18 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +65,8 @@ public class ProductService {
     private final ProductImageRepository productImageRepository;
     private final ProductSpecRepository productSpecRepository;
     private final ReviewRepository reviewRepository;
+    private final UserRepository userRepository;
+    private final OrderItemRepository orderItemRepository;
 
     @Value("${app.storage.product-image-dir:./uploads/images}")
     private String productImageDir;
@@ -67,8 +80,14 @@ public class ProductService {
                 if (filter.getCategoryId() != null) {
                     predicates.add(cb.equal(root.get("category").get("id"), filter.getCategoryId()));
                 }
+                if (filter.getCategoryIds() != null && !filter.getCategoryIds().isEmpty()) {
+                    predicates.add(root.get("category").get("id").in(filter.getCategoryIds()));
+                }
                 if (filter.getBrandId() != null) {
                     predicates.add(cb.equal(root.get("brand").get("id"), filter.getBrandId()));
+                }
+                if (filter.getBrandIds() != null && !filter.getBrandIds().isEmpty()) {
+                    predicates.add(root.get("brand").get("id").in(filter.getBrandIds()));
                 }
                 if (filter.getKeyword() != null && !filter.getKeyword().isBlank()) {
                     predicates.add(cb.like(
@@ -85,12 +104,87 @@ public class ProductService {
                         predicates.add(cb.lessThanOrEqualTo(priceExpr, filter.getMaxPrice()));
                     }
                 }
+
+                String sort = filter.getSort() == null ? "newest" : filter.getSort();
+                switch (sort) {
+                    case "price_asc" -> query.orderBy(cb.asc(cb.coalesce(root.get("salePrice"), root.get("originalPrice"))));
+                    case "price_desc" -> query.orderBy(cb.desc(cb.coalesce(root.get("salePrice"), root.get("originalPrice"))));
+                    case "popular" -> query.orderBy(cb.desc(root.get("soldQty")), cb.desc(root.get("createdAt")));
+                    default -> query.orderBy(cb.desc(root.get("createdAt")));
+                }
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
         return productRepository.findAll(spec, pageable).map(this::toProductResponse);
     }
+
+    public Map<String, Object> getProductsPayload(ProductFilterRequest filter, Pageable pageable) {
+        Page<ProductResponse> page = getProducts(filter, pageable);
+
+        List<Map<String, Object>> categories = categoryRepository.findAllByIsActiveTrue().stream()
+                .map(cat -> {
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("id", cat.getId());
+                    item.put("name", cat.getName());
+                    return item;
+                })
+                .toList();
+
+        List<Map<String, Object>> brands = brandRepository.findAllByIsActiveTrueOrderByNameAsc().stream()
+                .map(brand -> {
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("id", brand.getId());
+                    item.put("name", brand.getName());
+                    return item;
+                })
+                .toList();
+
+        BigDecimal minPrice = Objects.requireNonNullElse(productRepository.findMinEffectivePriceForActive(), BigDecimal.ZERO);
+        BigDecimal maxPrice = Objects.requireNonNullElse(productRepository.findMaxEffectivePriceForActive(), BigDecimal.ZERO);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("content", page.getContent());
+        payload.put("totalElements", page.getTotalElements());
+        payload.put("totalPages", page.getTotalPages());
+        payload.put("currentPage", page.getNumber());
+        payload.put("filters", Map.of(
+                "categories", categories,
+                "brands", brands,
+                "priceRange", Map.of("min", minPrice, "max", maxPrice)
+        ));
+        return payload;
+    }
+
+        public Map<String, Object> getFeaturedProducts() {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("newArrivals", productRepository
+            .findByIsActiveTrueOrderByCreatedAtDesc(Pageable.ofSize(8))
+            .map(this::toProductResponse)
+            .getContent());
+        response.put("onSale", productRepository
+            .findByIsActiveTrueAndSalePriceIsNotNull(Pageable.ofSize(8))
+            .map(this::toProductResponse)
+            .getContent());
+        response.put("bestSeller", productRepository
+            .findByIsActiveTrueOrderBySoldQtyDesc(Pageable.ofSize(8))
+            .map(this::toProductResponse)
+            .getContent());
+
+        List<Map<String, Object>> categories = categoryRepository.findActiveCategoriesHavingActiveProducts()
+            .stream()
+            .map(cat -> {
+                Map<String, Object> c = new LinkedHashMap<>();
+                c.put("id", cat.getId());
+                c.put("name", cat.getName());
+                c.put("slug", cat.getSlug());
+                c.put("iconUrl", cat.getIconUrl());
+                return c;
+            })
+            .toList();
+        response.put("categories", categories);
+        return response;
+        }
 
     public Page<ProductResponse> getAdminProducts(String keyword, Long categoryId, Boolean isActive, Pageable pageable) {
         Specification<Product> spec = (root, query, cb) -> {
@@ -130,6 +224,48 @@ public class ProductService {
         return toProductDetailResponse(product);
     }
 
+    public Page<ReviewDto> getProductReviews(Long productId, Pageable pageable) {
+        if (!productRepository.existsById(productId)) {
+            throw new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + productId);
+        }
+        return reviewRepository.findByProductIdAndStatusOrderByCreatedAtDesc(productId, ReviewStatus.APPROVED, pageable)
+                .map(this::toReviewDto);
+    }
+
+    @Transactional
+    public ReviewDto createReview(Long productId, String firebaseUid, CreateReviewRequest request) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm"));
+        User user = userRepository.findByFirebaseUid(firebaseUid)
+                .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại"));
+
+        List<OrderItem> purchasedItems = orderItemRepository.findPurchasedItemsByUserAndProduct(user.getUid(), productId);
+        if (purchasedItems.isEmpty()) {
+            throw new BadRequestException("Bạn chỉ có thể đánh giá sau khi mua sản phẩm");
+        }
+
+        OrderItem eligibleItem = purchasedItems.stream()
+                .filter(item -> !reviewRepository.existsByProductIdAndUser_UidAndOrderId(productId, user.getUid(), item.getOrder().getId()))
+                .findFirst()
+                .orElse(null);
+
+        if (eligibleItem == null) {
+            throw new BadRequestException("Bạn đã đánh giá sản phẩm này trước đó");
+        }
+
+        Review review = reviewRepository.save(Review.builder()
+                .product(product)
+                .user(user)
+                .order(eligibleItem.getOrder())
+                .rating(request.getRating())
+                .comment(request.getComment().trim())
+                .status(ReviewStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        return toReviewDto(review);
+    }
+
     private ProductDetailResponse toProductDetailResponse(Product product) {
 
         List<String> imageUrls = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId())
@@ -150,6 +286,21 @@ public class ProductService {
             avgRating = 0.0;
         }
 
+        int reviewCount = (int) reviewRepository.countByProductIdAndStatus(product.getId(), ReviewStatus.APPROVED);
+        List<ReviewDto> reviews = reviewRepository
+            .findByProductIdAndStatusOrderByCreatedAtDesc(product.getId(), ReviewStatus.APPROVED, PageRequest.of(0, 5))
+            .stream()
+            .map(this::toReviewDto)
+            .toList();
+        List<ProductResponse> related = productRepository
+            .findByIsActiveTrueAndCategory_IdAndIdNotOrderByCreatedAtDesc(
+                product.getCategory().getId(),
+                product.getId(),
+                PageRequest.of(0, 4)
+            )
+            .map(this::toProductResponse)
+            .getContent();
+
         return ProductDetailResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -158,12 +309,30 @@ public class ProductService {
                 .originalPrice(product.getOriginalPrice())
                 .salePrice(product.getSalePrice())
                 .stockQty(product.getStockQty())
+            .active(Boolean.TRUE.equals(product.getIsActive()))
                 .thumbnailUrl(product.getThumbnailUrl())
                 .avgRating(avgRating)
+            .averageRating(avgRating)
+            .reviewCount(reviewCount)
+            .categoryName(product.getCategory() == null ? null : product.getCategory().getName())
+            .brandName(product.getBrand() == null ? null : product.getBrand().getName())
                 .imageUrls(imageUrls)
                 .specs(specs)
+            .reviews(reviews)
+            .related(related)
                 .build();
     }
+
+        private ReviewDto toReviewDto(Review review) {
+        return ReviewDto.builder()
+            .id(review.getId())
+            .rating(review.getRating())
+            .comment(review.getComment())
+            .userName(review.getUser() == null ? "Khách hàng" : review.getUser().getFullName())
+            .userAvatarUrl(review.getUser() == null ? null : review.getUser().getAvatarUrl())
+            .createdAt(review.getCreatedAt())
+            .build();
+        }
 
     @Transactional
     public ProductDetailResponse createProduct(CreateProductRequest req, MultipartFile[] images) {

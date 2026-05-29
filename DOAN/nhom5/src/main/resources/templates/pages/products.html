@@ -2,94 +2,431 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   th:replace="~{layout/base :: layout(~{::title}, ~{::main})}"
-
 >
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sản phẩm — ĐiệnMáy Pro</title>
   </head>
   <body>
     <main class="container py-5">
-      <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex justify-content-between align-items-center gap-2 mb-3 flex-wrap">
         <div>
           <div class="section-title">Tất cả <span>sản phẩm</span></div>
           <div class="text-muted">
-            Có <strong th:text="${products.totalElements}">0</strong> sản phẩm
+            Có <strong id="total-products">0</strong> sản phẩm
           </div>
         </div>
-        <a th:href="@{/products}" class="btn btn-outline-secondary">Bỏ lọc</a>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#mobileFilterSheet">
+            <i class="bi bi-funnel"></i> Bộ lọc
+          </button>
+          <button class="btn btn-outline-secondary" id="clearFiltersBtn">Bỏ lọc</button>
+        </div>
       </div>
-      <div class="row g-3">
-        <div class="col-lg-3">
-          <div class="admin-card p-3 h-100">
-            <h6 class="fw-bold mb-3">Bộ lọc</h6>
-            <div class="small text-muted mb-2">Danh mục</div>
-            <div class="list-group list-group-flush mb-3">
-              <a
-                th:each="cat : ${categories}"
-                th:href="@{/products(categoryId=${cat.id})}"
-                class="list-group-item list-group-item-action border-0 px-0"
-                th:text="${cat.name}"
-                >Danh mục</a
-              >
-            </div>
-            <div class="small text-muted mb-2">Thương hiệu</div>
-            <div class="list-group list-group-flush">
-              <a
-                th:each="brand : ${brands}"
-                th:href="@{/products(brandId=${brand.id})}"
-                class="list-group-item list-group-item-action border-0 px-0"
-                th:text="${brand.name}"
-                >Thương hiệu</a
-              >
-            </div>
+
+      <div class="admin-card p-3 mb-3">
+        <div class="row g-2 align-items-center">
+          <div class="col-lg-6">
+            <input id="keywordInput" class="form-control" placeholder="Tìm sản phẩm, ví dụ: samsung, oled..." />
+          </div>
+          <div class="col-6 col-lg-3">
+            <select id="sortSelect" class="form-select">
+              <option value="newest">Mới nhất</option>
+              <option value="price_asc">Giá tăng dần</option>
+              <option value="price_desc">Giá giảm dần</option>
+              <option value="popular">Phổ biến</option>
+            </select>
+          </div>
+          <div class="col-6 col-lg-3">
+            <button id="searchBtn" class="btn btn-primary w-100">Áp dụng</button>
           </div>
         </div>
-        <div class="col-lg-9">
-          <div class="row g-3">
-            <div class="col-6 col-md-4" th:each="p : ${products.content}">
-              <div class="product-card">
-                <div class="product-img-wrapper">
-                  <img
-                    th:if="${p.thumbnailUrl != null}"
-                    th:src="@{${p.thumbnailUrl}}"
-                    th:alt="${p.name}"
-                  />
-                  <div
-                    th:unless="${p.thumbnailUrl != null}"
-                    style="font-size: 54px"
-                  >
-                    📦
-                  </div>
-                </div>
-                <div class="product-body">
-                  <div class="product-brand">Sản phẩm</div>
-                  <div class="product-name" th:text="${p.name}">Tên</div>
-                  <div class="product-rating">
-                    ★★★★★ <span th:text="${p.avgRating}"></span>
-                  </div>
-                  <div
-                    th:if="${p.salePrice != null}"
-                    class="price-sale"
-                    th:text="${#numbers.formatDecimal(p.salePrice,0,'COMMA',0,'POINT') + 'đ'}"
-                  ></div>
-                  <div
-                    th:unless="${p.salePrice != null}"
-                    class="price-normal"
-                    th:text="${#numbers.formatDecimal(p.originalPrice,0,'COMMA',0,'POINT') + 'đ'}"
-                  ></div>
-                  <a
-                    th:href="@{/products/{slug}(slug=${p.slug})}"
-                    class="btn-add-cart mt-2"
-                    >Xem chi tiết</a
-                  >
-                </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-lg-3 d-none d-lg-block">
+          <div class="admin-card p-3 h-100" id="desktopFilterPanel">
+            <h6 class="fw-bold mb-3">Bộ lọc</h6>
+            <div class="small text-muted mb-2">Danh mục (multi-select)</div>
+            <div id="desktopCategories" class="mb-3"></div>
+
+            <div class="small text-muted mb-2">Thương hiệu (multi-select)</div>
+            <div id="desktopBrands" class="mb-3"></div>
+
+            <div class="small text-muted mb-2">Khoảng giá</div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <input id="minPriceInput" type="number" class="form-control" placeholder="Từ" min="0" />
+              </div>
+              <div class="col-6">
+                <input id="maxPriceInput" type="number" class="form-control" placeholder="Đến" min="0" />
               </div>
             </div>
+
+            <div class="d-grid gap-2">
+              <button id="applyFiltersDesktop" class="btn btn-primary">Áp dụng lọc</button>
+              <button id="resetFiltersDesktop" class="btn btn-outline-secondary">Xóa bộ lọc</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-9">
+          <div class="row g-3" id="productsGrid"></div>
+
+          <div class="admin-card p-3 text-center" id="emptyProducts" style="display: none">
+            Không tìm thấy sản phẩm phù hợp bộ lọc.
+          </div>
+
+          <nav class="mt-4" aria-label="Pagination">
+            <ul class="pagination justify-content-center" id="pagination"></ul>
           </div>
         </div>
       </div>
+
+      <div class="offcanvas offcanvas-bottom" tabindex="-1" id="mobileFilterSheet" style="height: 80vh">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title">Bộ lọc sản phẩm</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+          <div class="small text-muted mb-2">Danh mục</div>
+          <div id="mobileCategories" class="mb-3"></div>
+
+          <div class="small text-muted mb-2">Thương hiệu</div>
+          <div id="mobileBrands" class="mb-3"></div>
+
+          <div class="small text-muted mb-2">Khoảng giá</div>
+          <div class="row g-2 mb-3">
+            <div class="col-6"><input id="mobileMinPrice" type="number" class="form-control" placeholder="Từ" min="0" /></div>
+            <div class="col-6"><input id="mobileMaxPrice" type="number" class="form-control" placeholder="Đến" min="0" /></div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button id="applyFiltersMobile" class="btn btn-primary">Áp dụng lọc</button>
+            <button id="resetFiltersMobile" class="btn btn-outline-secondary">Xóa bộ lọc</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Xem nhanh sản phẩm</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="quickViewContent"></div>
+          </div>
+        </div>
+      </div>
+
+      <script type="module">
+        const state = {
+          keyword: "",
+          categoryIds: [],
+          brandIds: [],
+          minPrice: "",
+          maxPrice: "",
+          sort: "newest",
+          page: 0,
+          size: 12,
+          categories: [],
+          brands: [],
+          priceRange: { min: 0, max: 100000000 },
+          productMap: new Map(),
+        };
+
+        function formatVND(v) {
+          return Number(v || 0).toLocaleString("vi-VN") + "đ";
+        }
+
+        function parseQueryState() {
+          const params = new URLSearchParams(window.location.search);
+          state.keyword = params.get("keyword") || "";
+          state.categoryIds = params.getAll("categoryId").map(Number).filter(Boolean);
+          state.brandIds = params.getAll("brandId").map(Number).filter(Boolean);
+          state.minPrice = params.get("minPrice") || "";
+          state.maxPrice = params.get("maxPrice") || "";
+          state.sort = params.get("sort") || "newest";
+          state.page = Math.max(0, Number(params.get("page") || 0));
+          state.size = Math.max(1, Number(params.get("size") || 12));
+        }
+
+        function syncQuery() {
+          const params = new URLSearchParams();
+          if (state.keyword) params.set("keyword", state.keyword);
+          state.categoryIds.forEach((id) => params.append("categoryId", String(id)));
+          state.brandIds.forEach((id) => params.append("brandId", String(id)));
+          if (state.minPrice) params.set("minPrice", state.minPrice);
+          if (state.maxPrice) params.set("maxPrice", state.maxPrice);
+          if (state.sort) params.set("sort", state.sort);
+          params.set("page", String(state.page));
+          params.set("size", String(state.size));
+          history.pushState({}, "", "?" + params.toString());
+        }
+
+        function productCard(product) {
+          const sale = Number(product.salePrice || 0);
+          const original = Number(product.originalPrice || 0);
+          const display = sale || original;
+          const stock = Number(product.stockQty || 0);
+          const disabled = stock <= 0;
+          const discount = sale && original > sale ? Math.round(((original - sale) / original) * 100) : 0;
+          const badge = disabled
+            ? '<span class="badge-sale" style="background:#64748b">Hết hàng</span>'
+            : discount > 0
+              ? `<span class="badge-sale">-${discount}%</span>`
+              : '<span class="badge-sale">Mới</span>';
+
+          return `
+            <div class="col-6 col-md-6 col-lg-4">
+              <div class="product-card" data-product-id="${product.id}">
+                <div class="product-img-wrapper">
+                  ${badge}
+                  ${product.thumbnailUrl
+                    ? `<img src="${product.thumbnailUrl}" alt="${product.name}">`
+                    : `<div style="font-size:54px">📦</div>`}
+                  <button class="btn-quick-view" data-id="${product.id}">👁 Xem nhanh</button>
+                </div>
+                <div class="product-body">
+                  <div class="product-name">${product.name}</div>
+                  <div class="product-rating">★★★★★ <span>(${Number(product.avgRating || 0).toFixed(1)})</span></div>
+                  ${discount > 0 ? `<div class="price-original">${formatVND(original)}</div>` : ""}
+                  <div class="${discount > 0 ? "price-sale" : "price-normal"}">${formatVND(display)}</div>
+                  <small class="text-muted">Tồn kho: ${stock}</small>
+                  <div class="d-grid gap-2 mt-2">
+                    <button class="btn-add-cart" data-product-id="${product.id}" ${disabled ? "disabled" : ""}>${disabled ? "Hết hàng" : "🛒 Thêm vào giỏ"}</button>
+                    <a href="/products/${product.slug}" class="btn btn-outline-secondary btn-sm">Xem chi tiết</a>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+        }
+
+        function renderCheckboxList(containerId, items, type, selected) {
+          const container = document.getElementById(containerId);
+          if (!container) return;
+          container.innerHTML = items.map((item) => `
+            <label class="d-flex align-items-center gap-2 mb-2" style="font-size:14px">
+              <input type="checkbox" class="form-check-input m-0" data-type="${type}" value="${item.id}" ${selected.includes(item.id) ? "checked" : ""}>
+              <span>${item.name}</span>
+            </label>
+          `).join("");
+        }
+
+        function renderProducts(items) {
+          const grid = document.getElementById("productsGrid");
+          const empty = document.getElementById("emptyProducts");
+          state.productMap = new Map(items.map((it) => [it.id, it]));
+          if (!items.length) {
+            grid.innerHTML = "";
+            empty.style.display = "block";
+            return;
+          }
+          empty.style.display = "none";
+          grid.innerHTML = items.map(productCard).join("");
+        }
+
+        function renderPagination(data) {
+          const pagination = document.getElementById("pagination");
+          const totalPages = Number(data.totalPages || 0);
+          const currentPage = Number(data.currentPage || 0);
+          if (totalPages <= 1) {
+            pagination.innerHTML = "";
+            return;
+          }
+
+          const items = [];
+          items.push(`<li class="page-item ${currentPage === 0 ? "disabled" : ""}"><button class="page-link" data-page="${Math.max(0, currentPage - 1)}">Trước</button></li>`);
+
+          const start = Math.max(0, currentPage - 2);
+          const end = Math.min(totalPages - 1, currentPage + 2);
+          for (let p = start; p <= end; p++) {
+            items.push(`<li class="page-item ${p === currentPage ? "active" : ""}"><button class="page-link" data-page="${p}">${p + 1}</button></li>`);
+          }
+
+          items.push(`<li class="page-item ${currentPage >= totalPages - 1 ? "disabled" : ""}"><button class="page-link" data-page="${Math.min(totalPages - 1, currentPage + 1)}">Sau</button></li>`);
+          pagination.innerHTML = items.join("");
+        }
+
+        function bindFilterInputs() {
+          document.getElementById("keywordInput").value = state.keyword;
+          document.getElementById("sortSelect").value = state.sort;
+          document.getElementById("minPriceInput").value = state.minPrice;
+          document.getElementById("maxPriceInput").value = state.maxPrice;
+          document.getElementById("mobileMinPrice").value = state.minPrice;
+          document.getElementById("mobileMaxPrice").value = state.maxPrice;
+        }
+
+        function collectChecked(selector) {
+          return Array.from(document.querySelectorAll(selector + ":checked"))
+            .map((el) => Number(el.value))
+            .filter(Boolean);
+        }
+
+        function applyDesktopFilters() {
+          state.keyword = document.getElementById("keywordInput").value.trim();
+          state.sort = document.getElementById("sortSelect").value || "newest";
+          state.minPrice = document.getElementById("minPriceInput").value.trim();
+          state.maxPrice = document.getElementById("maxPriceInput").value.trim();
+          state.categoryIds = collectChecked('#desktopCategories input[data-type="category"]');
+          state.brandIds = collectChecked('#desktopBrands input[data-type="brand"]');
+          state.page = 0;
+          filterProducts();
+        }
+
+        function applyMobileFilters() {
+          state.keyword = document.getElementById("keywordInput").value.trim();
+          state.sort = document.getElementById("sortSelect").value || "newest";
+          state.minPrice = document.getElementById("mobileMinPrice").value.trim();
+          state.maxPrice = document.getElementById("mobileMaxPrice").value.trim();
+          state.categoryIds = collectChecked('#mobileCategories input[data-type="category"]');
+          state.brandIds = collectChecked('#mobileBrands input[data-type="brand"]');
+          state.page = 0;
+          filterProducts();
+          bootstrap.Offcanvas.getOrCreateInstance(document.getElementById("mobileFilterSheet")).hide();
+        }
+
+        function resetFilters() {
+          state.keyword = "";
+          state.categoryIds = [];
+          state.brandIds = [];
+          state.minPrice = "";
+          state.maxPrice = "";
+          state.sort = "newest";
+          state.page = 0;
+          bindFilterInputs();
+          renderCheckboxList("desktopCategories", state.categories, "category", state.categoryIds);
+          renderCheckboxList("desktopBrands", state.brands, "brand", state.brandIds);
+          renderCheckboxList("mobileCategories", state.categories, "category", state.categoryIds);
+          renderCheckboxList("mobileBrands", state.brands, "brand", state.brandIds);
+          filterProducts();
+        }
+
+        async function filterProducts() {
+          const url = new URL("/api/products", window.location.origin);
+          if (state.keyword) url.searchParams.set("keyword", state.keyword);
+          state.categoryIds.forEach((id) => url.searchParams.append("categoryId", String(id)));
+          state.brandIds.forEach((id) => url.searchParams.append("brandId", String(id)));
+          if (state.minPrice) url.searchParams.set("minPrice", state.minPrice);
+          if (state.maxPrice) url.searchParams.set("maxPrice", state.maxPrice);
+          url.searchParams.set("sort", state.sort);
+          url.searchParams.set("page", String(state.page));
+          url.searchParams.set("size", String(state.size));
+
+          const res = await fetch(url);
+          if (!res.ok) {
+            if (typeof window.showToast === "function") {
+              window.showToast("Không tải được danh sách sản phẩm", "error");
+            }
+            return;
+          }
+
+          const data = await res.json();
+          state.categories = data.filters?.categories || state.categories;
+          state.brands = data.filters?.brands || state.brands;
+          state.priceRange = data.filters?.priceRange || state.priceRange;
+
+          renderCheckboxList("desktopCategories", state.categories, "category", state.categoryIds);
+          renderCheckboxList("desktopBrands", state.brands, "brand", state.brandIds);
+          renderCheckboxList("mobileCategories", state.categories, "category", state.categoryIds);
+          renderCheckboxList("mobileBrands", state.brands, "brand", state.brandIds);
+
+          document.getElementById("total-products").textContent = String(data.totalElements || 0);
+          renderProducts(data.content || []);
+          renderPagination(data);
+          syncQuery();
+        }
+
+        function openQuickView(productId) {
+          const p = state.productMap.get(productId);
+          if (!p) return;
+          const stock = Number(p.stockQty || 0);
+          const displayPrice = p.salePrice || p.originalPrice;
+          document.getElementById("quickViewContent").innerHTML = `
+            <div class="row g-3">
+              <div class="col-md-5 text-center">
+                ${p.thumbnailUrl
+                  ? `<img src="${p.thumbnailUrl}" alt="${p.name}" style="width:100%;max-height:280px;object-fit:cover;border-radius:10px">`
+                  : `<div style="height:280px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;font-size:64px">📦</div>`}
+              </div>
+              <div class="col-md-7">
+                <h5>${p.name}</h5>
+                <div class="mb-2">
+                  ${p.salePrice ? `<span class="price-original">${formatVND(p.originalPrice)}</span>` : ""}
+                  <div class="${p.salePrice ? "price-sale" : "price-normal"}">${formatVND(displayPrice)}</div>
+                </div>
+                <div class="mb-3">Tồn kho: <strong>${stock}</strong></div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-primary" id="qvAddCart" ${stock <= 0 ? "disabled" : ""}>${stock <= 0 ? "Hết hàng" : "🛒 Thêm vào giỏ"}</button>
+                  <a href="/products/${p.slug}" class="btn btn-outline-secondary">Xem chi tiết</a>
+                </div>
+              </div>
+            </div>`;
+
+          const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("quickViewModal"));
+          modal.show();
+          const addBtn = document.getElementById("qvAddCart");
+          if (addBtn && stock > 0) {
+            addBtn.addEventListener("click", () => {
+              if (typeof window.addToCart === "function") {
+                window.addToCart(p.id);
+              }
+            });
+          }
+        }
+
+        document.getElementById("searchBtn").addEventListener("click", applyDesktopFilters);
+        document.getElementById("applyFiltersDesktop").addEventListener("click", applyDesktopFilters);
+        document.getElementById("applyFiltersMobile").addEventListener("click", applyMobileFilters);
+        document.getElementById("resetFiltersDesktop").addEventListener("click", resetFilters);
+        document.getElementById("resetFiltersMobile").addEventListener("click", resetFilters);
+        document.getElementById("clearFiltersBtn").addEventListener("click", resetFilters);
+        document.getElementById("sortSelect").addEventListener("change", () => {
+          state.sort = document.getElementById("sortSelect").value;
+          state.page = 0;
+          filterProducts();
+        });
+        document.getElementById("keywordInput").addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            applyDesktopFilters();
+          }
+        });
+
+        document.addEventListener("click", (e) => {
+          const addBtn = e.target.closest(".btn-add-cart[data-product-id]");
+          if (addBtn) {
+            const id = Number(addBtn.dataset.productId);
+            if (typeof window.addToCart === "function") {
+              window.addToCart(id);
+            }
+            return;
+          }
+
+          const quickBtn = e.target.closest(".btn-quick-view[data-id]");
+          if (quickBtn) {
+            openQuickView(Number(quickBtn.dataset.id));
+            return;
+          }
+
+          const pageBtn = e.target.closest("#pagination .page-link[data-page]");
+          if (pageBtn && !pageBtn.closest(".disabled") && !pageBtn.closest(".active")) {
+            state.page = Number(pageBtn.dataset.page || 0);
+            filterProducts();
+          }
+        });
+
+        window.addEventListener("popstate", () => {
+          parseQueryState();
+          bindFilterInputs();
+          filterProducts();
+        });
+
+        parseQueryState();
+        bindFilterInputs();
+        await filterProducts();
+      </script>
     </main>
   </body>
 </html>

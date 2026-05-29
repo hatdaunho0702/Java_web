@@ -12,6 +12,7 @@ import com.dienmay.entity.nhom5.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,30 +27,31 @@ public class CartService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
-    public List<CartResponse> getCart(String userId) {
-        return cartItemRepository.findByUser_Uid(userId)
+    public List<CartResponse> getCart(String userUid) {
+        return cartItemRepository.findByUser_Uid(userUid)
                 .stream()
                 .map(item -> {
-                    BigDecimal unitPrice = item.getProduct().getSalePrice() != null
-                            ? item.getProduct().getSalePrice()
-                            : item.getProduct().getOriginalPrice();
+                    Product p = item.getProduct();
+                    BigDecimal unitPrice = p.getSalePrice() != null
+                            ? p.getSalePrice()
+                            : p.getOriginalPrice();
                     BigDecimal subtotal = unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
                     return CartResponse.builder()
                             .cartItemId(item.getId())
-                            .productId(item.getProduct().getId())
-                            .productName(item.getProduct().getName())
-                            .thumbnailUrl(item.getProduct().getThumbnailUrl())
+                            .productId(p.getId())
+                            .productName(p.getName())
+                            .thumbnailUrl(p.getThumbnailUrl())
                             .quantity(item.getQuantity())
                             .unitPrice(unitPrice)
                             .subtotal(subtotal)
-                            .stockQty(item.getProduct().getStockQty())
+                            .stockQty(p.getStockQty())
                             .build();
                 })
                 .toList();
     }
 
     @Transactional
-    public void addToCart(String userId, Long productId, int quantity) {
+    public void addToCart(String userUid, Long productId, int quantity) {
         if (quantity <= 0) {
             throw new BadRequestException("Số lượng phải lớn hơn 0");
         }
@@ -58,25 +60,23 @@ public class CartService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm"));
 
         if (!Boolean.TRUE.equals(product.getIsActive())) {
-            throw new BadRequestException("Sản phẩm đang tạm ngưng bán");
+            throw new BadRequestException("Sản phẩm không còn kinh doanh");
         }
 
-        if (product.getStockQty() < quantity) {
-            throw new BadRequestException("Số lượng yêu cầu vượt quá tồn kho");
+        Optional<CartItem> existing = cartItemRepository.findByUser_UidAndProduct_Id(userUid, productId);
+        int totalQty = quantity + existing.map(CartItem::getQuantity).orElse(0);
+        if (totalQty > product.getStockQty()) {
+            throw new BadRequestException("Chỉ còn " + product.getStockQty() + " sản phẩm trong kho");
         }
 
-        CartItem cartItem = cartItemRepository.findByUser_UidAndProductId(userId, productId).orElse(null);
-        if (cartItem != null) {
-            int newQty = cartItem.getQuantity() + quantity;
-            if (newQty > product.getStockQty()) {
-                throw new BadRequestException("Số lượng trong giỏ vượt quá tồn kho");
-            }
-            cartItem.setQuantity(newQty);
-            cartItemRepository.save(cartItem);
+        if (existing.isPresent()) {
+            CartItem item = existing.get();
+            item.setQuantity(totalQty);
+            cartItemRepository.save(item);
             return;
         }
 
-        User user = userRepository.findByUid(userId)
+        User user = userRepository.findByUid(userUid)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
         cartItemRepository.save(CartItem.builder()
@@ -88,7 +88,7 @@ public class CartService {
     }
 
     @Transactional
-    public void updateCartItem(String userId, Long cartItemId, int quantity) {
+    public void updateCartItem(String userUid, Long cartItemId, int quantity) {
         if (quantity <= 0) {
             throw new BadRequestException("Số lượng phải lớn hơn 0");
         }
@@ -96,12 +96,12 @@ public class CartService {
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm trong giỏ"));
 
-        if (!cartItem.getUser().getUid().equals(userId)) {
+        if (!cartItem.getUser().getUid().equals(userUid)) {
             throw new BadRequestException("Bạn không có quyền sửa giỏ hàng này");
         }
 
-        if (cartItem.getProduct().getStockQty() < quantity) {
-            throw new BadRequestException("Số lượng yêu cầu vượt quá tồn kho");
+        if (quantity > cartItem.getProduct().getStockQty()) {
+            throw new BadRequestException("Chỉ còn " + cartItem.getProduct().getStockQty() + " sản phẩm trong kho");
         }
 
         cartItem.setQuantity(quantity);
@@ -109,17 +109,21 @@ public class CartService {
     }
 
     @Transactional
-    public void removeCartItem(String userId, Long cartItemId) {
+    public void removeCartItem(String userUid, Long cartItemId) {
         CartItem cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm trong giỏ"));
-        if (!cartItem.getUser().getUid().equals(userId)) {
+        if (!cartItem.getUser().getUid().equals(userUid)) {
             throw new BadRequestException("Bạn không có quyền xóa sản phẩm trong giỏ này");
         }
         cartItemRepository.delete(cartItem);
     }
 
+    public int countCartItems(String userUid) {
+        return cartItemRepository.findByUser_Uid(userUid).size();
+    }
+
     @Transactional
-    public void clearCart(String userId) {
-        cartItemRepository.deleteByUser_Uid(userId);
+    public void clearCart(String userUid) {
+        cartItemRepository.deleteByUser_Uid(userUid);
     }
 }

@@ -13,12 +13,13 @@
       <div class="admin-card">
         <div class="admin-card-header">
           <span>Danh sách đơn hàng</span>
-          <div class="btn-group btn-group-sm">
-            <button
-              class="btn btn-outline-secondary"
-              th:each="status : ${statusList}"
-              th:text="${status}"
-            ></button>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="filterStatus" class="form-control form-control-sm">
+              <option value="">--Tất cả trạng thái--</option>
+              <option th:each="s : ${statusList}" th:value="${s}" th:text="${s}"></option>
+            </select>
+            <input id="filterKeyword" class="form-control form-control-sm" placeholder="Tìm theo mã hoặc tên khách" />
+            <button class="btn btn-sm btn-primary" id="btnSearch">Tìm</button>
           </div>
         </div>
         <table class="table admin-table mb-0">
@@ -32,24 +33,78 @@
             </tr>
           </thead>
           <tbody>
-            <tr th:each="order : ${orders.content}">
-              <td th:text="${order.orderCode}"></td>
-              <td th:text="${order.recipientName}"></td>
-              <td
-                th:text="${#numbers.formatDecimal(order.totalAmount,0,'COMMA',0,'POINT') + 'đ'}"
-              ></td>
-              <td th:text="${order.status}"></td>
-              <td>
-                <a
-                  th:href="@{/admin/orders/{id}(id=${order.id})}"
-                  class="btn btn-sm btn-outline-secondary"
-                  >Chi tiết</a
-                >
-              </td>
+            <!-- will be populated by JS -->
+            <tr id="tplRow" style="display:none">
+              <td class="col-code"></td>
+              <td class="col-customer"></td>
+              <td class="col-total"></td>
+              <td class="col-status"></td>
+              <td class="col-action"></td>
             </tr>
           </tbody>
         </table>
       </div>
+    </div>
+
+    <script>
+      async function fetchOrders(page=0,size=20){
+        const status = document.getElementById('filterStatus').value;
+        const keyword = document.getElementById('filterKeyword').value;
+        const qs = new URLSearchParams({page,size});
+        if(status) qs.set('status', status);
+        if(keyword) qs.set('keyword', keyword);
+        const res = await fetch('/api/admin/orders?'+qs.toString(),{credentials:'same-origin'});
+        if(!res.ok){ alert('Không thể tải danh sách đơn hàng'); return; }
+        const pageData = await res.json();
+        const tbody = document.querySelector('table.admin-table tbody');
+        tbody.querySelectorAll('tr:not(#tplRow)').forEach(el=>el.remove());
+        const tpl = document.getElementById('tplRow');
+        for(const o of pageData.content){
+          const tr = tpl.cloneNode(true);
+          tr.style.display='';
+          tr.id='';
+          tr.querySelector('.col-code').textContent = o.orderCode;
+          tr.querySelector('.col-customer').textContent = o.recipientName || '';
+          tr.querySelector('.col-total').textContent = (o.totalAmount!=null? o.totalAmount + 'đ' : '');
+          const statusEl = tr.querySelector('.col-status');
+          statusEl.textContent = o.status || '';
+          // badge classes
+          statusEl.className = 'col-status';
+          const s = o.status || '';
+          if(s==='PENDING') statusEl.classList.add('badge','badge-warning');
+          else if(s==='CONFIRMED') statusEl.classList.add('badge','badge-primary');
+          else if(s==='SHIPPING') statusEl.classList.add('badge','badge-success');
+          else if(s==='COMPLETED') statusEl.classList.add('badge','badge-secondary');
+          else if(s==='CANCELLED') statusEl.classList.add('badge','badge-danger');
+
+          const a = document.createElement('a');
+          a.href = '/admin/orders/'+o.id;
+          a.className='btn btn-sm btn-outline-secondary';
+          a.textContent='Chi tiết';
+          tr.querySelector('.col-action').appendChild(a);
+
+          // inline status change select
+          const sel = document.createElement('select');
+          sel.className='form-control form-control-sm';
+          ['','PENDING','CONFIRMED','SHIPPING','COMPLETED','CANCELLED'].forEach(v=>{
+            const opt=document.createElement('option'); opt.value=v; opt.textContent=v||'--'; if(v===o.status) opt.selected=true; sel.appendChild(opt);
+          });
+          sel.addEventListener('change', async ()=>{
+            const newStatus = sel.value;
+            if(!newStatus) return;
+            if(!confirm('Cập nhật trạng thái sang '+newStatus+'?')) return;
+            const r = await fetch('/api/admin/orders/'+o.id+'/status', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status:newStatus})});
+            if(r.ok) { alert('Cập nhật thành công'); fetchOrders(page,size);} else { alert('Lỗi khi cập nhật'); }
+          });
+          tr.querySelector('.col-action').appendChild(sel);
+
+          tbody.appendChild(tr);
+        }
+      }
+
+      document.getElementById('btnSearch').addEventListener('click', ()=>fetchOrders());
+      window.addEventListener('load', ()=>fetchOrders());
+    </script>
     </div>
   </body>
 </html>
