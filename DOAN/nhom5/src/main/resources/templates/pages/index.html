@@ -6,238 +6,190 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Trang chủ — ĐiệnMáy Pro</title>
+    <title>cyber — Technology Store</title>
   </head>
   <body>
     <main>
-      <section class="hero-section" id="hero-slider">
+      <!-- 1. Hero Section (iPhone 14 Pro) -->
+      <section class="cyber-hero">
         <div class="container">
-          <div class="hero-floating-card" style="padding: 0; overflow: hidden">
-            <div class="row g-0 align-items-stretch" id="hero-content"></div>
-            <div
-              class="d-flex justify-content-center gap-2 py-3"
-              id="hero-dots"
-            ></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="py-5">
-        <div class="container">
-          <div class="section-title">Danh mục <span>nổi bật</span></div>
-          <div class="section-divider"></div>
-          <div class="row g-3" id="featured-categories"></div>
-        </div>
-      </section>
-
-      <section class="pb-5">
-        <div class="container">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="section-title">Sản phẩm <span>mới về</span></div>
-            <a
-              th:href="@{/products(sort=newest)}"
-              style="color: var(--accent); font-weight: 600"
-              >Xem tất cả →</a
-            >
-          </div>
-          <div class="section-divider"></div>
-          <div class="row g-3" id="new-arrivals"></div>
-        </div>
-      </section>
-
-      <section class="pb-5">
-        <div class="container">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="section-title">Đang <span>giảm giá</span></div>
-            <a
-              th:href="@{/products(sort=price_asc)}"
-              style="color: var(--accent); font-weight: 600"
-              >Săn deal →</a
-            >
-          </div>
-          <div class="section-divider"></div>
-          <div class="row g-3" id="on-sale"></div>
-        </div>
-      </section>
-
-      <section class="pb-5">
-        <div class="container">
-          <div class="promo-banner">
-            <span
-              class="badge mb-2"
-              style="
-                background: rgba(255, 255, 255, 0.3);
-                color: white;
-                padding: 6px 14px;
-              "
-              >⚡ FLASH SALE</span
-            >
-            <h3>Siêu sale đến hết hôm nay<br />Giảm sâu toàn bộ ngành hàng</h3>
-            <p>Mỗi ngày một deal sốc, số lượng có hạn</p>
-            <div class="d-flex gap-3 my-3 flex-wrap" id="countdown">
-              <div class="countdown-box">
-                <div class="countdown-val" id="cd-hours">00</div>
-                <div class="countdown-lbl">Giờ</div>
-              </div>
-              <div class="countdown-box">
-                <div class="countdown-val" id="cd-mins">00</div>
-                <div class="countdown-lbl">Phút</div>
-              </div>
-              <div class="countdown-box">
-                <div class="countdown-val" id="cd-secs">00</div>
-                <div class="countdown-lbl">Giây</div>
+          <div class="row align-items-center">
+            <div class="col-lg-6 reveal-on-scroll">
+              <span class="cyber-hero-badge">Pro. Beyond.</span>
+              <h1 class="cyber-hero-title">IPhone 14 <strong>Pro</strong></h1>
+              <p class="cyber-hero-desc">Created to change everything for the better. For everyone. Special premium performance.</p>
+              <a th:href="@{/products}" class="btn-cyber-outline">Shop Now</a>
+            </div>
+            <div class="col-lg-6 text-center reveal-on-scroll">
+              <div class="cyber-hero-img-wrapper">
+                <img class="cyber-hero-img" src="/uploads/images/banner/1.jpg" alt="Banner cyber">
               </div>
             </div>
-            <a th:href="@{/products(sort=popular)}" class="btn-promo"
-              >Xem ngay →</a
-            >
           </div>
         </div>
       </section>
 
-      <section class="pb-5">
-        <div class="container">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="section-title">Bán chạy <span>nhất</span></div>
-            <a
-              th:href="@{/products(sort=popular)}"
-              style="color: var(--accent); font-weight: 600"
-              >Top sản phẩm →</a
-            >
+      <!-- 2. Grid Banners Section (PS5, Macbook, etc.) -->
+      <section class="cyber-promo-grid reveal-on-scroll">
+        <!-- Left column: PS5 and sub-grid -->
+        <div class="cyber-promo-left">
+          <!-- Playstation 5 -->
+          <div class="cyber-promo-block cyber-bg-light">
+            <div class="cyber-promo-block-content">
+              <h2 class="cyber-promo-block-title">Playstation 5</h2>
+              <p class="cyber-promo-block-desc">A incredibly powerful CPU, GPU, and SSD with Integrated I/O will redefine your PlayStation experience.</p>
+            </div>
+            <img src="https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&q=80&w=400" alt="Playstation 5">
           </div>
-          <div class="section-divider"></div>
-          <div class="row g-3" id="best-seller"></div>
+          
+          <!-- Sub grid: Airpods Max & Vision Pro -->
+          <div class="cyber-promo-sub-grid">
+            <!-- AirPods Max -->
+            <div class="cyber-promo-sub-block cyber-bg-light">
+              <div class="cyber-promo-block-content" style="max-width: 140px;">
+                <h3 class="cyber-promo-block-title" style="font-size: 20px;">Apple<br>AirPods <strong>Max</strong></h3>
+                <p class="cyber-promo-block-desc" style="font-size: 11px;">An entirely reimagined over-ear headphone.</p>
+              </div>
+              <img src="https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?auto=format&fit=crop&q=80&w=260" alt="AirPods Max">
+            </div>
+            <!-- Vision Pro -->
+            <div class="cyber-promo-sub-block cyber-bg-black text-white">
+              <div class="cyber-promo-block-content" style="max-width: 140px;">
+                <h3 class="cyber-promo-block-title cyber-text-white" style="font-size: 20px;">Apple<br>Vision <strong>Pro</strong></h3>
+                <p class="cyber-promo-block-desc" style="font-size: 11px;">An immersive way to experience entertainment.</p>
+              </div>
+              <img src="https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&q=80&w=260" alt="Vision Pro">
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column: Macbook Air -->
+        <div class="cyber-promo-right">
+          <div class="cyber-promo-right-content">
+            <h2 class="cyber-promo-block-title" style="font-size: 40px; font-weight: 300;">Macbook <strong>Air</strong></h2>
+            <p class="cyber-promo-block-desc" style="margin-bottom: 24px;">The new 15-inch MacBook Air makes room for more of what you love with a spacious Liquid Retina display.</p>
+            <a th:href="@{/products}" class="btn-cyber-outline-dark">Shop Now</a>
+          </div>
+          <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=500" alt="Macbook Air">
         </div>
       </section>
 
+      <!-- 3. Browse By Category Section -->
+      <section class="py-5 container reveal-on-scroll">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="cyber-sora" style="font-size: 22px; font-weight: 600;">Browse By Category</h3>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 36px; height: 36px; padding: 0;" onclick="window.showToast('Tính năng đang phát triển!', 'info')"><i class="bi bi-chevron-left"></i></button>
+            <button class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 36px; height: 36px; padding: 0;" onclick="window.showToast('Tính năng đang phát triển!', 'info')"><i class="bi bi-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="row g-3" id="featured-categories"></div>
+      </section>
+
+      <!-- 4. Tab Products Grid (New Arrival, Bestseller, Featured) -->
+      <section class="py-5 container reveal-on-scroll">
+        <div class="cyber-tabs">
+          <button class="cyber-tab-btn active" data-tab="new-arrivals" onclick="switchProductTab('new-arrivals')">New Arrival</button>
+          <button class="cyber-tab-btn" data-tab="best-seller" onclick="switchProductTab('best-seller')">Bestseller</button>
+          <button class="cyber-tab-btn" data-tab="on-sale" onclick="switchProductTab('on-sale')">Featured Products</button>
+        </div>
+        
+        <div class="row g-4" id="tab-products-grid"></div>
+      </section>
+
+      <!-- 5. Featured 4 Columns Section -->
+      <section class="cyber-featured-cols reveal-on-scroll">
+        <!-- Col 1 -->
+        <div class="cyber-featured-col cyber-bg-light">
+          <div class="cyber-featured-col-header">
+            <h3 class="cyber-col-title">Popular <strong>Products</strong></h3>
+            <p class="cyber-col-desc">iPad combines a magnificent 10.2-inch Retina display, incredible performance, multitasking and ease of use.</p>
+          </div>
+          <a th:href="@{/products}" class="btn-cyber-outline-dark">Shop Now</a>
+          <img src="https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?auto=format&fit=crop&q=80&w=260" alt="Earbuds">
+        </div>
+        <!-- Col 2 -->
+        <div class="cyber-featured-col" style="background-color: #F9F9F9;">
+          <div class="cyber-featured-col-header">
+            <h3 class="cyber-col-title">Ipad <strong>Pro</strong></h3>
+            <p class="cyber-col-desc">iPad combines a magnificent 10.2-inch Retina display, incredible performance, multitasking and ease of use.</p>
+          </div>
+          <a th:href="@{/products}" class="btn-cyber-outline-dark">Shop Now</a>
+          <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&q=80&w=260" alt="iPad Pro">
+        </div>
+        <!-- Col 3 -->
+        <div class="cyber-featured-col" style="background-color: #EAEAEA;">
+          <div class="cyber-featured-col-header">
+            <h3 class="cyber-col-title">Samsung <strong>Galaxy</strong></h3>
+            <p class="cyber-col-desc">iPad combines a magnificent 10.2-inch Retina display, incredible performance, multitasking and ease of use.</p>
+          </div>
+          <a th:href="@{/products}" class="btn-cyber-outline-dark">Shop Now</a>
+          <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&q=80&w=260" alt="Z Fold">
+        </div>
+        <!-- Col 4 -->
+        <div class="cyber-featured-col cyber-bg-black text-white">
+          <div class="cyber-featured-col-header">
+            <h3 class="cyber-col-title cyber-text-white">Macbook <strong>Pro</strong></h3>
+            <p class="cyber-col-desc">iPad combines a magnificent 10.2-inch Retina display, incredible performance, multitasking and ease of use.</p>
+          </div>
+          <a th:href="@{/products}" class="btn-cyber-outline">Shop Now</a>
+          <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=260" alt="Macbook Pro">
+        </div>
+      </section>
+
+      <!-- 6. Discounts Grid Section -->
+      <section class="py-5 container reveal-on-scroll">
+        <h3 class="cyber-sora mb-4" style="font-size: 22px; font-weight: 600;">Discounts up to -50%</h3>
+        <div class="row g-4" id="discounts-grid"></div>
+      </section>
+
+      <!-- 7. Big Summer Sale Banner -->
+      <section class="cyber-summer-banner reveal-on-scroll">
+        <div class="container text-center">
+          <h2 class="cyber-summer-title">Big Summer <strong>Sale</strong></h2>
+          <p class="cyber-summer-desc">Comprises elements that creates beauty and convenience for your everyday tasks and premium style.</p>
+          <a th:href="@{/products}" class="btn-cyber-outline">Shop Now</a>
+        </div>
+      </section>
+
+      <!-- Dynamic Data Script -->
       <script type="module">
-        const HERO_SLIDES = [
-          {
-            badge: "🔥 Khai trương mùa hè",
-            title: "Công nghệ mới\nGiá tốt mỗi ngày",
-            desc: "Laptop, điện thoại, tivi chính hãng. Giao nhanh trong ngày tại nội thành.",
-            cta1: { text: "Mua ngay", href: "/products" },
-            cta2: { text: "Xem ưu đãi", href: "/products?sort=popular" },
-            bg: "linear-gradient(120deg,#0f172a,#1d4ed8,#0ea5e9)",
-            emoji: "💻 📱 📺",
-          },
-          {
-            badge: "⚡ Flash Deal 24h",
-            title: "Giảm sâu đến 50%\nSố lượng có hạn",
-            desc: "Săn mã giảm giá, tích điểm thành viên và nhận ưu đãi độc quyền theo khung giờ.",
-            cta1: { text: "Săn deal", href: "/products?sort=price_asc" },
-            cta2: { text: "Hàng mới về", href: "/products?sort=newest" },
-            bg: "linear-gradient(120deg,#7f1d1d,#ea580c,#f59e0b)",
-            emoji: "🎧 ⌚ 🖥️",
-          },
-          {
-            badge: "🚚 Miễn phí vận chuyển",
-            title: "Đơn từ 500K\nGiao hàng toàn quốc",
-            desc: "Đổi trả 7 ngày, bảo hành tận nơi, hỗ trợ kỹ thuật 24/7.",
-            cta1: { text: "Khám phá", href: "/products" },
-            cta2: { text: "Danh mục", href: "/products" },
-            bg: "linear-gradient(120deg,#14532d,#0d9488,#0891b2)",
-            emoji: "🧊 🧺 📦",
-          },
-        ];
-
-        const iconPalette = [
-          "#eef2ff",
-          "#fef3c7",
-          "#ecfeff",
-          "#f0fdf4",
-          "#fff1f2",
-          "#f5f3ff",
-        ];
         const iconGlyph = [
           "bi-phone",
-          "bi-laptop",
-          "bi-tv",
-          "bi-speaker",
           "bi-watch",
-          "bi-cpu",
+          "bi-camera",
+          "bi-headphones",
+          "bi-laptop",
+          "bi-controller"
         ];
 
         function formatVND(value) {
           return Number(value || 0).toLocaleString("vi-VN") + "đ";
         }
 
-        function getDiscountPercent(product) {
-          const original = Number(product.originalPrice || 0);
-          const sale = Number(product.salePrice || 0);
-          if (!original || !sale || sale >= original) {
-            return 0;
-          }
-          return Math.round(((original - sale) / original) * 100);
-        }
-
-        function productCard(product, badgeType) {
+        function productCard(product, index = 0) {
           const price = Number(product.salePrice || product.originalPrice || 0);
-          const hasSale = !!product.salePrice;
           const stock = Number(product.stockQty || 0);
           const disabled = stock <= 0;
-          const salePercent = getDiscountPercent(product);
-          let badge = '<span class="badge-sale">Mới</span>';
-          if (disabled) {
-            badge =
-              '<span class="badge-sale" style="background:#64748b">Hết hàng</span>';
-          } else if (badgeType === "sale" && salePercent > 0) {
-            badge = `<span class=\"badge-sale\">-${salePercent}%</span>`;
-          }
 
           return `
-            <div class="col-6 col-md-4 col-lg-3">
-              <div class="product-card" data-product-id="${product.id}">
-                <div class="product-img-wrapper">
-                  ${badge}
+            <div class="col-6 col-md-4 col-lg-3 reveal-on-scroll" data-delay-index="${index % 4}">
+              <div class="cyber-product-card" data-product-id="${product.id}" onclick="location.href='/products/${product.slug}'" style="cursor: pointer;">
+                <button class="wishlist-btn" onclick="event.stopPropagation(); this.classList.toggle('active'); window.showToast('Đã thích sản phẩm!', 'success')">
+                  <i class="bi bi-heart-fill"></i>
+                </button>
+                <div class="cyber-product-img-wrapper">
                   ${
                     product.thumbnailUrl
-                      ? `<img src="${product.thumbnailUrl}" alt="${product.name}">`
+                      ? `<img class="cyber-product-img" src="${product.thumbnailUrl}" alt="${product.name}">`
                       : `<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:56px">📦</div>`
                   }
-                  <button class="btn-quick-view" data-slug="${product.slug}">👁 Xem nhanh</button>
                 </div>
-                <div class="product-body">
-                  <div class="product-name">${product.name}</div>
-                  <div class="product-rating">★★★★★ <span>(${(product.avgRating || 0).toFixed(1)})</span></div>
-                  <div class="mb-2">
-                    ${hasSale ? `<span class=\"price-original\">${formatVND(product.originalPrice)}</span>` : ""}
-                    <div class="${hasSale ? "price-sale" : "price-normal"}">${formatVND(price)}</div>
-                    <small class="text-muted">Tồn kho: ${stock}</small>
-                  </div>
-                  <button class="btn-add-cart" data-product-id="${product.id}" ${disabled ? "disabled" : ""}>${disabled ? "Hết hàng" : "🛒 Thêm vào giỏ"}</button>
-                </div>
+                <div class="cyber-product-title">${product.name}</div>
+                <div class="cyber-product-price">${formatVND(price)}</div>
+                <button type="button" class="btn-buy-now" data-product-id="${product.id}" onclick="event.stopPropagation(); return window.addToCart(this.dataset.productId, 1, this);" ${disabled ? "disabled" : ""}>${disabled ? "Out of Stock" : "Buy Now"}</button>
               </div>
             </div>`;
-        }
-
-        function renderHero(index) {
-          const slide = HERO_SLIDES[index];
-          const hero = document.getElementById("hero-content");
-          if (!hero) return;
-          hero.innerHTML = `
-            <div class="col-lg-8 p-4 p-lg-5" style="background:${slide.bg};color:white">
-              <span class="badge rounded-pill" style="background:rgba(255,255,255,.2);padding:8px 16px">${slide.badge}</span>
-              <h1 class="hero-title mt-3" style="white-space:pre-line">${slide.title}</h1>
-              <p class="hero-subtitle">${slide.desc}</p>
-              <div class="d-flex gap-3 flex-wrap mt-3">
-                <a href="${slide.cta1.href}" class="btn-hero-primary">${slide.cta1.text}</a>
-                <a href="${slide.cta2.href}" class="btn-hero-secondary">${slide.cta2.text}</a>
-              </div>
-            </div>
-            <div class="col-lg-4 d-none d-lg-flex align-items-center justify-content-center" style="background:rgba(15,23,42,.07)">
-              <div style="font-size:52px">${slide.emoji}</div>
-            </div>
-          `;
-
-          const dots = document.getElementById("hero-dots");
-          if (dots) {
-            dots.innerHTML = HERO_SLIDES.map(
-              (_, i) => `
-              <button type="button" data-idx="${i}" style="width:10px;height:10px;border-radius:999px;border:none;${i === index ? "background:var(--accent)" : "background:#cbd5e1"}"></button>
-            `,
-            ).join("");
-          }
         }
 
         async function loadFeatured() {
@@ -247,36 +199,37 @@
               throw new Error("Không thể tải dữ liệu trang chủ");
             }
             const data = await res.json();
+            window.featuredData = data;
 
+            // Render categories
             const catEl = document.getElementById("featured-categories");
             catEl.innerHTML = (data.categories || [])
               .map(
                 (cat, idx) => `
-              <div class="col-6 col-md-4 col-lg-2">
-                <a href="/products?categoryId=${cat.id}" class="cat-card">
-                  <div class="cat-icon" style="background:${iconPalette[idx % iconPalette.length]}">
-                    <i class="bi ${iconGlyph[idx % iconGlyph.length]}" style="color:#1d4ed8"></i>
+              <div class="col-6 col-md-4 col-lg-2 reveal-on-scroll" data-delay-index="${idx % 6}">
+                <div class="cyber-cat-card" onclick="location.href='/products?categoryId=${cat.id}'">
+                  <div class="cyber-cat-icon">
+                    <i class="bi ${iconGlyph[idx % iconGlyph.length] || "bi-device-tv"}"></i>
                   </div>
-                  <div style="font-size:14px;font-weight:600">${cat.name}</div>
-                </a>
+                  <div class="cyber-cat-name">${cat.name}</div>
+                </div>
               </div>
             `,
               )
               .join("");
 
-            document.getElementById("new-arrivals").innerHTML = (
-              data.newArrivals || []
-            )
-              .map((p) => productCard(p, "new"))
+            // Render default active tab (New Arrivals)
+            renderTabProducts('new-arrivals');
+
+            // Render discounts grid
+            const discountsList = (data.onSale || []).slice(0, 4);
+            document.getElementById("discounts-grid").innerHTML = discountsList
+              .map((p, idx) => productCard(p, idx))
               .join("");
-            document.getElementById("on-sale").innerHTML = (data.onSale || [])
-              .map((p) => productCard(p, "sale"))
-              .join("");
-            document.getElementById("best-seller").innerHTML = (
-              data.bestSeller || []
-            )
-              .map((p) => productCard(p, "best"))
-              .join("");
+
+            if (typeof window.initScrollReveal === "function") {
+              window.initScrollReveal();
+            }
           } catch (e) {
             if (typeof window.showToast === "function") {
               window.showToast(e.message || "Lỗi tải dữ liệu", "error");
@@ -284,42 +237,42 @@
           }
         }
 
-        function startDailyCountdown() {
-          const tick = () => {
-            const end = new Date();
-            end.setHours(23, 59, 59, 999);
-            const diff = Math.max(0, end.getTime() - Date.now());
-            const hours = Math.floor(diff / 3600000);
-            const mins = Math.floor((diff % 3600000) / 60000);
-            const secs = Math.floor((diff % 60000) / 1000);
-            const h = document.getElementById("cd-hours");
-            const m = document.getElementById("cd-mins");
-            const s = document.getElementById("cd-secs");
-            if (h) h.textContent = String(hours).padStart(2, "0");
-            if (m) m.textContent = String(mins).padStart(2, "0");
-            if (s) s.textContent = String(secs).padStart(2, "0");
-          };
-          tick();
-          setInterval(tick, 1000);
-        }
+        function renderTabProducts(tabName) {
+          const container = document.getElementById("tab-products-grid");
+          if (!container || !window.featuredData) return;
 
-        let heroIndex = 0;
-        renderHero(heroIndex);
-        setInterval(() => {
-          heroIndex = (heroIndex + 1) % HERO_SLIDES.length;
-          renderHero(heroIndex);
-        }, 4500);
-
-        document.addEventListener("click", (event) => {
-          const dot = event.target.closest("#hero-dots button");
-          if (dot) {
-            heroIndex = Number(dot.dataset.idx || 0);
-            renderHero(heroIndex);
+          let list = [];
+          if (tabName === 'new-arrivals') {
+            list = window.featuredData.newArrivals || [];
+          } else if (tabName === 'best-seller') {
+            list = window.featuredData.bestSeller || [];
+          } else if (tabName === 'on-sale') {
+            list = window.featuredData.onSale || [];
           }
-        });
+
+          container.innerHTML = list.slice(0, 8)
+            .map((p, idx) => productCard(p, idx))
+            .join("");
+
+          if (typeof window.initScrollReveal === "function") {
+            window.initScrollReveal();
+          }
+        }
+        window.renderTabProducts = renderTabProducts;
+
+        function switchProductTab(tabName) {
+          document.querySelectorAll(".cyber-tab-btn").forEach(btn => {
+            if (btn.getAttribute("data-tab") === tabName) {
+              btn.classList.add("active");
+            } else {
+              btn.classList.remove("active");
+            }
+          });
+          renderTabProducts(tabName);
+        }
+        window.switchProductTab = switchProductTab;
 
         await loadFeatured();
-        startDailyCountdown();
       </script>
     </main>
   </body>

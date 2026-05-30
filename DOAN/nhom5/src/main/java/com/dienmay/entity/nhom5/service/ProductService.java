@@ -504,6 +504,7 @@ public class ProductService {
                 .thumbnailUrl(product.getThumbnailUrl())
                 .avgRating(avgRating)
                 .stockQty(product.getStockQty())
+                .soldQty(product.getSoldQty())
                 .build();
     }
 }

@@ -92,6 +92,12 @@ public class DashboardService {
                 .thumbnailUrl(product.getThumbnailUrl())
                 .avgRating(avgRating)
                 .stockQty(product.getStockQty())
+                .soldQty(product.getSoldQty())
                 .build();
+    }
+
+    public List<com.dienmay.entity.nhom5.entity.Order> getRecentOrders(int limit) {
+        return orderRepository.findAll(org.springframework.data.domain.PageRequest.of(0, limit, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt")))
+                .getContent();
     }
 }

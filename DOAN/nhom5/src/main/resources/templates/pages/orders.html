@@ -55,8 +55,8 @@
           }
           document.getElementById("orders-list").innerHTML = orders
             .map(
-              (order) => `
-            <div class="admin-card mb-3 p-3">
+              (order, idx) => `
+            <div class="admin-card mb-3 p-3 reveal-on-scroll" data-delay-index="${idx % 4}">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <strong>#${order.orderCode}</strong>
                 <span class="badge-status badge-${order.status}">${statusLabel[order.status]}</span>
@@ -72,6 +72,10 @@
             </div>`,
             )
             .join("");
+
+          if (typeof window.initScrollReveal === "function") {
+            window.initScrollReveal();
+          }
         }
 
         window.cancelOrder = async function (orderId) {

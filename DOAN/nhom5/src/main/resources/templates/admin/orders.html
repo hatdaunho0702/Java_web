@@ -1,110 +1,183 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
-
 >
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đơn hàng — Admin</title>
+    <title>Quản lý đơn hàng — ElectraManager</title>
   </head>
   <body>
     <div class="page-content">
-      <div class="admin-card">
-        <div class="admin-card-header">
-          <span>Danh sách đơn hàng</span>
-          <div style="display:flex;gap:8px;align-items:center">
-            <select id="filterStatus" class="form-control form-control-sm">
-              <option value="">--Tất cả trạng thái--</option>
-              <option th:each="s : ${statusList}" th:value="${s}" th:text="${s}"></option>
-            </select>
-            <input id="filterKeyword" class="form-control form-control-sm" placeholder="Tìm theo mã hoặc tên khách" />
-            <button class="btn btn-sm btn-primary" id="btnSearch">Tìm</button>
+      <!-- Title & Action Bar -->
+      <div class="action-bar">
+        <h3 class="panel-title" style="font-size: 20px; font-weight: 700;">Quản lý đơn hàng</h3>
+        
+        <div class="filter-group text-nowrap">
+          <select id="filterStatus" class="form-select-custom d-inline-block w-auto me-2">
+            <option value="">-- Tất cả trạng thái --</option>
+            <option th:each="s : ${statusList}" th:value="${s}" th:text="${s}"></option>
+          </select>
+          <div class="header-search d-inline-flex align-items-center me-2" style="border: 1px solid var(--border); background: var(--surface);">
+            <i class="ti ti-search" style="color: var(--text-muted);"></i>
+            <input id="filterKeyword" type="text" placeholder="Tìm mã đơn hoặc khách..." style="border: none; background: transparent; outline: none; font-size: 13px; color: var(--text-main);">
           </div>
+          <button class="btn-filled-primary" id="btnSearch">
+            <i class="ti ti-filter"></i> Tìm kiếm
+          </button>
         </div>
-        <table class="table admin-table mb-0">
-          <thead>
-            <tr>
-              <th>Mã</th>
-              <th>Khách</th>
-              <th>Tổng</th>
-              <th>Trạng thái</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- will be populated by JS -->
-            <tr id="tplRow" style="display:none">
-              <td class="col-code"></td>
-              <td class="col-customer"></td>
-              <td class="col-total"></td>
-              <td class="col-status"></td>
-              <td class="col-action"></td>
-            </tr>
-          </tbody>
-        </table>
+      </div>
+
+      <!-- Orders Panel Card -->
+      <div class="panel-card mt-3">
+        <div class="panel-header">
+          <h4 class="panel-title" style="font-size: 14px; font-weight: 600; color: var(--text-muted);">Danh sách đơn hàng toàn hệ thống</h4>
+        </div>
+        <div class="table-container">
+          <table class="custom-table" id="ordersTable">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Khách hàng</th>
+                <th>Tổng thanh toán</th>
+                <th>Trạng thái đơn hàng</th>
+                <th>Cập nhật nhanh</th>
+                <th style="text-align: center;">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- tplRow template -->
+              <tr id="tplRow" style="display:none">
+                <td class="col-code fw-bold text-primary"></td>
+                <td class="col-customer"></td>
+                <td class="col-total fw-bold"></td>
+                <td><span class="col-status badge-status"></span></td>
+                <td class="col-update-status"></td>
+                <td class="col-action" style="text-align: center;"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <script>
-      async function fetchOrders(page=0,size=20){
+      async function fetchOrders(page=0, size=20) {
         const status = document.getElementById('filterStatus').value;
         const keyword = document.getElementById('filterKeyword').value;
-        const qs = new URLSearchParams({page,size});
+        const qs = new URLSearchParams({page, size});
         if(status) qs.set('status', status);
         if(keyword) qs.set('keyword', keyword);
-        const res = await fetch('/api/admin/orders?'+qs.toString(),{credentials:'same-origin'});
-        if(!res.ok){ alert('Không thể tải danh sách đơn hàng'); return; }
-        const pageData = await res.json();
-        const tbody = document.querySelector('table.admin-table tbody');
-        tbody.querySelectorAll('tr:not(#tplRow)').forEach(el=>el.remove());
-        const tpl = document.getElementById('tplRow');
-        for(const o of pageData.content){
-          const tr = tpl.cloneNode(true);
-          tr.style.display='';
-          tr.id='';
-          tr.querySelector('.col-code').textContent = o.orderCode;
-          tr.querySelector('.col-customer').textContent = o.recipientName || '';
-          tr.querySelector('.col-total').textContent = (o.totalAmount!=null? o.totalAmount + 'đ' : '');
-          const statusEl = tr.querySelector('.col-status');
-          statusEl.textContent = o.status || '';
-          // badge classes
-          statusEl.className = 'col-status';
-          const s = o.status || '';
-          if(s==='PENDING') statusEl.classList.add('badge','badge-warning');
-          else if(s==='CONFIRMED') statusEl.classList.add('badge','badge-primary');
-          else if(s==='SHIPPING') statusEl.classList.add('badge','badge-success');
-          else if(s==='COMPLETED') statusEl.classList.add('badge','badge-secondary');
-          else if(s==='CANCELLED') statusEl.classList.add('badge','badge-danger');
+        
+        try {
+          const res = await fetch('/api/admin/orders?' + qs.toString(), {credentials: 'same-origin'});
+          if (!res.ok) {
+            window.showToast('Không thể tải danh sách đơn hàng', 'danger');
+            return;
+          }
+          const pageData = await res.json();
+          const tbody = document.querySelector('table.custom-table tbody');
+          tbody.querySelectorAll('tr:not(#tplRow)').forEach(el => el.remove());
+          
+          const tpl = document.getElementById('tplRow');
+          
+          if (pageData.content.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="6" class="text-center text-muted py-4">Không có đơn hàng nào khớp với tìm kiếm.</td>`;
+            tbody.appendChild(tr);
+            return;
+          }
 
-          const a = document.createElement('a');
-          a.href = '/admin/orders/'+o.id;
-          a.className='btn btn-sm btn-outline-secondary';
-          a.textContent='Chi tiết';
-          tr.querySelector('.col-action').appendChild(a);
+          for (const o of pageData.content) {
+            const tr = tpl.cloneNode(true);
+            tr.style.display = '';
+            tr.id = 'order-row-' + o.id;
+            
+            tr.querySelector('.col-code').textContent = o.orderCode;
+            tr.querySelector('.col-customer').textContent = o.recipientName || 'Khách vãng lai';
+            
+            const totalVal = Number(o.totalAmount || 0);
+            tr.querySelector('.col-total').textContent = totalVal.toLocaleString('vi-VN') + ' đ';
+            
+            const statusEl = tr.querySelector('.col-status');
+            statusEl.textContent = o.status || 'PENDING';
+            
+            // Set dynamic badge styles
+            const s = o.status || 'PENDING';
+            statusEl.className = 'badge-status';
+            if (s === 'PENDING') statusEl.classList.add('status-pending');
+            else if (s === 'CONFIRMED') statusEl.classList.add('status-shipping');
+            else if (s === 'SHIPPING') statusEl.classList.add('status-shipping');
+            else if (s === 'COMPLETED') statusEl.classList.add('status-completed');
+            else if (s === 'CANCELLED') statusEl.classList.add('status-cancelled');
 
-          // inline status change select
-          const sel = document.createElement('select');
-          sel.className='form-control form-control-sm';
-          ['','PENDING','CONFIRMED','SHIPPING','COMPLETED','CANCELLED'].forEach(v=>{
-            const opt=document.createElement('option'); opt.value=v; opt.textContent=v||'--'; if(v===o.status) opt.selected=true; sel.appendChild(opt);
-          });
-          sel.addEventListener('change', async ()=>{
-            const newStatus = sel.value;
-            if(!newStatus) return;
-            if(!confirm('Cập nhật trạng thái sang '+newStatus+'?')) return;
-            const r = await fetch('/api/admin/orders/'+o.id+'/status', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status:newStatus})});
-            if(r.ok) { alert('Cập nhật thành công'); fetchOrders(page,size);} else { alert('Lỗi khi cập nhật'); }
-          });
-          tr.querySelector('.col-action').appendChild(sel);
+            // Detail link
+            const a = document.createElement('a');
+            a.href = '/admin/orders/' + o.id;
+            a.className = 'btn-action-sm';
+            a.innerHTML = '<i class="ti ti-eye"></i> Xem';
+            tr.querySelector('.col-action').appendChild(a);
 
-          tbody.appendChild(tr);
+            // Inline status change select dropdown
+            const selectWrapper = tr.querySelector('.col-update-status');
+            const sel = document.createElement('select');
+            sel.className = 'form-select-custom';
+            sel.style.padding = '4px 8px';
+            sel.style.minWidth = '140px';
+            sel.style.fontSize = '12px';
+            
+            const statuses = [
+              { value: 'PENDING', label: 'Chờ xác nhận' },
+              { value: 'CONFIRMED', label: 'Đã xác nhận' },
+              { value: 'SHIPPING', label: 'Đang giao hàng' },
+              { value: 'COMPLETED', label: 'Hoàn thành' },
+              { value: 'CANCELLED', label: 'Hủy đơn hàng' }
+            ];
+
+            statuses.forEach(st => {
+              const opt = document.createElement('option');
+              opt.value = st.value;
+              opt.textContent = st.label;
+              if (st.value === o.status) opt.selected = true;
+              sel.appendChild(opt);
+            });
+
+            sel.addEventListener('change', async () => {
+              const newStatus = sel.value;
+              if (!newStatus) return;
+              if (!confirm('Bạn có chắc chắn muốn cập nhật trạng thái đơn hàng này sang ' + newStatus + '?')) {
+                sel.value = o.status; // Revert selection
+                return;
+              }
+              try {
+                const r = await fetch('/api/admin/orders/' + o.id + '/status', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ status: newStatus })
+                });
+                if (r.ok) {
+                  window.showToast('Cập nhật trạng thái đơn hàng thành công!', 'success');
+                  fetchOrders(page, size);
+                } else {
+                  window.showToast('Lỗi khi cập nhật trạng thái đơn hàng.', 'danger');
+                  sel.value = o.status; // Revert selection
+                }
+              } catch (err) {
+                window.showToast('Đã xảy ra lỗi mạng.', 'danger');
+                sel.value = o.status;
+              }
+            });
+
+            selectWrapper.appendChild(sel);
+            tbody.appendChild(tr);
+          }
+        } catch (error) {
+          window.showToast('Không thể kết nối đến máy chủ.', 'danger');
         }
       }
 
-      document.getElementById('btnSearch').addEventListener('click', ()=>fetchOrders());
-      window.addEventListener('load', ()=>fetchOrders());
+      document.getElementById('btnSearch').addEventListener('click', () => fetchOrders());
+      window.addEventListener('load', () => fetchOrders());
     </script>
-    </div>
   </body>
 </html>

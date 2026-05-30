@@ -75,7 +75,7 @@ function resolveQuantity(quantity) {
     : 1;
 }
 
-async function addToCart(productId, quantity = 1) {
+async function addToCart(productId, quantity = 1, triggerEl = null) {
   let token = null;
   try {
     token = await getToken();
@@ -99,9 +99,11 @@ async function addToCart(productId, quantity = 1) {
   }
 
   const btn =
+    triggerEl ||
     (typeof event !== "undefined" && event?.target?.closest
       ? event.target.closest(".btn-add-cart")
-      : null) || null;
+      : null) ||
+    null;
 
   if (btn) {
     btn.disabled = true;
@@ -191,11 +193,49 @@ function changeQty(delta) {
   );
 }
 
+function initScrollReveal() {
+  const elements = document.querySelectorAll(".reveal-on-scroll");
+  if (elements.length === 0) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const delayIndex = el.getAttribute("data-delay-index") || el.style.getPropertyValue("--delay-index");
+          if (delayIndex) {
+            el.style.transitionDelay = `${Number(delayIndex) * 80}ms`;
+          }
+          el.classList.add("revealed");
+          observer.unobserve(el);
+        }
+      });
+    },
+    {
+      threshold: 0.05,
+      rootMargin: "0px 0px -40px 0px"
+    }
+  );
+
+  elements.forEach((el) => {
+    if (!el.classList.contains("revealed")) {
+      observer.observe(el);
+    }
+  });
+}
+
 window.showToast = showToast;
 window.addToCart = addToCart;
 window.updateCartBadge = updateCartBadge;
 window.quickView = quickView;
 window.changeQty = changeQty;
+window.initScrollReveal = initScrollReveal;
+
+// Run initial reveal on DOM content loaded
+document.addEventListener("DOMContentLoaded", () => {
+  initScrollReveal();
+});
+
 
 // Update cart badge only after Firebase auth state resolved to avoid
 // calling /api/cart when user is not logged in.
@@ -223,7 +263,7 @@ document.addEventListener("click", (ev) => {
     if (pid) {
       const qtyInput = document.getElementById("qty-input");
       const qty = Number(qtyInput?.value || 1);
-      addToCart(pid, qty);
+      addToCart(pid, qty, addBtn);
     }
     return;
   }

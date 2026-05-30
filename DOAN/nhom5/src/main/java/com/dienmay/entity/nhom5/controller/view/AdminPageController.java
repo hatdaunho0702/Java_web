@@ -43,6 +43,7 @@ public class AdminPageController {
         model.addAttribute("ordersByStatus", dashboardService.countOrdersByStatus());
         model.addAttribute("topProducts", dashboardService.getTopSellingProducts(5));
         model.addAttribute("lowStockProducts", dashboardService.getLowStockProducts(5));
+        model.addAttribute("recentOrders", dashboardService.getRecentOrders(5));
         return "admin/dashboard";
     }
 

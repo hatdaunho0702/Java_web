@@ -1,57 +1,82 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
-
 >
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sản phẩm — Admin</title>
+    <title>Quản lý sản phẩm — ElectraManager</title>
   </head>
   <body>
     <div class="page-content">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="section-title mb-0">Quản lý <span>sản phẩm</span></div>
-        <a th:href="@{/admin/products/new}" class="btn btn-gradient"
-          >+ Thêm sản phẩm</a
-        >
+      <!-- Title & Action Bar -->
+      <div class="action-bar">
+        <h3 class="panel-title" style="font-size: 20px; font-weight: 700;">Quản lý sản phẩm</h3>
+        <a th:href="@{/admin/products/new}" class="btn-filled-primary text-decoration-none">
+          <i class="ti ti-plus"></i> Thêm sản phẩm mới
+        </a>
       </div>
-      <div class="admin-card">
-        <table class="table admin-table mb-0">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Tên</th>
-              <th>Giá</th>
-              <th>Tồn kho</th>
-              <th>Trạng thái</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr th:each="p,iter : ${products.content}">
-              <td th:text="${iter.index + 1}"></td>
-              <td th:text="${p.name}"></td>
-              <td
-                th:text="${#numbers.formatDecimal(p.originalPrice,0,'COMMA',0,'POINT') + 'đ'}"
-              ></td>
-              <td th:text="${p.stockQty}"></td>
-              <td>
-                <span
-                  class="badge-status badge-PENDING"
-                  th:text="${p.avgRating}"
-                ></span>
-              </td>
-              <td>
-                <a
-                  th:href="@{/admin/products/{id}/edit(id=${p.id})}"
-                  class="btn btn-sm btn-outline-secondary"
-                  >Sửa</a
-                >
-              </td>
-            </tr>
-          </tbody>
-        </table>
+
+      <!-- Table Panel -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <h4 class="panel-title" style="font-size: 14px; font-weight: 600; color: var(--text-muted);">Danh sách sản phẩm trong hệ thống</h4>
+        </div>
+        <div class="table-container">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th>Đánh giá</th>
+                <th>Giá bán</th>
+                <th>Tồn kho</th>
+                <th>Trạng thái</th>
+                <th style="text-align: center;">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="p : ${products.content}">
+                <td>
+                  <img class="product-cell-img" 
+                       th:src="${p.thumbnailUrl != null ? p.thumbnailUrl : 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?auto=format&fit=crop&q=80&w=100'}" 
+                       alt="Ảnh sản phẩm">
+                </td>
+                <td>
+                  <span style="font-weight: 700; display: block;" th:text="${p.name}">Tên sản phẩm</span>
+                  <span class="product-sku" th:text="'ID: #' + ${p.id}">ID: #1</span>
+                </td>
+                <td>
+                  <span class="category-badge" th:text="${p.avgRating > 0 ? p.avgRating + ' ⭐' : 'Chưa có đánh giá'}">Chưa có đánh giá</span>
+                </td>
+                <td style="font-weight: 700;" th:text="${#numbers.formatDecimal(p.salePrice != null ? p.salePrice : p.originalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'">
+                  0đ
+                </td>
+                <td>
+                  <span th:class="${p.stockQty < 5 ? 'stock-critical' : ''}" 
+                        th:text="${p.stockQty} + ' cái'">
+                    10 cái
+                  </span>
+                </td>
+                <td>
+                  <span class="badge-status" 
+                        th:classappend="${p.stockQty > 0 ? 'status-completed' : 'status-cancelled'}" 
+                        th:text="${p.stockQty > 0 ? 'Còn hàng' : 'Hết hàng'}">
+                    Còn hàng
+                  </span>
+                </td>
+                <td style="text-align: center;">
+                  <a th:href="@{/admin/products/{id}/edit(id=${p.id})}" class="btn-action-sm" title="Sửa">
+                    <i class="ti ti-edit"></i> Sửa
+                  </a>
+                </td>
+              </tr>
+              <tr th:if="${products == null || products.content.isEmpty()}">
+                <td colspan="7" class="text-center text-muted py-4">Không có sản phẩm nào.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </body>

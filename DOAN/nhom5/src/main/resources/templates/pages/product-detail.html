@@ -10,23 +10,40 @@
   </head>
   <body>
     <main
-      class="container py-5"
+      class="container pb-5"
       th:attr="data-product-id=${product != null ? product.id : 0}"
       id="product-detail-root"
     >
-      <div id="product-detail-content" class="admin-card p-4">
-        Đang tải chi tiết sản phẩm...
+      <!-- Dynamic Breadcrumbs -->
+      <div class="py-3">
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+          <ol class="breadcrumb mb-0 cyber-breadcrumb">
+            <li class="breadcrumb-item cyber-breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item cyber-breadcrumb-item"><a href="/products">Catalog</a></li>
+            <li class="breadcrumb-item cyber-breadcrumb-item" id="breadcrumb-category"><a href="/products">Smartphones</a></li>
+            <li class="breadcrumb-item cyber-breadcrumb-item" id="breadcrumb-brand"><a href="/products">Brand</a></li>
+            <li class="breadcrumb-item active fw-bold text-black" aria-current="page" id="breadcrumb-title">Product Detail</li>
+          </ol>
+        </nav>
       </div>
 
-      <section class="mt-4" id="related-section" style="display: none">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <div class="section-title">Sản phẩm <span>liên quan</span></div>
-          <a href="/products" style="color: var(--accent); font-weight: 600"
-            >Xem thêm →</a
-          >
+      <!-- Main Detail Content Card -->
+      <div id="product-detail-content" class="reveal-on-scroll">
+        <div class="p-5 text-center bg-white rounded-4 border">
+          <div class="spinner-border text-dark" role="status">
+            <span class="visually-hidden">Đang tải...</span>
+          </div>
+          <div class="mt-2 text-muted">Đang tải chi tiết sản phẩm...</div>
         </div>
-        <div class="section-divider"></div>
-        <div class="row g-3" id="related-products"></div>
+      </div>
+
+      <!-- Related Products Section -->
+      <section class="mt-5 reveal-on-scroll" id="related-section" style="display: none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="section-title fw-bold" style="font-family: 'Sora', sans-serif;">Related <span>Products</span></div>
+          <a href="/products" style="color: #000000; font-weight: 600; font-family: 'DM Sans', sans-serif;">See All →</a>
+        </div>
+        <div class="row g-4" id="related-products"></div>
       </section>
 
       <script type="module">
@@ -56,6 +73,258 @@
           return div.innerHTML;
         }
 
+        function getSpecIcon(key) {
+          const k = (key || "").toLowerCase();
+          if (k.includes("màn hình") || k.includes("screen") || k.includes("kích thước")) return "bi-aspect-ratio";
+          if (k.includes("cpu") || k.includes("vi xử lý") || k.includes("vi xử lí") || k.includes("bộ xử lý hình ảnh")) return "bi-cpu";
+          if (k.includes("gpu") || k.includes("đồ họa")) return "bi-card-image";
+          if (k.includes("động cơ") || k.includes("công suất") || k.includes("tốc độ") || k.includes("tần số")) return "bi-speedometer";
+          if (k.includes("pin") || k.includes("battery") || k.includes("dung lượng") || k.includes("thời lượng")) return "bi-battery-full";
+          if (k.includes("camera sau") || k.includes("camera chính") || k.includes("main camera")) return "bi-camera";
+          if (k.includes("camera trước") || k.includes("selfie")) return "bi-camera-video";
+          if (k.includes("hệ điều hành") || k.includes("os")) return "bi-braces";
+          if (k.includes("kết nối") || k.includes("bluetooth")) return "bi-bluetooth";
+          if (k.includes("kháng nước") || k.includes("chống nước") || k.includes("ipx") || k.includes("ip67") || k.includes("ip54")) return "bi-droplet-half";
+          if (k.includes("chống ồn") || k.includes("khử tiếng ồn")) return "bi-earbuds";
+          if (k.includes("âm thanh") || k.includes("driver") || k.includes("loa")) return "bi-soundwave";
+          if (k.includes("nổi bật") || k.includes("tính năng") || k.includes("đặc biệt")) return "bi-star";
+          if (k.includes("trọng lượng") || k.includes("nặng")) return "bi-box-seam";
+          if (k.includes("loại") || k.includes("kiểu") || k.includes("chất liệu")) return "bi-info-circle";
+          return "bi-sliders";
+        }
+
+        function getProductOptions(slug) {
+          const s = slug || "";
+          
+          if (s.includes("may-giat-samsung")) {
+            return {
+              label: "Tùy chọn khối lượng:",
+              options: ["9 Kg", "10 Kg", "11 Kg"],
+              colors: []
+            };
+          }
+          if (s.includes("tu-lanh-samsung-inverter-382l")) {
+            return {
+              label: "Tùy chọn dung tích:",
+              options: ["382 Lít"],
+              colors: []
+            };
+          }
+          if (s.includes("tivi-lg-oled-55-inch-4k")) {
+            return {
+              label: "Tùy chọn:",
+              options: ["Tiêu chuẩn"],
+              colors: []
+            };
+          }
+          if (s.includes("macbook-air-m3-13-inch")) {
+            return {
+              label: "Tùy chọn (RAM/SSD):",
+              options: ["8GB | 256GB", "16GB | 512GB"],
+              colors: []
+            };
+          }
+          if (s.includes("iphone-14-pro-max")) {
+            return {
+              label: "Tùy chọn dung lượng:",
+              options: ["128GB", "256GB", "512GB", "1TB"],
+              colors: [
+                { name: "Deep Purple", hex: "#3C2E3D" },
+                { name: "Space Black", hex: "#1F2022" },
+                { name: "Red", hex: "#A50011" },
+                { name: "Gold", hex: "#F9E4B7" },
+                { name: "Silver", hex: "#F2F1ED" }
+              ]
+            };
+          }
+          if (s.includes("samsung-galaxy-s24-ultra")) {
+            return {
+              label: "Tùy chọn dung lượng:",
+              options: ["256GB", "512GB", "1TB"],
+              colors: []
+            };
+          }
+          if (s.includes("samsung-galaxy-s26-ultra")) {
+            return {
+              label: "Tùy chọn dung lượng:",
+              options: ["256GB", "512GB", "1TB"],
+              colors: []
+            };
+          }
+          if (s.includes("xiaomi-redmi-note-10")) {
+            return {
+              label: "Tùy chọn dung lượng:",
+              options: ["64GB", "128GB"],
+              colors: []
+            };
+          }
+          if (s.includes("redmi-note-13-pro-5g") || s.includes("xiaomi")) {
+            return {
+              label: "Tùy chọn dung lượng:",
+              options: ["256GB", "512GB"],
+              colors: []
+            };
+          }
+          if (s.includes("op-lung-chong-soc-iphone")) {
+            return {
+              label: "Tùy chọn dòng máy:",
+              options: ["iPhone 13 Pro Max", "iPhone 14 Pro Max", "iPhone 15 Pro Max"],
+              colors: []
+            };
+          }
+          if (s.includes("loa-jbl-charge-5")) {
+            return {
+              label: "",
+              options: [],
+              colors: [
+                { name: "Đen", hex: "#000000" },
+                { name: "Xanh Dương", hex: "#1E3A8A" },
+                { name: "Xám", hex: "#808080" }
+              ]
+            };
+          }
+          if (s.includes("tai-nghe-tecno-buds")) {
+            return {
+              label: "",
+              options: [],
+              colors: [
+                { name: "Trắng", hex: "#FFFFFF" },
+                { name: "Đen", hex: "#000000" }
+              ]
+            };
+          }
+          if (s.includes("tai-nghe-chup-tai")) {
+            return {
+              label: "",
+              options: [],
+              colors: [
+                { name: "Đỏ Đô", hex: "#800020" },
+                { name: "Đen", hex: "#000000" }
+              ]
+            };
+          }
+          if (s.includes("tai-nghe-tws-jbl")) {
+            return {
+              label: "",
+              options: [],
+              colors: [
+                { name: "Đen", hex: "#000000" },
+                { name: "Trắng", hex: "#FFFFFF" }
+              ]
+            };
+          }
+          if (s.includes("tai-nghe-redmi-buds")) {
+            return {
+              label: "",
+              options: [],
+              colors: [
+                { name: "Trắng", hex: "#FFFFFF" },
+                { name: "Xanh nhạt", hex: "#ADD8E6" }
+              ]
+            };
+          }
+
+          // Fallback default
+          return {
+            label: "Tùy chọn:",
+            options: ["Tiêu chuẩn"],
+            colors: []
+          };
+        }
+
+        window.selectColor = function(el) {
+          const dots = el.parentElement.querySelectorAll(".cyber-color-dot");
+          dots.forEach(d => d.classList.remove("active"));
+          el.classList.add("active");
+          if (typeof window.showToast === "function") {
+            window.showToast("Đã chọn màu: " + el.title, "info");
+          }
+        };
+
+        window.selectCapacity = function(el) {
+          const boxes = el.parentElement.querySelectorAll(".cyber-capacity-box");
+          boxes.forEach(b => b.classList.remove("active"));
+          el.classList.add("active");
+          if (typeof window.showToast === "function") {
+            window.showToast("Đã chọn dung lượng: " + el.textContent.trim(), "info");
+          }
+        };
+
+        window.toggleDetailWishlist = function(productId) {
+          let wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+          const idx = wishlist.indexOf(productId);
+          const btn = document.getElementById("detail-wishlist-btn");
+          
+          if (idx > -1) {
+            wishlist.splice(idx, 1);
+            btn.classList.remove("active");
+            btn.innerHTML = 'Add to Wishlist <i class="bi bi-heart ms-1"></i>';
+            if (typeof window.showToast === "function") {
+              window.showToast("Đã xóa khỏi danh sách yêu thích", "info");
+            }
+          } else {
+            wishlist.push(productId);
+            btn.classList.add("active");
+            btn.innerHTML = 'Add to Wishlist <i class="bi bi-heart-fill ms-1"></i>';
+            if (typeof window.showToast === "function") {
+              window.showToast("Đã thêm vào danh sách yêu thích", "success");
+            }
+          }
+          localStorage.setItem("wishlist", JSON.stringify(wishlist));
+          updateWishlistCount();
+        };
+
+        window.toggleWishlist = function(productId, btnEl) {
+          let wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+          const idx = wishlist.indexOf(productId);
+          const icon = btnEl.querySelector("i");
+          if (idx > -1) {
+            wishlist.splice(idx, 1);
+            icon.className = "bi bi-heart text-muted";
+            if (typeof window.showToast === "function") {
+              window.showToast("Đã xóa khỏi danh sách yêu thích", "info");
+            }
+          } else {
+            wishlist.push(productId);
+            icon.className = "bi bi-heart-fill text-danger";
+            if (typeof window.showToast === "function") {
+              window.showToast("Đã thêm vào danh sách yêu thích", "success");
+            }
+          }
+          localStorage.setItem("wishlist", JSON.stringify(wishlist));
+          
+          if (detailData && productId === detailData.id) {
+            const detailBtn = document.getElementById("detail-wishlist-btn");
+            if (detailBtn) {
+              if (idx > -1) {
+                detailBtn.classList.remove("active");
+                detailBtn.innerHTML = 'Add to Wishlist <i class="bi bi-heart ms-1"></i>';
+              } else {
+                detailBtn.classList.add("active");
+                detailBtn.innerHTML = 'Add to Wishlist <i class="bi bi-heart-fill ms-1"></i>';
+              }
+            }
+          }
+          updateWishlistCount();
+        };
+
+        function updateWishlistCount() {
+          const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+          const badge = document.querySelector(".nav-link-cyber i.bi-heart");
+          if (badge) {
+            let badgeEl = badge.parentElement.querySelector(".wishlist-badge");
+            if (!badgeEl) {
+              badgeEl = document.createElement("span");
+              badgeEl.className = "wishlist-badge";
+              badgeEl.style = "position: absolute; top: -4px; right: -6px; background: #000000; color: #fff; border-radius: 999px; font-size: 9px; font-weight: 800; min-width: 14px; height: 14px; padding: 0 3px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid #fff;";
+              badge.parentElement.appendChild(badgeEl);
+              badge.parentElement.style.position = "relative";
+            }
+            badgeEl.textContent = wishlist.length;
+            badgeEl.style.display = wishlist.length > 0 ? "inline-flex" : "none";
+          }
+        }
+
         function renderDetail(data) {
           const images =
             data.imageUrls && data.imageUrls.length
@@ -63,85 +332,190 @@
               : [data.thumbnailUrl].filter(Boolean);
           const stock = Number(data.stockQty || 0);
           const price = data.salePrice || data.originalPrice;
-          const salePercent =
-            data.salePrice &&
-            data.originalPrice &&
-            Number(data.originalPrice) > Number(data.salePrice)
-              ? Math.round(
-                  ((Number(data.originalPrice) - Number(data.salePrice)) /
-                    Number(data.originalPrice)) *
-                    100,
-                )
-              : 0;
+          
+          // Breadcrumbs binding
+          document.getElementById("breadcrumb-category").innerHTML = `<a href="/products?categoryId=${data.categoryId || ""}">${escapeHtml(data.categoryName || "Smartphones")}</a>`;
+          document.getElementById("breadcrumb-brand").innerHTML = `<a href="/products?brandId=${data.brandId || ""}">${escapeHtml(data.brandName || "Brand")}</a>`;
+          document.getElementById("breadcrumb-title").textContent = data.name;
+
+          // Thumbnail List Generation
+          const thumbsHtml = images.map((img, idx) => `
+            <button class="cyber-gallery-thumb-btn ${idx === 0 ? "active" : ""} thumb-btn" data-image="${img}">
+              <img src="${img}" alt="${escapeHtml(data.name)} thumb" />
+            </button>
+          `).join("");
+
+          // Specs Grid Generation
+          const specsToRender = (data.specs || []).slice(0, 6);
+          const specsCardsHtml = specsToRender.map(spec => {
+            const iconClass = getSpecIcon(spec.key);
+            return `
+              <div class="cyber-spec-card">
+                <div class="cyber-spec-icon"><i class="bi ${iconClass}"></i></div>
+                <div class="cyber-spec-info">
+                  <span class="cyber-spec-label">${escapeHtml(spec.key)}</span>
+                  <span class="cyber-spec-value">${escapeHtml(spec.value)}</span>
+                </div>
+              </div>
+            `;
+          }).join("");
+          const specsGridHtml = `
+            <div class="cyber-specs-grid">
+              ${specsCardsHtml}
+            </div>
+          `;
+
+          // Options configuration
+          const optConfig = getProductOptions(data.slug);
+          
+          let colorSelectorHtml = "";
+          if (optConfig.colors && optConfig.colors.length > 0) {
+            const colorDotsHtml = optConfig.colors.map((c, idx) => `
+              <span class="cyber-color-dot ${idx === 0 ? "active" : ""}" style="background-color: ${c.hex}; ${c.hex === "#FFFFFF" ? "border: 1px solid #ccc;" : ""}" title="${escapeHtml(c.name)}" onclick="selectColor(this)"></span>
+            `).join("");
+            
+            colorSelectorHtml = `
+              <div class="cyber-color-selector">
+                <span class="cyber-color-label">Select color:</span>
+                <div class="cyber-color-dots">
+                  ${colorDotsHtml}
+                </div>
+              </div>
+            `;
+          }
+
+          let capacitySelectorHtml = "";
+          if (optConfig.options && optConfig.options.length > 0) {
+            const capacityBoxesHtml = optConfig.options.map((opt, idx) => `
+              <div class="cyber-capacity-box ${idx === 0 ? "active" : ""}" onclick="selectCapacity(this)">
+                ${escapeHtml(opt)}
+              </div>
+            `).join("");
+            
+            capacitySelectorHtml = `
+              <div class="mb-3">
+                ${optConfig.label ? `<span class="text-muted d-block mb-2" style="font-family: 'DM Sans', sans-serif; font-size: 14px;">${escapeHtml(optConfig.label)}</span>` : ""}
+                <div class="cyber-capacity-selector">
+                  ${capacityBoxesHtml}
+                </div>
+              </div>
+            `;
+          }
+
+          // Wishlist Action Preparation
+          const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+          const isWishlisted = wishlist.includes(data.id);
+          const wishlistBtnText = isWishlisted ? 'Add to Wishlist <i class="bi bi-heart-fill ms-1"></i>' : 'Add to Wishlist <i class="bi bi-heart ms-1"></i>';
+          const activeWishlistClass = isWishlisted ? "active" : "";
+          const disabledAttr = stock <= 0 ? "disabled" : "";
+          const cartBtnText = stock <= 0 ? "Out of Stock" : "Add to Cart";
 
           document.getElementById("product-detail-content").innerHTML = `
-            <div class="row g-4">
-              <div class="col-lg-5">
-                <div class="admin-card p-3">
-                  <div class="position-relative">
-                    ${salePercent > 0 ? `<span class=\"badge-sale\" style=\"position:absolute;left:10px;top:10px\">-${salePercent}%</span>` : ""}
-                    <img id="main-product-image" src="${images[0] || ""}" alt="${escapeHtml(data.name)}" class="img-fluid rounded" style="width:100%;max-height:440px;object-fit:cover;background:#f8fafc" />
+            <div class="row g-5">
+              <!-- Left Column: Gallery -->
+              <div class="col-lg-6">
+                <div class="cyber-gallery-container">
+                  <div class="cyber-gallery-thumbs">
+                    ${thumbsHtml}
                   </div>
-                  <div class="d-flex gap-2 mt-3 flex-wrap" id="thumb-list">
-                    ${images.map((img, idx) => `<button class=\"btn btn-sm ${idx === 0 ? "btn-primary" : "btn-outline-secondary"} thumb-btn\" data-image=\"${img}\">${idx + 1}</button>`).join("")}
+                  <div class="cyber-gallery-main">
+                    <img id="main-product-image" src="${images[0] || ""}" alt="${escapeHtml(data.name)}" />
                   </div>
                 </div>
               </div>
-              <div class="col-lg-7">
-                <div class="section-title">${escapeHtml(data.name)}</div>
-                <div class="d-flex align-items-center gap-2 mb-2">
+
+              <!-- Right Column: Info Details -->
+              <div class="col-lg-6">
+                <h1 class="fw-bold mb-2" style="font-family: 'Sora', sans-serif; font-size: 36px; line-height: 1.1;">${escapeHtml(data.name)}</h1>
+                
+                <div class="d-flex align-items-center gap-2 mb-3">
                   <span style="color:#f59e0b;font-size:18px">${stars(data.averageRating)}</span>
-                  <span class="text-muted">${Number(data.averageRating || 0).toFixed(1)} (${data.reviewCount || 0} đánh giá)</span>
+                  <span class="text-muted" style="font-family: 'DM Sans', sans-serif; font-size: 14px;">${Number(data.averageRating || 0).toFixed(1)} (${data.reviewCount || 0} reviews)</span>
                 </div>
-                <div class="mb-3">
-                  ${data.salePrice ? `<span class=\"price-original\">${formatVND(data.originalPrice)}</span>` : ""}
-                  <div class="${data.salePrice ? "price-sale" : "price-normal"}">${formatVND(price)}</div>
-                  ${salePercent > 0 ? `<small class=\"text-danger\">Tiết kiệm ${salePercent}%</small>` : ""}
+
+                <!-- Price Block -->
+                <div class="d-flex align-items-baseline gap-2 mb-4">
+                  <span style="font-size: 32px; font-weight: 700; font-family: 'Sora', sans-serif; color: #000000;">${formatVND(price)}</span>
+                  ${data.salePrice ? `<span class="text-muted text-decoration-line-through" style="font-size: 20px; font-family: 'Sora', sans-serif;">${formatVND(data.originalPrice)}</span>` : ""}
                 </div>
-                <div class="mb-3">
-                  ${
-                    stock > 0
-                      ? `<span class=\"badge bg-success\">Còn hàng (${stock} sản phẩm)</span>`
-                      : `<span class=\"badge bg-danger\">Hết hàng</span>`
-                  }
+
+                <!-- Color selector -->
+                ${colorSelectorHtml}
+
+                <!-- Capacity options -->
+                ${capacitySelectorHtml}
+
+                <!-- 3x2 Specs Grid -->
+                ${specsGridHtml}
+
+                <p class="text-muted mb-4" style="font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.6;">${escapeHtml(data.description || "")}</p>
+                
+                <!-- Quantity & Buy buttons -->
+                <div class="d-flex align-items-center gap-2 mb-3" style="font-family: 'DM Sans', sans-serif;">
+                  <span class="text-muted me-2">Quantity:</span>
+                  <button class="btn btn-sm btn-outline-dark" id="qty-minus" style="width: 32px; height: 32px; padding: 0;">-</button>
+                  <input id="qty-input" type="number" min="1" max="${Math.max(stock, 1)}" value="1" class="form-control text-center" style="width: 60px; height: 32px; padding: 0; font-weight: bold;" ${stock <= 0 ? "disabled" : ""}>
+                  <button class="btn btn-sm btn-outline-dark" id="qty-plus" style="width: 32px; height: 32px; padding: 0;">+</button>
+                  <span class="text-muted ms-2" style="font-size: 13px;">(Stock: ${stock})</span>
                 </div>
-                <p>${escapeHtml(data.description || "")}</p>
-                <div class="d-flex align-items-center gap-2 mt-3 mb-3">
-                  <button class="btn btn-outline-secondary" id="qty-minus">-</button>
-                  <input id="qty-input" type="number" min="1" max="${Math.max(stock, 1)}" value="1" class="form-control" style="width:96px;text-align:center" ${stock <= 0 ? "disabled" : ""}>
-                  <button class="btn btn-outline-secondary" id="qty-plus">+</button>
+
+                <div class="cyber-actions-wrapper">
+                  <button class="btn-cyber-wishlist ${activeWishlistClass}" id="detail-wishlist-btn" onclick="toggleDetailWishlist(${data.id})">
+                    ${wishlistBtnText}
+                  </button>
+                  <button class="btn-cyber-cart" id="add-cart-btn" ${disabledAttr}>
+                    ${cartBtnText}
+                  </button>
                 </div>
-                <div class="d-flex gap-2 flex-wrap">
-                  <button class="btn-add-cart" id="add-cart-btn" ${stock <= 0 ? "disabled" : ""}>${stock <= 0 ? "Hết hàng" : "🛒 Thêm vào giỏ"}</button>
-                  <a href="/products" class="btn btn-outline-secondary">Quay lại</a>
+
+                <!-- Features Row -->
+                <div class="cyber-features-row">
+                  <div class="cyber-feature-card">
+                    <div class="cyber-feature-icon"><i class="bi bi-truck"></i></div>
+                    <div class="cyber-feature-text">
+                      <span class="cyber-feature-title">Free Delivery</span>
+                      <span class="cyber-feature-desc">1-2 day</span>
+                    </div>
+                  </div>
+                  <div class="cyber-feature-card">
+                    <div class="cyber-feature-icon"><i class="bi bi-shop"></i></div>
+                    <div class="cyber-feature-text">
+                      <span class="cyber-feature-title">In Stock</span>
+                      <span class="cyber-feature-desc">Today</span>
+                    </div>
+                  </div>
+                  <div class="cyber-feature-card">
+                    <div class="cyber-feature-icon"><i class="bi bi-shield-check"></i></div>
+                    <div class="cyber-feature-text">
+                      <span class="cyber-feature-title">Guaranteed</span>
+                      <span class="cyber-feature-desc">1 year</span>
+                    </div>
+                  </div>
                 </div>
-                <hr />
-                <div>
-                  <div><strong>Danh mục:</strong> ${escapeHtml(data.categoryName || "-")}</div>
-                  <div><strong>Thương hiệu:</strong> ${escapeHtml(data.brandName || "-")}</div>
-                </div>
+
               </div>
             </div>
 
+            <!-- Lower Layout: Specifications Details and Reviews -->
             <div class="row g-4 mt-2">
               <div class="col-lg-6">
-                <div class="admin-card p-3 h-100">
-                  <h5 class="mb-3">Thông số kỹ thuật</h5>
+                <div class="border rounded-4 p-4 bg-white h-100">
+                  <h5 class="fw-bold mb-3" style="font-family: 'Sora', sans-serif;">Full Specifications</h5>
                   <div class="table-responsive">
-                    <table class="table table-sm mb-0">
+                    <table class="table table-sm mb-0 align-middle" style="font-family: 'DM Sans', sans-serif; font-size: 14px;">
                       <tbody>
                         ${
                           (data.specs || [])
                             .map(
                               (spec) => `
                           <tr>
-                            <th style=\"width:40%\">${escapeHtml(spec.key)}</th>
-                            <td>${escapeHtml(spec.value)}</td>
+                            <th class="py-2 text-muted fw-normal" style="width:40%">${escapeHtml(spec.key)}</th>
+                            <td class="py-2 fw-semibold text-dark">${escapeHtml(spec.value)}</td>
                           </tr>
                         `,
                             )
                             .join("") ||
-                          '<tr><td colspan="2" class="text-muted">Chưa có thông số kỹ thuật</td></tr>'
+                          '<tr><td colspan="2" class="text-muted py-3">Chưa có thông số kỹ thuật</td></tr>'
                         }
                       </tbody>
                     </table>
@@ -149,12 +523,12 @@
                 </div>
               </div>
               <div class="col-lg-6">
-                <div class="admin-card p-3 h-100">
-                  <h5 class="mb-3">Đánh giá sản phẩm</h5>
-                  <form id="review-form" class="mb-3">
+                <div class="border rounded-4 p-4 bg-white h-100">
+                  <h5 class="fw-bold mb-3" style="font-family: 'Sora', sans-serif;">Customer Reviews</h5>
+                  <form id="review-form" class="mb-4">
                     <div class="row g-2">
                       <div class="col-4">
-                        <select id="review-rating" class="form-select">
+                        <select id="review-rating" class="form-select form-select-sm">
                           <option value="5">5 sao</option>
                           <option value="4">4 sao</option>
                           <option value="3">3 sao</option>
@@ -163,35 +537,34 @@
                         </select>
                       </div>
                       <div class="col-8">
-                        <input id="review-comment" class="form-control" placeholder="Chia sẻ cảm nhận của bạn" maxlength="500" />
+                        <input id="review-comment" class="form-control form-control-sm" placeholder="Chia sẻ cảm nhận của bạn" maxlength="500" />
                       </div>
                     </div>
                     <div class="mt-2 d-grid">
-                      <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                      <button type="submit" class="btn btn-sm btn-dark">Gửi đánh giá</button>
                     </div>
                   </form>
                   <div id="reviews-list"></div>
-                  <div class="text-center mt-2">
-                    <button id="load-more-reviews" class="btn btn-sm btn-outline-secondary">Xem thêm đánh giá</button>
+                  <div class="text-center mt-3">
+                    <button id="load-more-reviews" class="btn btn-sm btn-outline-dark">Xem thêm đánh giá</button>
                   </div>
                 </div>
               </div>
             </div>
           `;
 
+          // Gallery thumbnail clicks handler
           document.querySelectorAll(".thumb-btn").forEach((btn) => {
             btn.addEventListener("click", () => {
-              document.getElementById("main-product-image").src =
-                btn.dataset.image;
+              document.getElementById("main-product-image").src = btn.dataset.image;
               document.querySelectorAll(".thumb-btn").forEach((b) => {
-                b.classList.remove("btn-primary");
-                b.classList.add("btn-outline-secondary");
+                b.classList.remove("active");
               });
-              btn.classList.remove("btn-outline-secondary");
-              btn.classList.add("btn-primary");
+              btn.classList.add("active");
             });
           });
 
+          // Quantity adjustments handler
           const qtyInput = document.getElementById("qty-input");
           const minusBtn = document.getElementById("qty-minus");
           const plusBtn = document.getElementById("qty-plus");
@@ -204,41 +577,40 @@
             qtyInput.value = String(Math.min(stock, current + 1));
           });
 
-          document
-            .getElementById("add-cart-btn")
-            ?.addEventListener("click", async () => {
-              const qty = Math.max(
-                1,
-                Math.min(stock, Number(qtyInput.value || 1)),
-              );
-              if (typeof window.addToCart === "function") {
-                await window.addToCart(productId, qty);
-              }
-            });
+          // Add to Cart handler
+          document.getElementById("add-cart-btn")?.addEventListener("click", async () => {
+            const qty = Math.max(1, Math.min(stock, Number(qtyInput.value || 1)));
+            if (typeof window.addToCart === "function") {
+              await window.addToCart(productId, qty);
+            }
+          });
 
           renderReviews(data.reviews || []);
           renderRelated(data.related || []);
           bindReviewForm();
+          
+          if (typeof window.initScrollReveal === "function") {
+            window.initScrollReveal();
+          }
         }
 
         function renderReviews(reviews) {
           const box = document.getElementById("reviews-list");
           if (!box) return;
           if (!reviews.length) {
-            box.innerHTML =
-              '<div class="text-muted">Chưa có đánh giá nào.</div>';
+            box.innerHTML = '<div class="text-muted py-2" style="font-family: \'DM Sans\', sans-serif; font-size: 13.5px;">Chưa có đánh giá nào.</div>';
             return;
           }
           box.innerHTML = reviews
             .map(
               (rv) => `
-            <div class="border rounded p-2 mb-2">
-              <div class="d-flex justify-content-between align-items-center">
-                <strong>${escapeHtml(rv.userName || "Khách hàng")}</strong>
-                <small class="text-muted">${new Date(rv.createdAt).toLocaleDateString("vi-VN")}</small>
+            <div class="border-bottom py-3 mb-2" style="font-family: 'DM Sans', sans-serif;">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong class="text-dark" style="font-size: 14px;">${escapeHtml(rv.userName || "Khách hàng")}</strong>
+                <small class="text-muted" style="font-size: 12px;">${new Date(rv.createdAt).toLocaleDateString("vi-VN")}</small>
               </div>
-              <div style="color:#f59e0b">${stars(rv.rating)}</div>
-              <div>${escapeHtml(rv.comment || "")}</div>
+              <div class="mb-2" style="color:#f59e0b; font-size: 13px;">${stars(rv.rating)}</div>
+              <div style="font-size: 14.5px; color: #4b5563;">${escapeHtml(rv.comment || "")}</div>
             </div>
           `,
             )
@@ -254,28 +626,41 @@
             return;
           }
           section.style.display = "block";
+          
+          const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+
           box.innerHTML = items
-            .map((p) => {
+            .map((p, idx) => {
               const price = p.salePrice || p.originalPrice;
               const stock = Number(p.stockQty || 0);
+              const disabled = stock <= 0;
+              const isWishlisted = wishlist.includes(p.id);
+              const heartIconClass = isWishlisted ? "bi-heart-fill text-danger" : "bi-heart text-muted";
+
               return `
-              <div class="col-6 col-md-4 col-lg-3">
-                <div class="product-card">
-                  <div class="product-img-wrapper">
-                    ${p.thumbnailUrl ? `<img src="${p.thumbnailUrl}" alt="${escapeHtml(p.name)}">` : `<div style="font-size:56px">📦</div>`}
+              <div class="col-6 col-md-4 col-lg-3 reveal-on-scroll" data-delay-index="${idx % 4}">
+                <div class="cyber-product-card" data-product-id="${p.id}">
+                  <button class="wishlist-btn" onclick="event.stopPropagation(); toggleWishlist(${p.id}, this)">
+                    <i class="bi ${heartIconClass}"></i>
+                  </button>
+                  <div class="cyber-product-img-wrapper" style="cursor: pointer" onclick="location.href='/products/${p.slug}'">
+                    ${p.thumbnailUrl ? `<img class="cyber-product-img" src="${p.thumbnailUrl}" alt="${escapeHtml(p.name)}">` : `<div style="font-size:56px">📦</div>`}
                   </div>
-                  <div class="product-body">
-                    <div class="product-name">${escapeHtml(p.name)}</div>
-                    <div class="${p.salePrice ? "price-sale" : "price-normal"}">${formatVND(price)}</div>
-                    <div class="d-grid gap-2 mt-2">
-                      <button class="btn-add-cart related-add" data-id="${p.id}" ${stock <= 0 ? "disabled" : ""}>${stock <= 0 ? "Hết hàng" : "🛒 Thêm vào giỏ"}</button>
-                      <a href="/products/${p.slug}" class="btn btn-outline-secondary btn-sm">Chi tiết</a>
-                    </div>
+                  <div>
+                    <div class="cyber-product-title" style="cursor: pointer" onclick="location.href='/products/${p.slug}'">${escapeHtml(p.name)}</div>
+                    <div class="cyber-product-price">${formatVND(price)}</div>
                   </div>
+                  <button class="btn-buy-now btn-add-cart" data-product-id="${p.id}" ${disabled ? "disabled" : ""}>
+                    ${disabled ? "Hết hàng" : "Buy Now"}
+                  </button>
                 </div>
               </div>`;
             })
             .join("");
+
+          if (typeof window.initScrollReveal === "function") {
+            window.initScrollReveal();
+          }
 
           document.querySelectorAll(".related-add").forEach((btn) => {
             btn.addEventListener("click", () => {
@@ -293,9 +678,7 @@
 
           loadMoreBtn?.addEventListener("click", async () => {
             reviewPage += 1;
-            const res = await fetch(
-              `/api/products/${productId}/reviews?page=${reviewPage}&size=5`,
-            );
+            const res = await fetch(`/api/products/${productId}/reviews?page=${reviewPage}&size=5`);
             if (!res.ok) {
               if (typeof window.showToast === "function") {
                 window.showToast("Không tải thêm được đánh giá", "error");
@@ -303,8 +686,7 @@
               return;
             }
             const data = await res.json();
-            const currentHtml =
-              document.getElementById("reviews-list").innerHTML;
+            const currentHtml = document.getElementById("reviews-list").innerHTML;
             if (!data.content || !data.content.length) {
               loadMoreBtn.disabled = true;
               loadMoreBtn.textContent = "Đã hiển thị hết";
@@ -313,28 +695,23 @@
             const appendHtml = data.content
               .map(
                 (rv) => `
-              <div class="border rounded p-2 mb-2">
-                <div class="d-flex justify-content-between align-items-center">
-                  <strong>${escapeHtml(rv.userName || "Khách hàng")}</strong>
-                  <small class="text-muted">${new Date(rv.createdAt).toLocaleDateString("vi-VN")}</small>
+              <div class="border-bottom py-3 mb-2" style="font-family: 'DM Sans', sans-serif;">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <strong class="text-dark" style="font-size: 14px;">${escapeHtml(rv.userName || "Khách hàng")}</strong>
+                  <small class="text-muted" style="font-size: 12px;">${new Date(rv.createdAt).toLocaleDateString("vi-VN")}</small>
                 </div>
-                <div style="color:#f59e0b">${stars(rv.rating)}</div>
-                <div>${escapeHtml(rv.comment || "")}</div>
+                <div class="mb-2" style="color:#f59e0b; font-size: 13px;">${stars(rv.rating)}</div>
+                <div style="font-size: 14.5px; color: #4b5563;">${escapeHtml(rv.comment || "")}</div>
               </div>`,
               )
               .join("");
-            document.getElementById("reviews-list").innerHTML =
-              currentHtml + appendHtml;
+            document.getElementById("reviews-list").innerHTML = currentHtml + appendHtml;
           });
 
           form?.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const rating = Number(
-              document.getElementById("review-rating").value || 5,
-            );
-            const comment = document
-              .getElementById("review-comment")
-              .value.trim();
+            const rating = Number(document.getElementById("review-rating").value || 5);
+            const comment = document.getElementById("review-comment").value.trim();
             if (!comment) {
               if (typeof window.showToast === "function") {
                 window.showToast("Vui lòng nhập nội dung đánh giá", "warning");
@@ -365,10 +742,7 @@
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
               if (typeof window.showToast === "function") {
-                window.showToast(
-                  data.message || "Gửi đánh giá thất bại",
-                  "error",
-                );
+                window.showToast(data.message || "Gửi đánh giá thất bại", "error");
               }
               return;
             }
@@ -397,6 +771,7 @@
         }
 
         await loadProductDetail();
+        updateWishlistCount();
       </script>
     </main>
   </body>

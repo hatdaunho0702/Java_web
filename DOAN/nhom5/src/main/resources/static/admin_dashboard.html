@@ -1,0 +1,3127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ElectraManager — Trang quản trị cửa hàng điện máy</title>
+  
+  <!-- Fonts -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Sora:wght@100..800&display=swap');
+  </style>
+
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- CSS Design Styles -->
+  <style>
+    :root {
+      --primary:     #2563EB;   /* action blue */
+      --primary-dim: #1E3A8A;   /* hover state */
+      --sidebar-bg:  #0F172A;   /* dark navy */
+      --sidebar-text:#94A3B8;
+      --sidebar-active:#F1F5F9;
+      --surface:     #FFFFFF;
+      --surface-2:   #F8FAFC;
+      --border:      #E2E8F0;
+      --text-main:   #0F172A;
+      --text-muted:  #64748B;
+      --success:     #10B981;
+      --warning:     #F59E0B;
+      --danger:      #EF4444;
+      --transition:  150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-long: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+      --shadow-sm:   0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md:   0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg:   0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface-2);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Fixed Left Sidebar */
+    .sidebar {
+      width: 240px;
+      background: var(--sidebar-bg);
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-brand {
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-brand .logo-icon {
+      font-size: 20px;
+      color: #ffffff;
+      background: var(--primary);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    }
+
+    .sidebar-brand .brand-name {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    .sidebar-menu {
+      flex-grow: 1;
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-left: 3px solid transparent;
+      transition: var(--transition);
+    }
+
+    .menu-item i {
+      font-size: 18px;
+      opacity: 0.8;
+    }
+
+    .menu-item:hover {
+      color: var(--sidebar-active);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .menu-item.active {
+      color: #ffffff;
+      border-left-color: var(--primary);
+      background: #1E293B;
+    }
+
+    .sidebar-footer {
+      padding: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-footer img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .sidebar-footer .user-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-footer .user-name {
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .sidebar-footer .user-role {
+      color: var(--sidebar-text);
+      font-size: 11px;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      margin-left: 240px;
+      flex-grow: 1;
+      background: var(--surface-2);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Top Header Bar */
+    .header {
+      height: 64px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 90;
+    }
+
+    .header-title {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .header-search {
+      display: flex;
+      align-items: center;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      width: 260px;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .header-search:focus-within {
+      border-color: var(--primary);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .header-search i {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+
+    .header-search input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 13px;
+      width: 100%;
+      color: var(--text-main);
+    }
+
+    .header-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 20px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .header-btn:hover {
+      background: var(--surface-2);
+      color: var(--text-main);
+    }
+
+    .header-btn .dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      border: 2px solid var(--surface);
+    }
+
+    .admin-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 1px solid var(--border);
+    }
+
+    /* Page Container */
+    .page-section {
+      display: none;
+      padding: 32px;
+      animation: fadeIn var(--transition-long);
+    }
+
+    .page-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Breadcrumbs */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .breadcrumb a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      color: var(--primary);
+    }
+
+    .breadcrumb i {
+      font-size: 12px;
+    }
+
+    /* Dismissible Warning Banner */
+    .inventory-alert {
+      background: #FFF7ED;
+      border: 1px solid #FFEDD5;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition-long);
+    }
+
+    .inventory-alert.dismissed {
+      display: none;
+    }
+
+    .alert-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .alert-icon {
+      color: var(--warning);
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .alert-text {
+      font-size: 13px;
+      color: #7C2D12;
+      line-height: 1.5;
+    }
+
+    .alert-text strong {
+      font-weight: 700;
+    }
+
+    .alert-products {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    .alert-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .alert-btn {
+      background: var(--warning);
+      color: #7C2D12;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .alert-btn:hover {
+      background: #F59E0B;
+    }
+
+    .alert-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #9A3412;
+      font-size: 16px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+
+    .alert-close:hover {
+      background: rgba(154, 52, 18, 0.08);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--accent-color, var(--primary));
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: var(--shadow-md);
+      border-color: rgba(37, 99, 235, 0.15);
+    }
+
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .kpi-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .kpi-icon {
+      font-size: 20px;
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    .kpi-value {
+      font-family: 'Sora', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-trend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .trend-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 11px;
+    }
+
+    .trend-up {
+      background: #D1FAE5;
+      color: #065F46;
+    }
+
+    .trend-down {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+
+    .trend-neutral {
+      background: #F1F5F9;
+      color: #475569;
+    }
+
+    /* Charts and Top Products Row */
+    .dashboard-row-2 {
+      display: grid;
+      grid-template-columns: 60% 40%;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .panel-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .panel-body {
+      padding: 20px;
+      flex-grow: 1;
+    }
+
+    /* Top Products Styling */
+    .top-products-list {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: space-between;
+    }
+
+    .top-product-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 8px;
+      transition: var(--transition);
+    }
+
+    .top-product-item:nth-child(odd) {
+      background: var(--surface-2);
+    }
+
+    .top-product-item:hover {
+      background: #F1F5F9;
+    }
+
+    .rank-number {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .rank-1 { background: #FEF3C7; color: #D97706; }
+    .rank-2 { background: #E2E8F0; color: #475569; }
+    .rank-3 { background: #FFEDD5; color: #C2410C; }
+
+    .product-info {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .product-name-txt {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .category-badge {
+      display: inline-block;
+      font-size: 10px;
+      background: #EFF6FF;
+      color: var(--primary);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      width: fit-content;
+      text-transform: uppercase;
+    }
+
+    .sales-count {
+      text-align: right;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-right: 16px;
+    }
+
+    .sales-count strong {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .product-revenue {
+      text-align: right;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      min-width: 90px;
+    }
+
+    /* Common Table Styling */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .custom-table th {
+      background: var(--surface-2);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .custom-table td {
+      padding: 14px 20px;
+      font-size: 13.5px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .custom-table tbody tr {
+      transition: var(--transition);
+    }
+
+    .custom-table tbody tr:hover {
+      background: #F1F5F9;
+    }
+
+    .custom-table tbody tr.expanded-row:hover {
+      background: initial;
+    }
+
+    /* Status Badges */
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .status-pending { background: #FEF3C7; color: #D97706; }
+    .status-shipping { background: #DBEAFE; color: #1D4ED8; }
+    .status-completed { background: #D1FAE5; color: #065F46; }
+    .status-cancelled { background: #FEE2E2; color: #991B1B; }
+
+    /* Action buttons */
+    .btn-action-sm {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+
+    .btn-action-sm:hover {
+      background: var(--surface-2);
+      border-color: var(--text-muted);
+    }
+
+    .btn-action-sm:active {
+      transform: scale(0.97);
+    }
+
+    .panel-footer-link {
+      display: block;
+      text-align: center;
+      padding: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary);
+      text-decoration: none;
+      border-top: 1px solid var(--border);
+      transition: var(--transition);
+    }
+
+    .panel-footer-link:hover {
+      background: var(--surface-2);
+      color: var(--primary-dim);
+    }
+
+    /* Action bar on lists */
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .form-select-custom {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--text-main);
+      font-weight: 500;
+      outline: none;
+      min-width: 160px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .form-select-custom:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn-filled-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-filled-primary:hover {
+      background: var(--primary-dim);
+    }
+
+    .btn-filled-primary:active {
+      transform: scale(0.97);
+    }
+
+    /* Product Specific UI */
+    .product-cell-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+
+    .product-sku {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: monospace;
+      margin-top: 2px;
+    }
+
+    .stock-critical {
+      color: var(--danger);
+      font-weight: 700;
+      background: #FEE2E2;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .icon-action-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+      border-radius: 6px;
+      transition: var(--transition);
+    }
+
+    .icon-action-btn:hover {
+      background: var(--surface-2);
+    }
+
+    .btn-edit:hover {
+      color: var(--primary);
+    }
+
+    .btn-delete:hover {
+      color: var(--danger);
+    }
+
+    /* Add/Edit Product Drawer from Right */
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition-long);
+    }
+
+    .drawer-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 480px;
+      background: var(--surface);
+      z-index: 1001;
+      box-shadow: -10px 0 30px rgba(15, 23, 42, 0.1);
+      transform: translateX(100%);
+      transition: var(--transition-long);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .drawer-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 6px;
+      transition: var(--transition);
+    }
+
+    .drawer-close:hover {
+      background: var(--surface-2);
+      color: var(--text-main);
+    }
+
+    .drawer-body {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .form-input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13.5px;
+      color: var(--text-main);
+      outline: none;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    textarea.form-input {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Drag and Drop Zone */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--surface-2);
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.02);
+    }
+
+    .upload-zone i {
+      font-size: 24px;
+      color: var(--text-muted);
+    }
+
+    .upload-zone p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .upload-zone span {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .preview-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .preview-thumb {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    /* Toggle Switch */
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 38px;
+      height: 20px;
+      background-color: var(--border);
+      border-radius: 20px;
+      transition: var(--transition);
+    }
+
+    .switch::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: white;
+      top: 2px;
+      left: 2px;
+      transition: var(--transition);
+    }
+
+    .toggle-checkbox {
+      display: none;
+    }
+
+    .toggle-checkbox:checked + .switch {
+      background-color: var(--success);
+    }
+
+    .toggle-checkbox:checked + .switch::after {
+      left: 20px;
+    }
+
+    .drawer-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      background: var(--surface-2);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(15, 23, 42, 0.05);
+      color: var(--text-main);
+    }
+
+    /* Order Specific UI */
+    .orders-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+      gap: 8px;
+    }
+
+    .order-tab {
+      padding: 12px 16px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .order-tab:hover {
+      color: var(--text-main);
+    }
+
+    .order-tab.active {
+      color: var(--primary);
+    }
+
+    .order-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--primary);
+    }
+
+    .tab-count {
+      font-size: 11px;
+      background: var(--border);
+      color: var(--text-muted);
+      padding: 1px 6px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .order-tab.active .tab-count {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    /* Expandable Order Detail Panel */
+    .detail-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: var(--transition-long);
+      background: var(--surface-2);
+    }
+
+    .detail-panel.open {
+      max-height: 600px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 30% 40% 30%;
+      padding: 24px;
+      gap: 24px;
+      border-bottom: 1.5px solid var(--border);
+    }
+
+    .detail-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .detail-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .info-lbl {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .info-val {
+      font-weight: 600;
+      color: var(--text-main);
+      text-align: right;
+    }
+
+    .order-products-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .order-p-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .order-p-name {
+      font-weight: 600;
+      color: var(--text-main);
+      max-width: 180px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .order-p-qty {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .order-p-price {
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Vertical Stepper Timeline */
+    .vertical-stepper {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+      padding-left: 24px;
+    }
+
+    .vertical-stepper::before {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: var(--border);
+      z-index: 1;
+    }
+
+    .step-item {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .step-icon {
+      position: absolute;
+      left: -24px;
+      top: 0;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--border);
+      border: 3px solid var(--surface-2);
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .step-item.completed .step-icon {
+      background: var(--success);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+
+    .step-item.active .step-icon {
+      background: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+
+    .step-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .step-item.active .step-title,
+    .step-item.completed .step-title {
+      color: var(--text-main);
+    }
+
+    .step-time {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .detail-actions {
+      padding: 12px 24px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Toast Container */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .toast {
+      background: var(--surface);
+      color: var(--text-main);
+      padding: 16px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13.5px;
+      font-weight: 600;
+      transform: translateX(120%);
+      opacity: 0;
+      transition: var(--transition-long);
+      min-width: 280px;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .toast-icon-success { color: var(--success); }
+    .toast-icon-danger { color: var(--danger); }
+    .toast-icon-warning { color: var(--warning); }
+    .toast-icon-info { color: var(--primary); }
+  </style>
+</head>
+<body>
+
+  <!-- Left Sidebar Panel -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo-icon">⚡</div>
+      <div class="brand-name">ElectraManager</div>
+    </div>
+    
+    <nav class="sidebar-menu">
+      <a href="#" class="menu-item active" data-target="dashboard">
+        <i class="ti ti-layout-dashboard"></i>
+        <span>Tổng quan</span>
+      </a>
+      <a href="#" class="menu-item" data-target="products">
+        <i class="ti ti-device-tv"></i>
+        <span>Sản phẩm</span>
+      </a>
+      <a href="#" class="menu-item" data-target="categories">
+        <i class="ti ti-category"></i>
+        <span>Danh mục</span>
+      </a>
+      <a href="#" class="menu-item" data-target="inventory">
+        <i class="ti ti-package"></i>
+        <span>Kho hàng</span>
+      </a>
+      <a href="#" class="menu-item" data-target="orders">
+        <i class="ti ti-clipboard-list"></i>
+        <span>Đơn hàng</span>
+      </a>
+      <a href="#" class="menu-item" data-target="customers">
+        <i class="ti ti-users"></i>
+        <span>Khách hàng</span>
+      </a>
+      <a href="#" class="menu-item" data-target="discounts">
+        <i class="ti ti-discount"></i>
+        <span>Khuyến mãi</span>
+      </a>
+      <a href="#" class="menu-item" data-target="employees">
+        <i class="ti ti-id-badge"></i>
+        <span>Nhân viên</span>
+      </a>
+      <a href="#" class="menu-item" data-target="reports">
+        <i class="ti ti-chart-bar"></i>
+        <span>Báo cáo</span>
+      </a>
+      <a href="#" class="menu-item" data-target="settings">
+        <i class="ti ti-settings"></i>
+        <span>Cài đặt</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="Avatar">
+      <div class="user-info">
+        <span class="user-name">Lê Minh Ngọc</span>
+        <span class="user-role">Quản lý cửa hàng</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right/Main Content Panel -->
+  <main class="main-content">
+    
+    <!-- Header Component -->
+    <header class="header">
+      <div class="header-title" id="pageTitle">Tổng quan hệ thống</div>
+      
+      <div class="header-actions">
+        <div class="header-search">
+          <i class="ti ti-search"></i>
+          <input type="text" placeholder="Tìm kiếm nhanh...">
+        </div>
+        
+        <button class="header-btn" onclick="triggerNotificationToast()">
+          <i class="ti ti-bell"></i>
+          <span class="dot"></span>
+        </button>
+        
+        <img class="admin-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="Admin" onclick="showToast('Xin chào, Lê Minh Ngọc!', 'info')">
+      </div>
+    </header>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- 1. DASHBOARD PAGE -->
+    <section class="page-section active" id="dashboardSection">
+      
+      <!-- Critical Inventory Banner -->
+      <div class="inventory-alert" id="inventoryAlert">
+        <div class="alert-content">
+          <i class="ti ti-alert-triangle alert-icon"></i>
+          <div class="alert-text">
+            <strong>Cảnh báo kho hàng:</strong> Có các sản phẩm sắp hết hàng (&lt; 5 cái): 
+            <span class="alert-products">Lò vi sóng Panasonic (3 cái), Máy giặt Electrolux (2 cái)</span>. 
+            Vui lòng nhập thêm hàng để phục vụ kinh doanh.
+          </div>
+        </div>
+        <div class="alert-actions">
+          <button class="alert-btn" onclick="switchToSection('products')">Nhập thêm hàng</button>
+          <button class="alert-close" onclick="dismissAlert()"><i class="ti ti-x"></i></button>
+        </div>
+      </div>
+
+      <!-- KPI Grid Row -->
+      <div class="kpi-grid">
+        <!-- KPI 1 -->
+        <div class="kpi-card" style="--accent-color: var(--primary);">
+          <div class="kpi-header">
+            <span class="kpi-title">Doanh thu hôm nay</span>
+            <i class="ti ti-coin kpi-icon"></i>
+          </div>
+          <div class="kpi-value" id="kpiRevenue" data-val="12450000">0 đ</div>
+          <div class="kpi-trend">
+            <span class="trend-badge trend-up">
+              <i class="ti ti-arrow-up-right"></i> +8.2%
+            </span>
+            <span style="color: var(--text-muted);">so hôm qua</span>
+          </div>
+        </div>
+        <!-- KPI 2 -->
+        <div class="kpi-card" style="--accent-color: var(--success);">
+          <div class="kpi-header">
+            <span class="kpi-title">Đơn hàng mới</span>
+            <i class="ti ti-shopping-cart kpi-icon"></i>
+          </div>
+          <div class="kpi-value" id="kpiOrders" data-val="38">0 đơn</div>
+          <div class="kpi-trend">
+            <span class="trend-badge trend-up">
+              <i class="ti ti-plus"></i> 12 đơn
+            </span>
+            <span style="color: var(--text-muted);">so hôm qua</span>
+          </div>
+        </div>
+        <!-- KPI 3 -->
+        <div class="kpi-card" style="--accent-color: var(--warning);">
+          <div class="kpi-header">
+            <span class="kpi-title">Sản phẩm sắp hết</span>
+            <i class="ti ti-alert-circle kpi-icon" style="color: var(--warning); opacity: 1;"></i>
+          </div>
+          <div class="kpi-value" id="kpiLowStock" data-val="7" style="color: var(--warning);">0 sản phẩm</div>
+          <div class="kpi-trend">
+            <span class="trend-badge trend-down">
+              <i class="ti ti-arrow-down-right"></i> Cần nhập
+            </span>
+            <span style="color: var(--text-muted);">trong kho</span>
+          </div>
+        </div>
+        <!-- KPI 4 -->
+        <div class="kpi-card" style="--accent-color: var(--accent);">
+          <div class="kpi-header">
+            <span class="kpi-title">Khách hàng mới</span>
+            <i class="ti ti-user-plus kpi-icon"></i>
+          </div>
+          <div class="kpi-value" id="kpiCustomers" data-val="14">0 người</div>
+          <div class="kpi-trend">
+            <span class="trend-badge trend-neutral">
+              Tháng này
+            </span>
+            <span style="color: var(--text-muted);">đăng ký mới</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts & Top Products Row -->
+      <div class="dashboard-row-2">
+        <!-- Chart Column -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title">📈 Doanh thu 7 ngày gần nhất</h3>
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Đơn vị: Triệu VND</span>
+          </div>
+          <div class="panel-body" style="display: flex; align-items: center; justify-content: center; min-height: 250px;">
+            <canvas id="revenueChart" style="max-height: 260px; width: 100%;"></canvas>
+          </div>
+        </div>
+        
+        <!-- Top Products Column -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title">🏆 Top 5 sản phẩm bán chạy</h3>
+          </div>
+          <div class="panel-body">
+            <div class="top-products-list">
+              <!-- Item 1 -->
+              <div class="top-product-item">
+                <div class="rank-number rank-1">1</div>
+                <div class="product-info">
+                  <span class="product-name-txt">Smart TV Samsung Neo QLED</span>
+                  <span class="category-badge">Tivi</span>
+                </div>
+                <div class="sales-count">Đã bán <strong>42</strong></div>
+                <div class="product-revenue">840.0M đ</div>
+              </div>
+              <!-- Item 2 -->
+              <div class="top-product-item">
+                <div class="rank-number rank-2">2</div>
+                <div class="product-info">
+                  <span class="product-name-txt">Tủ lạnh LG Side-by-Side Inverter</span>
+                  <span class="category-badge">Điện lạnh</span>
+                </div>
+                <div class="sales-count">Đã bán <strong>35</strong></div>
+                <div class="product-revenue">630.0M đ</div>
+              </div>
+              <!-- Item 3 -->
+              <div class="top-product-item">
+                <div class="rank-number rank-3">3</div>
+                <div class="product-info">
+                  <span class="product-name-txt">Điều hòa Daikin 1.5 HP Inverter</span>
+                  <span class="category-badge">Điều hòa</span>
+                </div>
+                <div class="sales-count">Đã bán <strong>29</strong></div>
+                <div class="product-revenue">377.0M đ</div>
+              </div>
+              <!-- Item 4 -->
+              <div class="top-product-item">
+                <div class="rank-number">4</div>
+                <div class="product-info">
+                  <span class="product-name-txt">Máy giặt Electrolux UltimateCare</span>
+                  <span class="category-badge">Máy giặt</span>
+                </div>
+                <div class="sales-count">Đã bán <strong>24</strong></div>
+                <div class="product-revenue">264.0M đ</div>
+              </div>
+              <!-- Item 5 -->
+              <div class="top-product-item">
+                <div class="rank-number">5</div>
+                <div class="product-info">
+                  <span class="product-name-txt">Lò vi sóng Panasonic Inverter</span>
+                  <span class="category-badge">Gia dụng</span>
+                </div>
+                <div class="sales-count">Đã bán <strong>18</strong></div>
+                <div class="product-revenue">68.4M đ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders Table Row -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <h3 class="panel-title">📋 Đơn hàng mới phát sinh</h3>
+        </div>
+        <div class="table-container">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Khách hàng</th>
+                <th>Sản phẩm tiêu biểu</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight: 700;">#DH-9402</td>
+                <td style="font-weight: 600;">Nguyễn Văn Bình</td>
+                <td>Smart TV Samsung Neo QLED 65"</td>
+                <td style="font-weight: 700;">22,500,000 đ</td>
+                <td><span class="badge-status status-pending">Chờ xác nhận</span></td>
+                <td>
+                  <button class="btn-action-sm" onclick="switchToSectionAndExpandOrder('DH-9402')">
+                    <i class="ti ti-eye"></i> Xem
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td style="font-weight: 700;">#DH-9401</td>
+                <td style="font-weight: 600;">Lâm Thị Thảo</td>
+                <td>Máy giặt Electrolux UltimateCare 10kg</td>
+                <td style="font-weight: 700;">11,500,000 đ</td>
+                <td><span class="badge-status status-shipping">Đang giao</span></td>
+                <td>
+                  <button class="btn-action-sm" onclick="switchToSectionAndExpandOrder('DH-9401')">
+                    <i class="ti ti-eye"></i> Xem
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td style="font-weight: 700;">#DH-9400</td>
+                <td style="font-weight: 600;">Phạm Quốc Việt</td>
+                <td>Tủ lạnh LG Side-by-Side 640L</td>
+                <td style="font-weight: 700;">18,500,000 đ</td>
+                <td><span class="badge-status status-completed">Hoàn thành</span></td>
+                <td>
+                  <button class="btn-action-sm" onclick="switchToSectionAndExpandOrder('DH-9400')">
+                    <i class="ti ti-eye"></i> Xem
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td style="font-weight: 700;">#DH-9399</td>
+                <td style="font-weight: 600;">Vũ Hoàng Anh</td>
+                <td>Lò vi sóng Panasonic Inverter 27L</td>
+                <td style="font-weight: 700;">3,800,000 đ</td>
+                <td><span class="badge-status status-completed">Hoàn thành</span></td>
+                <td>
+                  <button class="btn-action-sm" onclick="switchToSectionAndExpandOrder('DH-9399')">
+                    <i class="ti ti-eye"></i> Xem
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td style="font-weight: 700;">#DH-9398</td>
+                <td style="font-weight: 600;">Ngô Mỹ Linh</td>
+                <td>Điều hòa Daikin Inverter 1.5 HP</td>
+                <td style="font-weight: 700;">13,000,000 đ</td>
+                <td><span class="badge-status status-cancelled">Đã hủy</span></td>
+                <td>
+                  <button class="btn-action-sm" onclick="switchToSectionAndExpandOrder('DH-9398')">
+                    <i class="ti ti-eye"></i> Xem
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <a href="#" class="panel-footer-link" onclick="switchToSection('orders')">Xem tất cả đơn hàng →</a>
+      </div>
+
+    </section>
+
+    <!-- 2. PRODUCT MANAGEMENT PAGE -->
+    <section class="page-section" id="productsSection">
+      
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <a href="#" onclick="switchToSection('dashboard')">Trang quản trị</a>
+        <i class="ti ti-chevron-right"></i>
+        <span>Sản phẩm</span>
+      </div>
+
+      <div class="action-bar">
+        <div class="filter-group">
+          <!-- Full Text Search -->
+          <div class="header-search" style="background: var(--surface); width: 300px;">
+            <i class="ti ti-search"></i>
+            <input type="text" id="productSearchInput" placeholder="Tìm sản phẩm bằng tên, SKU..." oninput="filterProductsTable()">
+          </div>
+          <!-- Category Filter -->
+          <select class="form-select-custom" id="categoryFilter" onchange="filterProductsTable()">
+            <option value="all">Tất cả danh mục</option>
+            <option value="Tivi">Tivi</option>
+            <option value="Điện lạnh">Điện lạnh</option>
+            <option value="Điều hòa">Điều hòa</option>
+            <option value="Máy giặt">Máy giặt</option>
+            <option value="Gia dụng">Gia dụng</option>
+          </select>
+          <!-- Status Filter -->
+          <select class="form-select-custom" id="statusFilter" onchange="filterProductsTable()">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="Đang bán">Đang bán</option>
+            <option value="Ngừng bán">Ngừng bán</option>
+            <option value="Hết hàng">Hết hàng</option>
+          </select>
+        </div>
+
+        <button class="btn-filled-primary" onclick="openProductDrawer('add')">
+          <i class="ti ti-plus"></i> Thêm sản phẩm
+        </button>
+      </div>
+
+      <!-- Products List Card -->
+      <div class="panel-card">
+        <div class="table-container">
+          <table class="custom-table" id="productsTable">
+            <thead>
+              <tr>
+                <th>Ảnh</th>
+                <th>Tên sản phẩm & SKU</th>
+                <th>Danh mục</th>
+                <th>Giá bán</th>
+                <th>Tồn kho</th>
+                <th>Trạng thái</th>
+                <th style="text-align: center;">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Product 1 -->
+              <tr data-category="Tivi" data-status="Đang bán">
+                <td><img class="product-cell-img" src="https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&q=80&w=100" alt="TV Samsung"></td>
+                <td>
+                  <span style="font-weight: 700; display: block;">Smart TV Samsung Neo QLED 65"</span>
+                  <span class="product-sku">SKU: TV-SAM-65QLED</span>
+                </td>
+                <td><span class="category-badge">Tivi</span></td>
+                <td style="font-weight: 700;">22,500,000 đ</td>
+                <td style="font-weight: 600;">14 cái</td>
+                <td><span class="badge-status status-completed">Đang bán</span></td>
+                <td style="text-align: center;">
+                  <button class="icon-action-btn btn-edit" title="Sửa" onclick="openProductDrawer('edit', 'TV-SAM-65QLED')">
+                    <i class="ti ti-edit"></i>
+                  </button>
+                  <button class="icon-action-btn btn-delete" title="Xóa" onclick="deleteProductRow(this)">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <!-- Product 2 -->
+              <tr data-category="Điện lạnh" data-status="Đang bán">
+                <td><img class="product-cell-img" src="https://images.unsplash.com/photo-1571175432247-5c31c0c69d4d?auto=format&fit=crop&q=80&w=100" alt="Tủ lạnh LG"></td>
+                <td>
+                  <span style="font-weight: 700; display: block;">Tủ lạnh LG Side-by-Side Inverter 640L</span>
+                  <span class="product-sku">SKU: REF-LG-640SBS</span>
+                </td>
+                <td><span class="category-badge">Điện lạnh</span></td>
+                <td style="font-weight: 700;">18,500,000 đ</td>
+                <td style="font-weight: 600;">8 cái</td>
+                <td><span class="badge-status status-completed">Đang bán</span></td>
+                <td style="text-align: center;">
+                  <button class="icon-action-btn btn-edit" title="Sửa" onclick="openProductDrawer('edit', 'REF-LG-640SBS')">
+                    <i class="ti ti-edit"></i>
+                  </button>
+                  <button class="icon-action-btn btn-delete" title="Xóa" onclick="deleteProductRow(this)">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <!-- Product 3 -->
+              <tr data-category="Điều hòa" data-status="Đang bán">
+                <td><img class="product-cell-img" src="https://images.unsplash.com/photo-1621905252507-b354bc25edac?auto=format&fit=crop&q=80&w=100" alt="Điều hòa Daikin"></td>
+                <td>
+                  <span style="font-weight: 700; display: block;">Điều hòa Daikin Inverter 1.5 HP</span>
+                  <span class="product-sku">SKU: AC-DAI-1.5HP</span>
+                </td>
+                <td><span class="category-badge">Điều hòa</span></td>
+                <td style="font-weight: 700;">13,000,000 đ</td>
+                <td style="font-weight: 600;">11 cái</td>
+                <td><span class="badge-status status-completed">Đang bán</span></td>
+                <td style="text-align: center;">
+                  <button class="icon-action-btn btn-edit" title="Sửa" onclick="openProductDrawer('edit', 'AC-DAI-1.5HP')">
+                    <i class="ti ti-edit"></i>
+                  </button>
+                  <button class="icon-action-btn btn-delete" title="Xóa" onclick="deleteProductRow(this)">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <!-- Product 4 -->
+              <tr data-category="Máy giặt" data-status="Đang bán">
+                <td><img class="product-cell-img" src="https://images.unsplash.com/photo-1610557892470-76d739a29bfe?auto=format&fit=crop&q=80&w=100" alt="Máy giặt Electrolux"></td>
+                <td>
+                  <span style="font-weight: 700; display: block;">Máy giặt Electrolux UltimateCare 10kg</span>
+                  <span class="product-sku">SKU: WM-ELE-10KG</span>
+                </td>
+                <td><span class="category-badge">Máy giặt</span></td>
+                <td style="font-weight: 700;">11,500,000 đ</td>
+                <td><span class="stock-critical">2 cái</span></td>
+                <td><span class="badge-status status-completed">Đang bán</span></td>
+                <td style="text-align: center;">
+                  <button class="icon-action-btn btn-edit" title="Sửa" onclick="openProductDrawer('edit', 'WM-ELE-10KG')">
+                    <i class="ti ti-edit"></i>
+                  </button>
+                  <button class="icon-action-btn btn-delete" title="Xóa" onclick="deleteProductRow(this)">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <!-- Product 5 -->
+              <tr data-category="Gia dụng" data-status="Đang bán">
+                <td><img class="product-cell-img" src="https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?auto=format&fit=crop&q=80&w=100" alt="Lò vi sóng"></td>
+                <td>
+                  <span style="font-weight: 700; display: block;">Lò vi sóng Panasonic Inverter 27L</span>
+                  <span class="product-sku">SKU: MW-PAN-27L</span>
+                </td>
+                <td><span class="category-badge">Gia dụng</span></td>
+                <td style="font-weight: 700;">3,800,000 đ</td>
+                <td><span class="stock-critical">3 cái</span></td>
+                <td><span class="badge-status status-completed">Đang bán</span></td>
+                <td style="text-align: center;">
+                  <button class="icon-action-btn btn-edit" title="Sửa" onclick="openProductDrawer('edit', 'MW-PAN-27L')">
+                    <i class="ti ti-edit"></i>
+                  </button>
+                  <button class="icon-action-btn btn-delete" title="Xóa" onclick="deleteProductRow(this)">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <!-- Product 6 -->
+              <tr data-category="Gia dụng" data-status="Ngừng bán">
+                <td><img class="product-cell-img" src="https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&q=80&w=100" alt="Nồi cơm điện"></td>
+                <td>
+                  <span style="font-weight: 700; display: block;">Nồi cơm điện cao tần Toshiba 1.8L</span>
+                  <span class="product-sku">SKU: RC-TOS-1.8L</span>
+                </td>
+                <td><span class="category-badge">Gia dụng</span></td>
+                <td style="font-weight: 700;">2,900,000 đ</td>
+                <td style="font-weight: 600;">12 cái</td>
+                <td><span class="badge-status status-cancelled">Ngừng bán</span></td>
+                <td style="text-align: center;">
+                  <button class="icon-action-btn btn-edit" title="Sửa" onclick="openProductDrawer('edit', 'RC-TOS-1.8L')">
+                    <i class="ti ti-edit"></i>
+                  </button>
+                  <button class="icon-action-btn btn-delete" title="Xóa" onclick="deleteProductRow(this)">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 3. ORDER MANAGEMENT PAGE -->
+    <section class="page-section" id="ordersSection">
+      
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <a href="#" onclick="switchToSection('dashboard')">Trang quản trị</a>
+        <i class="ti ti-chevron-right"></i>
+        <span>Đơn hàng</span>
+      </div>
+
+      <!-- Tab Filters -->
+      <div class="orders-tabs">
+        <button class="order-tab active" data-tab="all" onclick="filterOrdersByTab('all')">
+          Tất cả <span class="tab-count" id="count-all">5</span>
+        </button>
+        <button class="order-tab" data-tab="pending" onclick="filterOrdersByTab('pending')">
+          Chờ xác nhận <span class="tab-count" id="count-pending" style="background: var(--warning); color: #7C2D12;">1</span>
+        </button>
+        <button class="order-tab" data-tab="confirmed" onclick="filterOrdersByTab('confirmed')">
+          Đã xác nhận <span class="tab-count" id="count-confirmed">0</span>
+        </button>
+        <button class="order-tab" data-tab="shipping" onclick="filterOrdersByTab('shipping')">
+          Đang giao <span class="tab-count" id="count-shipping" style="background: var(--primary); color: #ffffff;">1</span>
+        </button>
+        <button class="order-tab" data-tab="completed" onclick="filterOrdersByTab('completed')">
+          Hoàn thành <span class="tab-count" id="count-completed" style="background: var(--success); color: #ffffff;">2</span>
+        </button>
+        <button class="order-tab" data-tab="cancelled" onclick="filterOrdersByTab('cancelled')">
+          Đã hủy <span class="tab-count" id="count-cancelled" style="background: var(--danger); color: #ffffff;">1</span>
+        </button>
+      </div>
+
+      <!-- Orders List Card -->
+      <div class="panel-card">
+        <div class="table-container">
+          <table class="custom-table" id="ordersTable">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Khách hàng</th>
+                <th>Ngày đặt hàng</th>
+                <th>Phương thức TT</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th style="text-align: center;">Chi tiết</th>
+              </tr>
+            </thead>
+            <tbody>
+              
+              <!-- Order 1 -->
+              <tr class="order-main-row" data-id="DH-9402" data-status="pending" onclick="toggleOrderDetailRow('DH-9402')">
+                <td style="font-weight: 700;">#DH-9402</td>
+                <td style="font-weight: 600;">Nguyễn Văn Bình</td>
+                <td>30/05/2026 14:23</td>
+                <td>Thanh toán COD</td>
+                <td style="font-weight: 700;">22,500,000 đ</td>
+                <td><span class="badge-status status-pending">Chờ xác nhận</span></td>
+                <td style="text-align: center;">
+                  <button class="icon-action-btn toggle-arrow" id="arrow-DH-9402">
+                    <i class="ti ti-chevron-down"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr class="expanded-row" id="detail-DH-9402" style="display: none;">
+                <td colspan="7" style="padding: 0;">
+                  <div class="detail-panel" id="panel-DH-9402">
+                    <div class="detail-grid">
+                      <!-- Col 1: General Info -->
+                      <div class="detail-col">
+                        <h4 class="detail-title">Thông tin giao hàng</h4>
+                        <div class="info-list">
+                          <div class="info-item"><span class="info-lbl">Họ tên:</span><span class="info-val">Nguyễn Văn Bình</span></div>
+                          <div class="info-item"><span class="info-lbl">Điện thoại:</span><span class="info-val">0901234567</span></div>
+                          <div class="info-item"><span class="info-lbl">Địa chỉ:</span><span class="info-val">123 Đường 3/2, Quận 10, TP.HCM</span></div>
+                          <div class="info-item"><span class="info-lbl">Phương thức:</span><span class="info-val">COD (Nhận hàng trả tiền)</span></div>
+                        </div>
+                      </div>
+                      <!-- Col 2: Products List -->
+                      <div class="detail-col">
+                        <h4 class="detail-title">Danh sách sản phẩm</h4>
+                        <div class="order-products-list">
+                          <div class="order-p-item">
+                            <span class="order-p-name">Smart TV Samsung Neo QLED 65"</span>
+                            <span class="order-p-qty">x1</span>
+                            <span class="order-p-price">22,500,000 đ</span>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Col 3: Status Stepper -->
+                      <div class="detail-col">
+                        <h4 class="detail-title">Tiến trình đơn hàng</h4>
+                        <div class="vertical-stepper">
+                          <div class="step-item active">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Chờ xác nhận</span>
+                            <span class="step-time">30/05/2026 14:23</span>
+                          </div>
+                          <div class="step-item">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Đã xác nhận</span>
+                            <span class="step-time">--</span>
+                          </div>
+                          <div class="step-item">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Đang giao hàng</span>
+                            <span class="step-time">--</span>
+                          </div>
+                          <div class="step-item">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Hoàn thành</span>
+                            <span class="step-time">--</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="detail-actions">
+                      <select class="form-select-custom" style="min-width: 180px;" onchange="updateOrderStatus('DH-9402', this.value)" onclick="event.stopPropagation()">
+                        <option value="pending" selected>Chờ xác nhận</option>
+                        <option value="shipping">Đã xác nhận & Giao hàng</option>
+                        <option value="completed">Đánh dấu hoàn thành</option>
+                        <option value="cancelled">Hủy đơn hàng</option>
+                      </select>
+                      <button class="btn-filled-primary" onclick="showToast('Cập nhật trạng thái thành công!', 'success'); toggleOrderDetailRow('DH-9402');" onclick="event.stopPropagation()">Xác nhận</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Order 2 -->
+              <tr class="order-main-row" data-id="DH-9401" data-status="shipping" onclick="toggleOrderDetailRow('DH-9401')">
+                <td style="font-weight: 700;">#DH-9401</td>
+                <td style="font-weight: 600;">Lâm Thị Thảo</td>
+                <td>30/05/2026 09:12</td>
+                <td>Chuyển khoản</td>
+                <td style="font-weight: 700;">11,500,000 đ</td>
+                <td><span class="badge-status status-shipping">Đang giao</span></td>
+                <td style="text-align: center;">
+                  <button class="icon-action-btn toggle-arrow" id="arrow-DH-9401">
+                    <i class="ti ti-chevron-down"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr class="expanded-row" id="detail-DH-9401" style="display: none;">
+                <td colspan="7" style="padding: 0;">
+                  <div class="detail-panel" id="panel-DH-9401">
+                    <div class="detail-grid">
+                      <div class="detail-col">
+                        <h4 class="detail-title">Thông tin giao hàng</h4>
+                        <div class="info-list">
+                          <div class="info-item"><span class="info-lbl">Họ tên:</span><span class="info-val">Lâm Thị Thảo</span></div>
+                          <div class="info-item"><span class="info-lbl">Điện thoại:</span><span class="info-val">0938765432</span></div>
+                          <div class="info-item"><span class="info-lbl">Địa chỉ:</span><span class="info-val">456 Lê Hồng Phong, Quận 5, TP.HCM</span></div>
+                          <div class="info-item"><span class="info-lbl">Phương thức:</span><span class="info-val">Chuyển khoản (Đã thanh toán)</span></div>
+                        </div>
+                      </div>
+                      <div class="detail-col">
+                        <h4 class="detail-title">Danh sách sản phẩm</h4>
+                        <div class="order-products-list">
+                          <div class="order-p-item">
+                            <span class="order-p-name">Máy giặt Electrolux UltimateCare 10kg</span>
+                            <span class="order-p-qty">x1</span>
+                            <span class="order-p-price">11,500,000 đ</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="detail-col">
+                        <h4 class="detail-title">Tiến trình đơn hàng</h4>
+                        <div class="vertical-stepper">
+                          <div class="step-item completed">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Chờ xác nhận</span>
+                            <span class="step-time">30/05/2026 09:12</span>
+                          </div>
+                          <div class="step-item completed">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Đã xác nhận</span>
+                            <span class="step-time">30/05/2026 09:30</span>
+                          </div>
+                          <div class="step-item active">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Đang giao hàng</span>
+                            <span class="step-time">30/05/2026 11:15</span>
+                          </div>
+                          <div class="step-item">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Hoàn thành</span>
+                            <span class="step-time">--</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="detail-actions">
+                      <select class="form-select-custom" style="min-width: 180px;" onchange="updateOrderStatus('DH-9401', this.value)" onclick="event.stopPropagation()">
+                        <option value="pending">Chờ xác nhận</option>
+                        <option value="shipping" selected>Đang giao hàng</option>
+                        <option value="completed">Đánh dấu hoàn thành</option>
+                        <option value="cancelled">Hủy đơn hàng</option>
+                      </select>
+                      <button class="btn-filled-primary" onclick="showToast('Cập nhật trạng thái thành công!', 'success'); toggleOrderDetailRow('DH-9401');" onclick="event.stopPropagation()">Xác nhận</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Order 3 -->
+              <tr class="order-main-row" data-id="DH-9400" data-status="completed" onclick="toggleOrderDetailRow('DH-9400')">
+                <td style="font-weight: 700;">#DH-9400</td>
+                <td style="font-weight: 600;">Phạm Quốc Việt</td>
+                <td>29/05/2026 16:45</td>
+                <td>Thanh toán COD</td>
+                <td style="font-weight: 700;">18,500,000 đ</td>
+                <td><span class="badge-status status-completed">Hoàn thành</span></td>
+                <td style="text-align: center;">
+                  <button class="icon-action-btn toggle-arrow" id="arrow-DH-9400">
+                    <i class="ti ti-chevron-down"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr class="expanded-row" id="detail-DH-9400" style="display: none;">
+                <td colspan="7" style="padding: 0;">
+                  <div class="detail-panel" id="panel-DH-9400">
+                    <div class="detail-grid">
+                      <div class="detail-col">
+                        <h4 class="detail-title">Thông tin giao hàng</h4>
+                        <div class="info-list">
+                          <div class="info-item"><span class="info-lbl">Họ tên:</span><span class="info-val">Phạm Quốc Việt</span></div>
+                          <div class="info-item"><span class="info-lbl">Điện thoại:</span><span class="info-val">0978999888</span></div>
+                          <div class="info-item"><span class="info-lbl">Địa chỉ:</span><span class="info-val">789 Nguyễn Đình Chiểu, Quận 3, TP.HCM</span></div>
+                          <div class="info-item"><span class="info-lbl">Phương thức:</span><span class="info-val">COD</span></div>
+                        </div>
+                      </div>
+                      <div class="detail-col">
+                        <h4 class="detail-title">Danh sách sản phẩm</h4>
+                        <div class="order-products-list">
+                          <div class="order-p-item">
+                            <span class="order-p-name">Tủ lạnh LG Side-by-Side Inverter 640L</span>
+                            <span class="order-p-qty">x1</span>
+                            <span class="order-p-price">18,500,000 đ</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="detail-col">
+                        <h4 class="detail-title">Tiến trình đơn hàng</h4>
+                        <div class="vertical-stepper">
+                          <div class="step-item completed">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Chờ xác nhận</span>
+                            <span class="step-time">29/05/2026 16:45</span>
+                          </div>
+                          <div class="step-item completed">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Đã xác nhận</span>
+                            <span class="step-time">29/05/2026 17:00</span>
+                          </div>
+                          <div class="step-item completed">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Đang giao hàng</span>
+                            <span class="step-time">30/05/2026 09:00</span>
+                          </div>
+                          <div class="step-item completed">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Hoàn thành</span>
+                            <span class="step-time">30/05/2026 11:30</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="detail-actions">
+                      <select class="form-select-custom" style="min-width: 180px;" onchange="updateOrderStatus('DH-9400', this.value)" onclick="event.stopPropagation()">
+                        <option value="pending">Chờ xác nhận</option>
+                        <option value="shipping">Đang giao hàng</option>
+                        <option value="completed" selected>Hoàn thành</option>
+                        <option value="cancelled">Hủy đơn hàng</option>
+                      </select>
+                      <button class="btn-filled-primary" onclick="showToast('Cập nhật trạng thái thành công!', 'success'); toggleOrderDetailRow('DH-9400');" onclick="event.stopPropagation()">Xác nhận</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Order 4 -->
+              <tr class="order-main-row" data-id="DH-9399" data-status="completed" onclick="toggleOrderDetailRow('DH-9399')">
+                <td style="font-weight: 700;">#DH-9399</td>
+                <td style="font-weight: 600;">Vũ Hoàng Anh</td>
+                <td>28/05/2026 11:05</td>
+                <td>Chuyển khoản</td>
+                <td style="font-weight: 700;">3,800,000 đ</td>
+                <td><span class="badge-status status-completed">Hoàn thành</span></td>
+                <td style="text-align: center;">
+                  <button class="icon-action-btn toggle-arrow" id="arrow-DH-9399">
+                    <i class="ti ti-chevron-down"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr class="expanded-row" id="detail-DH-9399" style="display: none;">
+                <td colspan="7" style="padding: 0;">
+                  <div class="detail-panel" id="panel-DH-9399">
+                    <div class="detail-grid">
+                      <div class="detail-col">
+                        <h4 class="detail-title">Thông tin giao hàng</h4>
+                        <div class="info-list">
+                          <div class="info-item"><span class="info-lbl">Họ tên:</span><span class="info-val">Vũ Hoàng Anh</span></div>
+                          <div class="info-item"><span class="info-lbl">Điện thoại:</span><span class="info-val">0983111222</span></div>
+                          <div class="info-item"><span class="info-lbl">Địa chỉ:</span><span class="info-val">102 Hoàng Diệu, Quận 4, TP.HCM</span></div>
+                          <div class="info-item"><span class="info-lbl">Phương thức:</span><span class="info-val">Chuyển khoản</span></div>
+                        </div>
+                      </div>
+                      <div class="detail-col">
+                        <h4 class="detail-title">Danh sách sản phẩm</h4>
+                        <div class="order-products-list">
+                          <div class="order-p-item">
+                            <span class="order-p-name">Lò vi sóng Panasonic Inverter 27L</span>
+                            <span class="order-p-qty">x1</span>
+                            <span class="order-p-price">3,800,000 đ</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="detail-col">
+                        <h4 class="detail-title">Tiến trình đơn hàng</h4>
+                        <div class="vertical-stepper">
+                          <div class="step-item completed">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Chờ xác nhận</span>
+                            <span class="step-time">28/05/2026 11:05</span>
+                          </div>
+                          <div class="step-item completed">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Đã xác nhận</span>
+                            <span class="step-time">28/05/2026 11:40</span>
+                          </div>
+                          <div class="step-item completed">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Đang giao hàng</span>
+                            <span class="step-time">28/05/2026 14:00</span>
+                          </div>
+                          <div class="step-item completed">
+                            <span class="step-icon"></span>
+                            <span class="step-title">Hoàn thành</span>
+                            <span class="step-time">29/05/2026 10:30</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="detail-actions">
+                      <select class="form-select-custom" style="min-width: 180px;" onchange="updateOrderStatus('DH-9399', this.value)" onclick="event.stopPropagation()">
+                        <option value="pending">Chờ xác nhận</option>
+                        <option value="shipping">Đang giao hàng</option>
+                        <option value="completed" selected>Hoàn thành</option>
+                        <option value="cancelled">Hủy đơn hàng</option>
+                      </select>
+                      <button class="btn-filled-primary" onclick="showToast('Cập nhật trạng thái thành công!', 'success'); toggleOrderDetailRow('DH-9399');" onclick="event.stopPropagation()">Xác nhận</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Order 5 -->
+              <tr class="order-main-row" data-id="DH-9398" data-status="cancelled" onclick="toggleOrderDetailRow('DH-9398')">
+                <td style="font-weight: 700;">#DH-9398</td>
+                <td style="font-weight: 600;">Ngô Mỹ Linh</td>
+                <td>27/05/2026 15:30</td>
+                <td>Thanh toán COD</td>
+                <td style="font-weight: 700;">13,000,000 đ</td>
+                <td><span class="badge-status status-cancelled">Đã hủy</span></td>
+                <td style="text-align: center;">
+                  <button class="icon-action-btn toggle-arrow" id="arrow-DH-9398">
+                    <i class="ti ti-chevron-down"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr class="expanded-row" id="detail-DH-9398" style="display: none;">
+                <td colspan="7" style="padding: 0;">
+                  <div class="detail-panel" id="panel-DH-9398">
+                    <div class="detail-grid">
+                      <div class="detail-col">
+                        <h4 class="detail-title">Thông tin giao hàng</h4>
+                        <div class="info-list">
+                          <div class="info-item"><span class="info-lbl">Họ tên:</span><span class="info-val">Ngô Mỹ Linh</span></div>
+                          <div class="info-item"><span class="info-lbl">Điện thoại:</span><span class="info-val">0912345678</span></div>
+                          <div class="info-item"><span class="info-lbl">Địa chỉ:</span><span class="info-val">222 Cách Mạng Tháng 8, Quận 3, TP.HCM</span></div>
+                          <div class="info-item"><span class="info-lbl">Phương thức:</span><span class="info-val">COD</span></div>
+                        </div>
+                      </div>
+                      <div class="detail-col">
+                        <h4 class="detail-title">Danh sách sản phẩm</h4>
+                        <div class="order-products-list">
+                          <div class="order-p-item">
+                            <span class="order-p-name">Điều hòa Daikin Inverter 1.5 HP</span>
+                            <span class="order-p-qty">x1</span>
+                            <span class="order-p-price">13,000,000 đ</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="detail-col">
+                        <h4 class="detail-title">Tiến trình đơn hàng</h4>
+                        <div class="vertical-stepper">
+                          <div class="step-item completed">
+                            <span class="step-icon" style="background: var(--danger);"></span>
+                            <span class="step-title" style="color: var(--danger);">Đã hủy</span>
+                            <span class="step-time">27/05/2026 15:55</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="detail-actions">
+                      <select class="form-select-custom" style="min-width: 180px;" onchange="updateOrderStatus('DH-9398', this.value)" onclick="event.stopPropagation()">
+                        <option value="pending">Chờ xác nhận</option>
+                        <option value="shipping">Đang giao hàng</option>
+                        <option value="completed">Hoàn thành</option>
+                        <option value="cancelled" selected>Đã hủy</option>
+                      </select>
+                      <button class="btn-filled-primary" onclick="showToast('Cập nhật trạng thái thành công!', 'success'); toggleOrderDetailRow('DH-9398');" onclick="event.stopPropagation()">Xác nhận</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- OTHER DEMO/PLACEHOLDER SECTIONS -->
+    <section class="page-section" id="categoriesSection">
+      <div class="breadcrumb">
+        <a href="#" onclick="switchToSection('dashboard')">Trang quản trị</a>
+        <i class="ti ti-chevron-right"></i>
+        <span>Danh mục</span>
+      </div>
+      <div class="panel-card p-4">
+        <h3 class="panel-title mb-4">Quản lý danh mục sản phẩm</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">Trang danh mục sản phẩm đang được xây dựng...</p>
+      </div>
+    </section>
+
+    <section class="page-section" id="inventorySection">
+      <div class="breadcrumb">
+        <a href="#" onclick="switchToSection('dashboard')">Trang quản trị</a>
+        <i class="ti ti-chevron-right"></i>
+        <span>Kho hàng</span>
+      </div>
+      <div class="panel-card p-4">
+        <h3 class="panel-title mb-4">Quản lý tồn kho chi tiết</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">Trang kiểm soát tồn kho chi tiết đang được xây dựng...</p>
+      </div>
+    </section>
+
+    <section class="page-section" id="customersSection">
+      <div class="breadcrumb">
+        <a href="#" onclick="switchToSection('dashboard')">Trang quản trị</a>
+        <i class="ti ti-chevron-right"></i>
+        <span>Khách hàng</span>
+      </div>
+      <div class="panel-card p-4">
+        <h3 class="panel-title mb-4">Quản lý cơ sở dữ liệu khách hàng</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">Trang khách hàng đang được xây dựng...</p>
+      </div>
+    </section>
+
+    <section class="page-section" id="discountsSection">
+      <div class="breadcrumb">
+        <a href="#" onclick="switchToSection('dashboard')">Trang quản trị</a>
+        <i class="ti ti-chevron-right"></i>
+        <span>Khuyến mãi</span>
+      </div>
+      <div class="panel-card p-4">
+        <h3 class="panel-title mb-4">Các chương trình khuyến mãi & coupon</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">Trang khuyến mãi đang được xây dựng...</p>
+      </div>
+    </section>
+
+    <section class="page-section" id="employeesSection">
+      <div class="breadcrumb">
+        <a href="#" onclick="switchToSection('dashboard')">Trang quản trị</a>
+        <i class="ti ti-chevron-right"></i>
+        <span>Nhân viên</span>
+      </div>
+      <div class="panel-card p-4">
+        <h3 class="panel-title mb-4">Phân quyền nhân sự</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">Trang nhân viên đang được xây dựng...</p>
+      </div>
+    </section>
+
+    <section class="page-section" id="reportsSection">
+      <div class="breadcrumb">
+        <a href="#" onclick="switchToSection('dashboard')">Trang quản trị</a>
+        <i class="ti ti-chevron-right"></i>
+        <span>Báo cáo</span>
+      </div>
+      <div class="panel-card p-4">
+        <h3 class="panel-title mb-4">Báo cáo phân tích nâng cao</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">Trang báo cáo doanh thu & tồn kho đang được xây dựng...</p>
+      </div>
+    </section>
+
+    <section class="page-section" id="settingsSection">
+      <div class="breadcrumb">
+        <a href="#" onclick="switchToSection('dashboard')">Trang quản trị</a>
+        <i class="ti ti-chevron-right"></i>
+        <span>Cài đặt</span>
+      </div>
+      <div class="panel-card p-4">
+        <h3 class="panel-title mb-4">Cài đặt hệ thống quản trị</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">Trang cài đặt hệ thống đang được xây dựng...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ADD/EDIT PRODUCT SLIDE-IN DRAWER -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeProductDrawer()"></div>
+  <div class="drawer" id="productDrawer">
+    <div class="drawer-header">
+      <div class="drawer-title" id="drawerTitle">Thêm sản phẩm mới</div>
+      <button class="drawer-close" onclick="closeProductDrawer()">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+    
+    <div class="drawer-body">
+      <!-- Input fields -->
+      <div class="form-group">
+        <label class="form-label" for="prodName">Tên sản phẩm</label>
+        <input type="text" id="prodName" class="form-input" placeholder="Ví dụ: Smart TV LG OLED 55 inch">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="prodCategory">Danh mục</label>
+          <select id="prodCategory" class="form-select-custom w-100">
+            <option value="Tivi">Tivi</option>
+            <option value="Điện lạnh">Điện lạnh</option>
+            <option value="Điều hòa">Điều hòa</option>
+            <option value="Máy giặt">Máy giặt</option>
+            <option value="Gia dụng">Gia dụng</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="prodBrand">Thương hiệu</label>
+          <input type="text" id="prodBrand" class="form-input" placeholder="Ví dụ: LG, Samsung...">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="prodPriceCost">Giá gốc (VND)</label>
+          <input type="number" id="prodPriceCost" class="form-input" placeholder="Ví dụ: 12000000">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="prodPriceSell">Giá bán (VND)</label>
+          <input type="number" id="prodPriceSell" class="form-input" placeholder="Ví dụ: 15000000">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="prodStock">Số lượng tồn kho</label>
+        <input type="number" id="prodStock" class="form-input" placeholder="Ví dụ: 24">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="prodDesc">Mô tả sản phẩm</label>
+        <textarea id="prodDesc" class="form-input" placeholder="Mô tả tóm tắt tính năng và đặc điểm sản phẩm..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Hình ảnh sản phẩm</label>
+        <div class="upload-zone" onclick="triggerFileUpload()">
+          <i class="ti ti-cloud-upload"></i>
+          <p>Kéo thả hình ảnh vào đây hoặc <span>chọn file</span></p>
+          <input type="file" id="fileInput" style="display: none;" accept="image/*" multiple onchange="handleFileSelect(event)">
+        </div>
+        <div class="preview-container" id="previewContainer"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Trạng thái bán hàng</label>
+        <label class="toggle-container">
+          <input type="checkbox" id="prodStatus" class="toggle-checkbox" checked>
+          <span class="switch"></span>
+          <span style="font-size: 13.5px; font-weight: 500;" id="statusToggleLabel">Kinh doanh (Đang bán)</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn-ghost" onclick="closeProductDrawer()">Hủy</button>
+      <button class="btn-filled-primary" onclick="saveProduct()">Lưu sản phẩm</button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC & INTERACTIONS -->
+  <script>
+    // System Navigation State
+    let currentActiveSection = 'dashboard';
+    let currentEditSku = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Setup sidebar menu clicks
+      document.querySelectorAll(".menu-item").forEach(item => {
+        item.addEventListener("click", (e) => {
+          e.preventDefault();
+          const target = item.getAttribute("data-target");
+          switchToSection(target);
+        });
+      });
+
+      // Initialize KPI card count-up animations
+      runKpiCounters();
+
+      // Initialize Chart.js
+      initCharts();
+
+      // Setup drag and drop for upload zone
+      const uploadZone = document.querySelector(".upload-zone");
+      if(uploadZone) {
+        uploadZone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          uploadZone.style.borderColor = "var(--primary)";
+        });
+
+        uploadZone.addEventListener("dragleave", () => {
+          uploadZone.style.borderColor = "var(--border)";
+        });
+
+        uploadZone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          uploadZone.style.borderColor = "var(--border)";
+          if(e.dataTransfer.files.length) {
+            handleUploadedFiles(e.dataTransfer.files);
+          }
+        });
+      }
+
+      // Toggle switch status label update
+      const statusCheckbox = document.getElementById("prodStatus");
+      const toggleLabel = document.getElementById("statusToggleLabel");
+      if (statusCheckbox && toggleLabel) {
+        statusCheckbox.addEventListener("change", () => {
+          if (statusCheckbox.checked) {
+            toggleLabel.textContent = "Kinh doanh (Đang bán)";
+          } else {
+            toggleLabel.textContent = "Tạm ngừng bán";
+          }
+        });
+      }
+    });
+
+    // Navigation switching function
+    function switchToSection(sectionId) {
+      // Find matching nav item
+      document.querySelectorAll(".menu-item").forEach(item => {
+        if(item.getAttribute("data-target") === sectionId) {
+          item.classList.add("active");
+        } else {
+          item.classList.remove("active");
+        }
+      });
+
+      // Find matching section element
+      document.querySelectorAll(".page-section").forEach(sec => {
+        sec.classList.remove("active");
+      });
+
+      const activeSec = document.getElementById(sectionId + 'Section');
+      if (activeSec) {
+        activeSec.classList.add("active");
+      }
+
+      // Update header page title text
+      const pageTitleMap = {
+        'dashboard': 'Tổng quan hệ thống',
+        'products': 'Quản lý sản phẩm',
+        'categories': 'Danh mục sản phẩm',
+        'inventory': 'Kiểm kê kho hàng',
+        'orders': 'Quản lý đơn hàng',
+        'customers': 'Hồ sơ khách hàng',
+        'discounts': 'Mã giảm giá & Khuyến mãi',
+        'employees': 'Nhân viên cửa hàng',
+        'reports': 'Báo cáo thống kê',
+        'settings': 'Cài đặt hệ thống'
+      };
+
+      const titleEl = document.getElementById("pageTitle");
+      if (titleEl) {
+        titleEl.textContent = pageTitleMap[sectionId] || 'Trang quản trị';
+      }
+
+      currentActiveSection = sectionId;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Run KPI counter animation again when switching to dashboard
+      if (sectionId === 'dashboard') {
+        runKpiCounters();
+      }
+    }
+
+    // Dismiss Alert Warning Banner
+    function dismissAlert() {
+      const alertEl = document.getElementById("inventoryAlert");
+      if(alertEl) {
+        alertEl.classList.add("dismissed");
+        showToast("Đã đóng thông báo cảnh báo kho hàng.", "info");
+      }
+    }
+
+    // KPI count up numbers animation
+    function runKpiCounters() {
+      const counters = [
+        { id: 'kpiRevenue', isCurrency: true, suffix: ' đ' },
+        { id: 'kpiOrders', isCurrency: false, suffix: ' đơn' },
+        { id: 'kpiLowStock', isCurrency: false, suffix: ' sản phẩm' },
+        { id: 'kpiCustomers', isCurrency: false, suffix: ' người' }
+      ];
+
+      counters.forEach(counter => {
+        const el = document.getElementById(counter.id);
+        if (!el) return;
+
+        const targetValue = parseInt(el.getAttribute("data-val") || 0);
+        let startTimestamp = null;
+        const duration = 800; // 800ms animation
+
+        const step = (timestamp) => {
+          if (!startTimestamp) startTimestamp = timestamp;
+          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+          
+          // Easing cubicOut
+          const easeProgress = 1 - Math.pow(1 - progress, 3);
+          const currentValue = Math.floor(easeProgress * targetValue);
+
+          if (counter.isCurrency) {
+            el.textContent = currentValue.toLocaleString('vi-VN') + counter.suffix;
+          } else {
+            el.textContent = currentValue + counter.suffix;
+          }
+
+          if (progress < 1) {
+            window.requestAnimationFrame(step);
+          }
+        };
+
+        window.requestAnimationFrame(step);
+      });
+    }
+
+    // Initialize Line Chart for Revenue using Chart.js
+    let revenueChartInstance = null;
+    function initCharts() {
+      const ctx = document.getElementById('revenueChart');
+      if (!ctx) return;
+
+      if(revenueChartInstance) {
+        revenueChartInstance.destroy();
+      }
+
+      revenueChartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'],
+          datasets: [{
+            label: 'Doanh thu trong ngày (triệu đ)',
+            data: [12.4, 15.8, 14.2, 19.5, 18.0, 24.5, 28.2],
+            borderColor: '#2563EB',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#2563EB',
+            pointHoverRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ' Doanh thu: ' + context.raw + ' triệu đ';
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: '#64748B',
+                font: {
+                  family: 'DM Sans',
+                  size: 11
+                }
+              }
+            },
+            y: {
+              grid: {
+                color: '#E2E8F0'
+              },
+              ticks: {
+                color: '#64748B',
+                font: {
+                  family: 'DM Sans',
+                  size: 11
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Product search and filters table logic
+    function filterProductsTable() {
+      const searchVal = document.getElementById("productSearchInput").value.trim().toLowerCase();
+      const catVal = document.getElementById("categoryFilter").value;
+      const statusVal = document.getElementById("statusFilter").value;
+
+      const rows = document.querySelectorAll("#productsTable tbody tr");
+
+      rows.forEach(row => {
+        const textContent = row.textContent.toLowerCase();
+        const rowCategory = row.getAttribute("data-category");
+        const rowStatus = row.getAttribute("data-status");
+
+        const matchesSearch = textContent.includes(searchVal);
+        const matchesCategory = (catVal === "all") || (rowCategory === catVal);
+        const matchesStatus = (statusVal === "all") || (rowStatus === statusVal);
+
+        if (matchesSearch && matchesCategory && matchesStatus) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      });
+    }
+
+    // Open slide-in drawer for products
+    function openProductDrawer(mode, sku = null) {
+      const drawer = document.getElementById("productDrawer");
+      const overlay = document.getElementById("drawerOverlay");
+      const title = document.getElementById("drawerTitle");
+
+      if (!drawer || !overlay) return;
+
+      currentEditSku = sku;
+
+      if (mode === 'add') {
+        title.textContent = "Thêm sản phẩm mới";
+        // Reset form inputs
+        document.getElementById("prodName").value = "";
+        document.getElementById("prodCategory").value = "Tivi";
+        document.getElementById("prodBrand").value = "";
+        document.getElementById("prodPriceCost").value = "";
+        document.getElementById("prodPriceSell").value = "";
+        document.getElementById("prodStock").value = "";
+        document.getElementById("prodDesc").value = "";
+        document.getElementById("prodStatus").checked = true;
+        document.getElementById("statusToggleLabel").textContent = "Kinh doanh (Đang bán)";
+        document.getElementById("previewContainer").innerHTML = "";
+      } else if (mode === 'edit' && sku) {
+        title.textContent = "Sửa sản phẩm: " + sku;
+        
+        // Find existing product info in the table to populate form
+        const rows = document.querySelectorAll("#productsTable tbody tr");
+        let targetRow = null;
+        rows.forEach(row => {
+          if (row.querySelector(".product-sku")?.textContent.includes(sku)) {
+            targetRow = row;
+          }
+        });
+
+        if (targetRow) {
+          const name = targetRow.querySelector("td:nth-child(2) span").textContent;
+          const category = targetRow.getAttribute("data-category");
+          const sellPrice = parseInt(targetRow.querySelector("td:nth-child(4)").textContent.replace(/[^\d]/g, ''));
+          const stock = parseInt(targetRow.querySelector("td:nth-child(5)").textContent.replace(/[^\d]/g, ''));
+          const status = targetRow.getAttribute("data-status");
+          const imgSrc = targetRow.querySelector(".product-cell-img").src;
+
+          document.getElementById("prodName").value = name;
+          document.getElementById("prodCategory").value = category;
+          document.getElementById("prodBrand").value = "Hãng nhập khẩu";
+          document.getElementById("prodPriceCost").value = Math.round(sellPrice * 0.8);
+          document.getElementById("prodPriceSell").value = sellPrice;
+          document.getElementById("prodStock").value = stock;
+          document.getElementById("prodDesc").value = "Mô tả sản phẩm bán chạy tại hệ thống ElectraManager.";
+          document.getElementById("prodStatus").checked = (status === "Đang bán");
+          document.getElementById("statusToggleLabel").textContent = (status === "Đang bán") ? "Kinh doanh (Đang bán)" : "Tạm ngừng bán";
+
+          // Show existing preview thumbnail
+          const previewContainer = document.getElementById("previewContainer");
+          previewContainer.innerHTML = `<img class="preview-thumb" src="${imgSrc}">`;
+        }
+      }
+
+      overlay.classList.add("open");
+      drawer.classList.add("open");
+    }
+
+    // Close product drawer
+    function closeProductDrawer() {
+      const drawer = document.getElementById("productDrawer");
+      const overlay = document.getElementById("drawerOverlay");
+      if (drawer && overlay) {
+        drawer.classList.remove("open");
+        overlay.classList.remove("open");
+      }
+    }
+
+    // Trigger file input upload click
+    function triggerFileUpload() {
+      document.getElementById("fileInput").click();
+    }
+
+    // Handle files selection
+    function handleFileSelect(e) {
+      if(e.target.files.length) {
+        handleUploadedFiles(e.target.files);
+      }
+    }
+
+    // Display image previews of uploaded files
+    function handleUploadedFiles(files) {
+      const container = document.getElementById("previewContainer");
+      container.innerHTML = ""; // Clear existing previews
+      
+      Array.from(files).forEach(file => {
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = document.createElement("img");
+            img.className = "preview-thumb";
+            img.src = event.target.result;
+            container.appendChild(img);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      
+      showToast("Đã tải lên thành công " + files.length + " ảnh sản phẩm.", "info");
+    }
+
+    // Save product (Add or Edit update)
+    function saveProduct() {
+      const name = document.getElementById("prodName").value.trim();
+      const category = document.getElementById("prodCategory").value;
+      const brand = document.getElementById("prodBrand").value.trim();
+      const cost = document.getElementById("prodPriceCost").value;
+      const sell = document.getElementById("prodPriceSell").value;
+      const stock = document.getElementById("prodStock").value;
+      const isActive = document.getElementById("prodStatus").checked;
+
+      if (!name || !sell || !stock) {
+        showToast("Vui lòng điền đầy đủ Tên, Giá bán và Tồn kho!", "danger");
+        return;
+      }
+
+      // Generate a mock image for new products
+      const categoryImages = {
+        'Tivi': 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&q=80&w=100',
+        'Điện lạnh': 'https://images.unsplash.com/photo-1571175432247-5c31c0c69d4d?auto=format&fit=crop&q=80&w=100',
+        'Điều hòa': 'https://images.unsplash.com/photo-1621905252507-b354bc25edac?auto=format&fit=crop&q=80&w=100',
+        'Máy giặt': 'https://images.unsplash.com/photo-1610557892470-76d739a29bfe?auto=format&fit=crop&q=80&w=100',
+        'Gia dụng': 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?auto=format&fit=crop&q=80&w=100'
+      };
+
+      const imgSrc = categoryImages[category] || 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?auto=format&fit=crop&q=80&w=100';
+
+      const formattedPrice = parseInt(sell).toLocaleString('vi-VN') + " đ";
+      const statusBadge = isActive ? 
+        '<span class="badge-status status-completed">Đang bán</span>' : 
+        '<span class="badge-status status-cancelled">Ngừng bán</span>';
+      
+      const statusAttr = isActive ? "Đang bán" : "Ngừng bán";
+
+      const stockDisplay = (parseInt(stock) < 5) ? 
+        `<span class="stock-critical">${stock} cái</span>` : 
+        `${stock} cái`;
+
+      if (currentEditSku) {
+        // Edit existing product
+        const rows = document.querySelectorAll("#productsTable tbody tr");
+        rows.forEach(row => {
+          if (row.querySelector(".product-sku")?.textContent.includes(currentEditSku)) {
+            row.setAttribute("data-category", category);
+            row.setAttribute("data-status", statusAttr);
+            row.querySelector("td:nth-child(2) span").textContent = name;
+            row.querySelector(".category-badge").textContent = category;
+            row.querySelector("td:nth-child(4)").innerHTML = formattedPrice;
+            row.querySelector("td:nth-child(5)").innerHTML = stockDisplay;
+            row.querySelector("td:nth-child(6)").innerHTML = statusBadge;
+          }
+        });
+        showToast("Đã cập nhật thông tin sản phẩm thành công!", "success");
+      } else {
+        // Add new product
+        const tableBody = document.querySelector("#productsTable tbody");
+        const newSku = 'SKU: ' + category.substring(0, 3).toUpperCase() + '-' + brand.substring(0,3).toUpperCase() + '-' + Math.floor(100 + Math.random() * 900);
+        
+        const newRowHTML = `
+          <tr data-category="${category}" data-status="${statusAttr}">
+            <td><img class="product-cell-img" src="${imgSrc}" alt="${name}"></td>
+            <td>
+              <span style="font-weight: 700; display: block;">${name}</span>
+              <span class="product-sku">${newSku}</span>
+            </td>
+            <td><span class="category-badge">${category}</span></td>
+            <td style="font-weight: 700;">${formattedPrice}</td>
+            <td>${stockDisplay}</td>
+            <td>${statusBadge}</td>
+            <td style="text-align: center;">
+              <button class="icon-action-btn btn-edit" title="Sửa" onclick="openProductDrawer('edit', '${newSku}')">
+                <i class="ti ti-edit"></i>
+              </button>
+              <button class="icon-action-btn btn-delete" title="Xóa" onclick="deleteProductRow(this)">
+                <i class="ti ti-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+        tableBody.insertAdjacentHTML('afterbegin', newRowHTML);
+        showToast("Đã thêm sản phẩm mới thành công!", "success");
+      }
+
+      closeProductDrawer();
+      filterProductsTable();
+    }
+
+    // Delete a product row from table
+    function deleteProductRow(btn) {
+      if (confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
+        const row = btn.closest("tr");
+        if(row) {
+          row.style.opacity = '0';
+          setTimeout(() => {
+            row.remove();
+            showToast("Đã xóa sản phẩm khỏi cơ sở dữ liệu.", "success");
+          }, 300);
+        }
+      }
+    }
+
+    // Order expansion and detailed inline panel loading
+    function toggleOrderDetailRow(orderId) {
+      const detailRow = document.getElementById("detail-" + orderId);
+      const panel = document.getElementById("panel-" + orderId);
+      const arrowIcon = document.getElementById("arrow-" + orderId)?.querySelector("i");
+
+      if (!detailRow || !panel) return;
+
+      const isOpen = detailRow.style.display !== "none";
+
+      if (isOpen) {
+        panel.classList.remove("open");
+        arrowIcon.className = "ti ti-chevron-down";
+        setTimeout(() => {
+          detailRow.style.display = "none";
+        }, 300); // Wait for transition
+      } else {
+        // Close other expanded order detail panels first
+        document.querySelectorAll(".expanded-row").forEach(row => {
+          if (row.id !== "detail-" + orderId) {
+            row.style.display = "none";
+            const otherPanelId = row.id.replace("detail-", "panel-");
+            document.getElementById(otherPanelId)?.classList.remove("open");
+          }
+        });
+        document.querySelectorAll(".toggle-arrow i").forEach(otherArrow => {
+          otherArrow.className = "ti ti-chevron-down";
+        });
+
+        detailRow.style.display = "";
+        arrowIcon.className = "ti ti-chevron-up";
+        // Trigger reflow
+        panel.offsetHeight;
+        panel.classList.add("open");
+      }
+    }
+
+    // Update order status from dropdown select
+    function updateOrderStatus(orderId, newStatus) {
+      const rows = document.querySelectorAll("#ordersTable tbody tr.order-main-row");
+      rows.forEach(row => {
+        if(row.getAttribute("data-id") === orderId) {
+          row.setAttribute("data-status", newStatus);
+          
+          const badgeEl = row.querySelector("td:nth-child(6) .badge-status");
+          
+          const statusLabels = {
+            'pending': { label: 'Chờ xác nhận', class: 'status-pending' },
+            'shipping': { label: 'Đang giao', class: 'status-shipping' },
+            'completed': { label: 'Hoàn thành', class: 'status-completed' },
+            'cancelled': { label: 'Đã hủy', class: 'status-cancelled' }
+          };
+
+          const s = statusLabels[newStatus] || { label: 'Chờ xác nhận', class: 'status-pending' };
+          
+          if(badgeEl) {
+            badgeEl.className = "badge-status " + s.class;
+            badgeEl.textContent = s.label;
+          }
+        }
+      });
+
+      // Update stepper checkmarks in detail panel
+      const steps = document.querySelectorAll(`#panel-${orderId} .step-item`);
+      steps.forEach(step => {
+        step.classList.remove("completed", "active");
+      });
+
+      // Simple mock timeline stepper updating
+      const currentTimeStr = new Date().toLocaleString('vi-VN', { hour12: false }).substring(0, 16).replace(',', '');
+      
+      if (newStatus === 'pending') {
+        steps[0].classList.add("active");
+        steps[0].querySelector(".step-time").textContent = currentTimeStr;
+      } else if (newStatus === 'shipping') {
+        steps[0].classList.add("completed");
+        steps[1].classList.add("completed");
+        steps[2].classList.add("active");
+        steps[1].querySelector(".step-time").textContent = currentTimeStr;
+        steps[2].querySelector(".step-time").textContent = currentTimeStr;
+      } else if (newStatus === 'completed') {
+        steps[0].classList.add("completed");
+        steps[1].classList.add("completed");
+        steps[2].classList.add("completed");
+        steps[3].classList.add("completed");
+        steps[3].querySelector(".step-time").textContent = currentTimeStr;
+      } else if (newStatus === 'cancelled') {
+        // Redraw stepper for cancelled state
+        const stepperContainer = document.querySelector(`#panel-${orderId} .vertical-stepper`);
+        if(stepperContainer) {
+          stepperContainer.innerHTML = `
+            <div class="step-item completed">
+              <span class="step-icon" style="background: var(--danger);"></span>
+              <span class="step-title" style="color: var(--danger);">Đã hủy</span>
+              <span class="step-time">${currentTimeStr}</span>
+            </div>
+          `;
+        }
+      }
+
+      // Re-calculate the counts on tab badges
+      recalculateOrderCounts();
+    }
+
+    // Recalculate tab badge counts for order management page
+    function recalculateOrderCounts() {
+      const rows = document.querySelectorAll("#ordersTable tbody tr.order-main-row");
+      const counts = { all: 0, pending: 0, confirmed: 0, shipping: 0, completed: 0, cancelled: 0 };
+      
+      rows.forEach(row => {
+        const s = row.getAttribute("data-status");
+        counts.all++;
+        if (counts.hasOwnProperty(s)) {
+          counts[s]++;
+        }
+      });
+
+      // Update UI counts
+      for (const key in counts) {
+        const badge = document.getElementById("count-" + key);
+        if (badge) {
+          badge.textContent = counts[key];
+        }
+      }
+    }
+
+    // Filter orders by status tab click
+    function filterOrdersByTab(tabStatus) {
+      document.querySelectorAll(".order-tab").forEach(tab => {
+        if(tab.getAttribute("data-tab") === tabStatus) {
+          tab.classList.add("active");
+        } else {
+          tab.classList.remove("active");
+        }
+      });
+
+      const rows = document.querySelectorAll("#ordersTable tbody tr.order-main-row");
+      
+      rows.forEach(row => {
+        const orderId = row.getAttribute("data-id");
+        const detailRow = document.getElementById("detail-" + orderId);
+        const panel = document.getElementById("panel-" + orderId);
+        
+        // Hide details when switching tabs
+        if(detailRow) {
+          detailRow.style.display = "none";
+        }
+        if(panel) {
+          panel.classList.remove("open");
+        }
+
+        const s = row.getAttribute("data-status");
+        if(tabStatus === 'all' || s === tabStatus) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      });
+    }
+
+    // Open detail page directly from dashboard 'Xem' click
+    function switchToSectionAndExpandOrder(orderId) {
+      switchToSection('orders');
+      
+      // Delay slightly for render fade-in transition to complete
+      setTimeout(() => {
+        toggleOrderDetailRow(orderId);
+        
+        // Scroll smoothly to order
+        const targetRow = document.querySelector(`tr[data-id="${orderId}"]`);
+        if (targetRow) {
+          targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 350);
+    }
+
+    // Toast Notifications System Helper
+    function showToast(message, type = 'success') {
+      const container = document.getElementById("toastContainer");
+      if(!container) return;
+
+      const toast = document.createElement("div");
+      toast.className = `toast toast-${type}`;
+      
+      const icons = {
+        success: 'ti ti-circle-check toast-icon-success',
+        danger: 'ti ti-circle-x toast-icon-danger',
+        warning: 'ti ti-alert-triangle toast-icon-warning',
+        info: 'ti ti-info-circle toast-icon-info'
+      };
+
+      const iconClass = icons[type] || icons.success;
+
+      toast.innerHTML = `
+        <i class="${iconClass}" style="font-size: 20px;"></i>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+
+      // Trigger reflow
+      toast.offsetHeight;
+      toast.classList.add("show");
+
+      // Auto dismiss after 3 seconds
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 3000);
+    }
+
+    // Trigger Notification Toast for bell icon
+    function triggerNotificationToast() {
+      showToast("Không có thông báo mới chưa đọc.", "info");
+    }
+  </script>
+</body>
+</html>

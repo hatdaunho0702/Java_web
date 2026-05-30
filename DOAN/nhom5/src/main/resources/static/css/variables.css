@@ -1,24 +1,28 @@
 :root {
-  --primary: #ff6b35;
-  --primary-dark: #e55a25;
-  --secondary: #2d3748;
-  --accent: #38b2ac;
-  --bg-light: #f7fafc;
-  --text-main: #1a202c;
-  --text-muted: #718096;
-  --border-color: #e2e8f0;
-  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --radius: 12px;
+  --primary: #4f46e5;          /* Modern Indigo */
+  --primary-dark: #4338ca;     /* Darker Indigo */
+  --secondary: #0f172a;        /* Deep Slate (for major headings) */
+  --accent: #06b6d4;           /* Bright Teal/Cyan */
+  --bg-light: #f8fafc;         /* Crisp, clean slate-50 background */
+  --text-main: #334155;        /* Soft dark gray slate-700 */
+  --text-muted: #64748b;       /* Muted gray slate-500 */
+  --border-color: #e2e8f0;     /* Border slate-200 */
+  --card-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.04); /* Soft premium shadow */
+  --radius: 16px;              /* Modern larger border radius */
   --radius-lg: 24px;
-  --transition: all 0.25s ease;
-  --gradient-main: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-pink: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --admin-bg: #f0f2f5;
-  --admin-sidebar: linear-gradient(
-    180deg,
-    #1a1a2e 0%,
-    #16213e 50%,
-    #0f3460 100%
-  );
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth transition */
+  --gradient-main: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); /* Gorgeous Indigo-Blue gradient */
+  --gradient-pink: linear-gradient(135deg, #ff007f 0%, #ff5e62 100%);  /* Vibrant Pink-Red gradient */
+  
+  /* ── ADMIN PANEL ── */
+  --admin-bg: #f1f5f9;         /* Slate-100 */
+  --admin-sidebar: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); /* Slate-900 to Slate-800 */
   --admin-sidebar-w: 260px;
+
+  /* ── ORDER STATUS BADGES ── */
+  --status-pending: #eab308;    /* Amber-500 */
+  --status-confirmed: #3b82f6;  /* Blue-500 */
+  --status-shipping: #f97316;   /* Orange-500 */
+  --status-completed: #10b981;  /* Emerald-500 */
+  --status-cancelled: #ef4444;  /* Red-500 */
 }

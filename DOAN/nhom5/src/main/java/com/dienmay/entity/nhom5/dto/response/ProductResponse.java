@@ -19,4 +19,5 @@ public class ProductResponse {
     private String thumbnailUrl;
     private Double avgRating;
     private Integer stockQty;
+    private Integer soldQty;
 }

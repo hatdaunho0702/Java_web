@@ -1,156 +1,257 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
-
 >
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — Admin</title>
+    <title>Tổng quan hệ thống — ElectraManager</title>
   </head>
   <body>
     <div class="page-content">
-      <div class="row g-4 mb-4">
-        <div class="col-6 col-xl-3">
-          <div class="stat-card stat-card-1" data-icon="💰">
-            <div class="stat-label">Doanh thu hôm nay</div>
-            <div
-              class="stat-value"
-              th:text="${#numbers.formatDecimal(todayRevenue,0,'COMMA',0,'POINT') + 'đ'}"
-            >
-              0đ
-            </div>
-            <div class="stat-change">↑ so với hôm qua</div>
+      <!-- 1. Cảnh báo kho hàng (sản phẩm sắp hết hàng < 5) -->
+      <div class="inventory-alert" id="inventoryAlert" th:if="${lowStockProducts != null && !lowStockProducts.isEmpty()}">
+        <div class="alert-content">
+          <i class="ti ti-alert-triangle alert-icon"></i>
+          <div class="alert-text">
+            <strong>Cảnh báo kho hàng:</strong> Có <span class="fw-bold" th:text="${lowStockProducts.size()}">0</span> sản phẩm sắp hết hàng (&lt; 5 cái):
+            <span class="alert-products">
+              <span th:each="p, iter : ${lowStockProducts}"
+                    th:text="${p.name} + ' (' + ${p.stockQty} + ' cái)' + (${iter.last} ? '' : ', ')"></span>
+            </span>.
+            Vui lòng nhập thêm hàng để phục vụ kinh doanh.
           </div>
         </div>
-        <div class="col-6 col-xl-3">
-          <div class="stat-card stat-card-2" data-icon="📦">
-            <div class="stat-label">Đơn hàng tháng này</div>
-            <div
-              class="stat-value"
-              th:text="${monthlyRevenue != null ? #numbers.formatDecimal(monthlyRevenue,0,'COMMA',0,'POINT') + 'đ' : '0đ'}"
-            >
-              0đ
-            </div>
+        <div class="alert-actions">
+          <a th:href="@{/admin/products}" class="alert-btn text-decoration-none">Nhập thêm hàng</a>
+          <button class="alert-close" onclick="document.getElementById('inventoryAlert').style.display='none'"><i class="ti ti-x"></i></button>
+        </div>
+      </div>
+
+      <!-- 2. KPI Grid Row -->
+      <div class="kpi-grid">
+        <!-- KPI 1: Doanh thu hôm nay -->
+        <div class="kpi-card" style="--accent-color: var(--primary);">
+          <div class="kpi-header">
+            <span class="kpi-title">Doanh thu hôm nay</span>
+            <i class="ti ti-coin kpi-icon"></i>
+          </div>
+          <div class="kpi-value" id="kpiTodayRevenue" 
+               th:data-val="${todayRevenue != null ? todayRevenue : 0}"
+               th:text="${#numbers.formatDecimal(todayRevenue != null ? todayRevenue : 0, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+            0 đ
+          </div>
+          <div class="kpi-trend">
+            <span class="trend-badge trend-up">
+              <i class="ti ti-arrow-up-right"></i> Hôm nay
+            </span>
+            <span style="color: var(--text-muted);">doanh thu phát sinh</span>
           </div>
         </div>
-        <div class="col-6 col-xl-3">
-          <div class="stat-card stat-card-3" data-icon="👥">
-            <div class="stat-label">Tổng khách hàng</div>
-            <div class="stat-value">...</div>
+
+        <!-- KPI 2: Doanh thu tháng này -->
+        <div class="kpi-card" style="--accent-color: var(--success);">
+          <div class="kpi-header">
+            <span class="kpi-title">Doanh thu tháng này</span>
+            <i class="ti ti-chart-bar kpi-icon"></i>
+          </div>
+          <div class="kpi-value" id="kpiMonthlyRevenue" 
+               th:data-val="${monthlyRevenue != null ? monthlyRevenue : 0}"
+               th:text="${#numbers.formatDecimal(monthlyRevenue != null ? monthlyRevenue : 0, 0, 'COMMA', 0, 'POINT')} + ' đ'">
+            0 đ
+          </div>
+          <div class="kpi-trend">
+            <span class="trend-badge trend-up">
+              <i class="ti ti-calendar"></i> Tháng này
+            </span>
+            <span style="color: var(--text-muted);">doanh thu tích lũy</span>
           </div>
         </div>
-        <div class="col-6 col-xl-3">
-          <div class="stat-card stat-card-4" data-icon="🛍️">
-            <div class="stat-label">Sản phẩm đang bán</div>
-            <div class="stat-value" th:text="${topProducts.size()}">0</div>
+
+        <!-- KPI 3: Cảnh báo hết hàng -->
+        <div class="kpi-card" style="--accent-color: var(--warning);">
+          <div class="kpi-header">
+            <span class="kpi-title">Sản phẩm sắp hết</span>
+            <i class="ti ti-alert-triangle kpi-icon" style="color: var(--warning); opacity: 1;"></i>
+          </div>
+          <div class="kpi-value" id="kpiLowStock" 
+               th:data-val="${lowStockProducts != null ? lowStockProducts.size() : 0}"
+               th:text="${lowStockProducts != null ? lowStockProducts.size() : 0} + ' sản phẩm'"
+               style="color: var(--warning);">
+            0 sản phẩm
+          </div>
+          <div class="kpi-trend">
+            <span class="trend-badge trend-down">
+              <i class="ti ti-arrow-down-right"></i> Cần nhập
+            </span>
+            <span style="color: var(--text-muted);">trong kho hàng</span>
+          </div>
+        </div>
+
+        <!-- KPI 4: Sản phẩm bán chạy -->
+        <div class="kpi-card" style="--accent-color: var(--danger);">
+          <div class="kpi-header">
+            <span class="kpi-title">Sản phẩm bán chạy</span>
+            <i class="ti ti-award kpi-icon"></i>
+          </div>
+          <div class="kpi-value" id="kpiTopProducts" 
+               th:data-val="${topProducts != null ? topProducts.size() : 0}"
+               th:text="${topProducts != null ? topProducts.size() : 0} + ' sản phẩm'">
+            0 sản phẩm
+          </div>
+          <div class="kpi-trend">
+            <span class="trend-badge trend-neutral">
+              Hệ thống
+            </span>
+            <span style="color: var(--text-muted);">hiệu suất tốt nhất</span>
           </div>
         </div>
       </div>
 
-      <div class="row g-4">
-        <div class="col-lg-8">
-          <div class="admin-card">
-            <div class="admin-card-header">📈 Doanh thu 7 ngày gần nhất</div>
-            <div class="p-4">
-              <canvas id="revenueChart" height="100"></canvas>
+      <!-- 3. Charts & Top Products Row -->
+      <div class="dashboard-row-2">
+        <!-- Revenue Chart Column -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title">📈 Doanh thu 7 ngày gần nhất</h3>
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Đơn vị: Triệu VND</span>
+          </div>
+          <div class="panel-body" style="display: flex; align-items: center; justify-content: center; min-height: 250px;">
+            <canvas id="revenueChart" style="max-height: 260px; width: 100%;"></canvas>
+          </div>
+        </div>
+
+        <!-- Top Products Column -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title">🏆 Top sản phẩm bán chạy</h3>
+          </div>
+          <div class="panel-body">
+            <div class="top-products-list">
+              <div th:each="p, iter : ${topProducts}" class="top-product-item">
+                <div class="rank-number" th:classappend="'rank-' + ${iter.index + 1}" th:text="${iter.index + 1}">1</div>
+                <div class="product-info">
+                  <span class="product-name-txt" th:text="${p.name}">Tên sản phẩm</span>
+                  <span class="category-badge" th:text="${p.stockQty != null ? 'Tồn: ' + p.stockQty : 'Hết hàng'}">Điện tử</span>
+                </div>
+                <div class="sales-count">Đã bán <strong th:text="${p.soldQty != null ? p.soldQty : 0}">0</strong></div>
+                <div class="product-revenue" th:text="${#numbers.formatDecimal(p.salePrice != null ? p.salePrice : p.originalPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</div>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- 4. Recent Orders Table Row -->
+      <div class="row g-4">
+        <!-- Doughnut Order Status Chart -->
         <div class="col-lg-4">
-          <div class="admin-card">
-            <div class="admin-card-header">📊 Đơn hàng theo trạng thái</div>
-            <div class="p-4">
-              <canvas id="statusChart"></canvas>
-              <div class="mt-3">
-                <div
-                  th:each="entry : ${ordersByStatus}"
-                  class="d-flex justify-content-between mb-2"
-                >
-                  <span
-                    th:class="'badge-status badge-' + ${entry.key}"
-                    th:text="${entry.key}"
-                  ></span
-                  ><strong th:text="${entry.value}"></strong>
+          <div class="panel-card h-100">
+            <div class="panel-header">
+              <h3 class="panel-title">📊 Đơn hàng theo trạng thái</h3>
+            </div>
+            <div class="panel-body d-flex flex-column align-items-center justify-content-center">
+              <div style="max-width: 200px; width: 100%; min-height: 180px;">
+                <canvas id="statusChart"></canvas>
+              </div>
+              <div class="w-100 mt-4">
+                <div id="statusData" style="display: none;">
+                  <span th:each="entry : ${ordersByStatus}" 
+                        th:data-status="${entry.key}" 
+                        th:data-count="${entry.value}"></span>
+                </div>
+                <div th:each="entry : ${ordersByStatus}" class="d-flex justify-content-between mb-2" style="font-size: 13.5px;">
+                  <span class="badge-status" th:classappend="'status-' + ${#strings.toLowerCase(entry.key)}" th:text="${entry.key}">PENDING</span>
+                  <strong class="text-main" th:text="${entry.value} + ' đơn'">0 đơn</strong>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="col-lg-6">
-          <div class="admin-card">
-            <div class="admin-card-header">🏆 Top sản phẩm bán chạy</div>
-            <table class="table admin-table mb-0">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Sản phẩm</th>
-                  <th>Đã bán</th>
-                  <th>Giá</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="p,iter : ${topProducts}">
-                  <td th:text="${iter.index + 1}"></td>
-                  <td th:text="${p.name}"></td>
-                  <td>
-                    <span
-                      class="badge bg-primary"
-                      th:text="${p.stockQty}"
-                    ></span>
-                  </td>
-                  <td
-                    th:text="${#numbers.formatDecimal(p.originalPrice,0,'COMMA',0,'POINT') + 'đ'}"
-                  ></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="admin-card">
-            <div class="admin-card-header">
-              ⚠️ Sắp hết hàng
-              <span
-                class="badge"
-                style="background: var(--gradient-pink); color: white"
-                th:text="${lowStockProducts.size()}"
-              ></span>
+
+        <!-- Recent Orders Table -->
+        <div class="col-lg-8">
+          <div class="panel-card h-100">
+            <div class="panel-header">
+              <h3 class="panel-title">📋 Đơn hàng mới phát sinh</h3>
+              <a th:href="@{/admin/orders}" class="btn-action-sm">Xem tất cả <i class="ti ti-arrow-right"></i></a>
             </div>
-            <table class="table admin-table mb-0">
-              <thead>
-                <tr>
-                  <th>Sản phẩm</th>
-                  <th>Còn lại</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr th:each="p : ${lowStockProducts}">
-                  <td th:text="${p.name}"></td>
-                  <td>
-                    <span
-                      class="badge bg-danger"
-                      th:text="${p.stockQty}"
-                    ></span>
-                  </td>
-                  <td>
-                    <a
-                      th:href="@{/admin/products/{id}/edit(id=${p.id})}"
-                      class="btn btn-sm btn-gradient"
-                      >Nhập thêm</a
-                    >
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="table-container">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Mã đơn</th>
+                    <th>Khách hàng</th>
+                    <th>Ngày đặt</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th style="text-align: center;">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="o : ${recentOrders}">
+                    <td class="fw-bold text-primary" th:text="${o.orderCode}">ORD-1234</td>
+                    <td th:text="${o.recipientName}">Nguyễn Văn A</td>
+                    <td th:text="${#temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm')}">30/05/2026 12:00</td>
+                    <td class="fw-bold" th:text="${#numbers.formatDecimal(o.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">0 đ</td>
+                    <td>
+                      <span class="badge-status" th:classappend="'status-' + ${#strings.toLowerCase(o.status)}" th:text="${o.status}">PENDING</span>
+                    </td>
+                    <td style="text-align: center;">
+                      <a th:href="@{/admin/orders}" class="btn-action-sm">
+                        <i class="ti ti-eye"></i> Xem
+                      </a>
+                    </td>
+                  </tr>
+                  <tr th:if="${recentOrders == null || recentOrders.isEmpty()}">
+                    <td colspan="6" class="text-center text-muted py-4">Không có đơn hàng mới nào.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Chart Configuration Script -->
     <script>
       document.addEventListener("DOMContentLoaded", () => {
+        // --- count-up animation for KPI Cards ---
+        function animateCounter(id) {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const target = parseFloat(el.getAttribute("data-val") || "0");
+          if (target === 0) return;
+          
+          let start = 0;
+          const duration = 1200; // ms
+          const stepTime = 15;
+          const steps = duration / stepTime;
+          const increment = target / steps;
+          
+          let timer = setInterval(() => {
+            start += increment;
+            if (start >= target) {
+              clearInterval(timer);
+              start = target;
+            }
+            if (id.includes("Revenue")) {
+              el.textContent = Math.round(start).toLocaleString("vi-VN") + " đ";
+            } else if (id.includes("LowStock") || id.includes("TopProducts")) {
+              el.textContent = Math.round(start) + " sản phẩm";
+            } else {
+              el.textContent = Math.round(start);
+            }
+          }, stepTime);
+        }
+
+        animateCounter("kpiTodayRevenue");
+        animateCounter("kpiMonthlyRevenue");
+        animateCounter("kpiLowStock");
+        animateCounter("kpiTopProducts");
+
+        // --- Revenue Chart (7 Days) ---
         const revenueCanvas = document.getElementById("revenueChart");
         if (revenueCanvas && typeof Chart !== "undefined") {
           new Chart(revenueCanvas.getContext("2d"), {
@@ -161,47 +262,74 @@
                 {
                   label: "Doanh thu",
                   data: [12, 19, 15, 25, 22, 30, 28],
-                  borderColor: "#667eea",
-                  backgroundColor: "rgba(102,126,234,0.1)",
+                  borderColor: "#2563EB",
+                  backgroundColor: "rgba(37, 99, 235, 0.05)",
                   borderWidth: 2,
                   fill: true,
                   tension: 0.4,
+                  pointBackgroundColor: "#2563EB",
+                  pointHoverRadius: 6
                 },
               ],
             },
             options: {
               responsive: true,
+              maintainAspectRatio: false,
               plugins: { legend: { display: false } },
-              scales: { y: { beginAtZero: true } },
+              scales: {
+                y: { grid: { color: "#F1F5F9" }, ticks: { color: "#64748B" } },
+                x: { grid: { display: false }, ticks: { color: "#64748B" } }
+              },
             },
           });
         }
+
+        // --- Doughnut Order Status Chart ---
+        const statusDataEl = document.getElementById("statusData");
+        const statusLabels = [];
+        const statusCounts = [];
+        const statusColors = [];
+        
+        const colorMap = {
+          'PENDING': '#F59E0B',
+          'CONFIRMED': '#3B82F6',
+          'SHIPPING': '#2563EB',
+          'COMPLETED': '#10B981',
+          'CANCELLED': '#EF4444',
+          'DELIVERED': '#10B981'
+        };
+
+        if (statusDataEl) {
+          statusDataEl.querySelectorAll("span").forEach(span => {
+            const status = span.getAttribute("data-status");
+            const count = parseInt(span.getAttribute("data-count") || "0");
+            statusLabels.push(status);
+            statusCounts.push(count);
+            statusColors.push(colorMap[status] || '#64748B');
+          });
+        }
+
         const statusCanvas = document.getElementById("statusChart");
-        if (statusCanvas && typeof Chart !== "undefined") {
+        if (statusCanvas && typeof Chart !== "undefined" && statusCounts.length > 0) {
           new Chart(statusCanvas.getContext("2d"), {
             type: "doughnut",
             data: {
-              labels: [
-                "PENDING",
-                "CONFIRMED",
-                "SHIPPING",
-                "COMPLETED",
-                "CANCELLED",
-              ],
+              labels: statusLabels,
               datasets: [
                 {
-                  data: [1, 1, 1, 1, 1],
-                  backgroundColor: [
-                    "#ECC94B",
-                    "#4299E1",
-                    "#ED8936",
-                    "#48BB78",
-                    "#FC8181",
-                  ],
+                  data: statusCounts,
+                  backgroundColor: statusColors,
+                  borderWidth: 2,
+                  borderColor: "#FFFFFF"
                 },
               ],
             },
-            options: { cutout: "65%", plugins: { legend: { display: false } } },
+            options: {
+              cutout: "75%",
+              plugins: { legend: { display: false } },
+              responsive: true,
+              maintainAspectRatio: false
+            },
           });
         }
       });
