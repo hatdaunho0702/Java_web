@@ -10,24 +10,6 @@
   </head>
   <body>
     <main>
-      <!-- 1. Hero Section (iPhone 14 Pro) -->
-      <section class="cyber-hero">
-        <div class="container">
-          <div class="row align-items-center">
-            <div class="col-lg-6 reveal-on-scroll">
-              <span class="cyber-hero-badge">Pro. Beyond.</span>
-              <h1 class="cyber-hero-title">IPhone 14 <strong>Pro</strong></h1>
-              <p class="cyber-hero-desc">Created to change everything for the better. For everyone. Special premium performance.</p>
-              <a th:href="@{/products}" class="btn-cyber-outline">Shop Now</a>
-            </div>
-            <div class="col-lg-6 text-center reveal-on-scroll">
-              <div class="cyber-hero-img-wrapper">
-                <img class="cyber-hero-img" src="/uploads/images/banner/1.jpg" alt="Banner cyber">
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <!-- 2. Grid Banners Section (PS5, Macbook, etc.) -->
       <section class="cyber-promo-grid reveal-on-scroll">
@@ -98,42 +80,44 @@
       </section>
 
       <!-- 5. Featured 4 Columns Section -->
-      <section class="cyber-featured-cols reveal-on-scroll">
-        <!-- Col 1 -->
-        <div class="cyber-featured-col cyber-bg-light">
-          <div class="cyber-featured-col-header">
-            <h3 class="cyber-col-title">Popular <strong>Products</strong></h3>
-            <p class="cyber-col-desc">iPad combines a magnificent 10.2-inch Retina display, incredible performance, multitasking and ease of use.</p>
+      <section class="container py-5 reveal-on-scroll">
+        <div class="cyber-featured-cols">
+          <!-- Col 1 -->
+          <div class="cyber-featured-col cyber-bg-light">
+            <div class="cyber-featured-col-header">
+              <h3 class="cyber-col-title">Popular <strong>Products</strong></h3>
+              <p class="cyber-col-desc">Discover our top-rated gadgets and essential tech accessories curated for you.</p>
+            </div>
+            <a th:href="@{/products}" class="btn-cyber-outline-dark">Shop Now</a>
+            <img src="https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?auto=format&fit=crop&q=80&w=400" alt="Earbuds">
           </div>
-          <a th:href="@{/products}" class="btn-cyber-outline-dark">Shop Now</a>
-          <img src="https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?auto=format&fit=crop&q=80&w=260" alt="Earbuds">
-        </div>
-        <!-- Col 2 -->
-        <div class="cyber-featured-col" style="background-color: #F9F9F9;">
-          <div class="cyber-featured-col-header">
-            <h3 class="cyber-col-title">Ipad <strong>Pro</strong></h3>
-            <p class="cyber-col-desc">iPad combines a magnificent 10.2-inch Retina display, incredible performance, multitasking and ease of use.</p>
+          <!-- Col 2 -->
+          <div class="cyber-featured-col" style="background-color: #F9F9F9;">
+            <div class="cyber-featured-col-header">
+              <h3 class="cyber-col-title">Ipad <strong>Pro</strong></h3>
+              <p class="cyber-col-desc">Unparalleled performance with the new chip and stunning Liquid Retina display.</p>
+            </div>
+            <a th:href="@{/products}" class="btn-cyber-outline-dark">Shop Now</a>
+            <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&q=80&w=400" alt="iPad Pro">
           </div>
-          <a th:href="@{/products}" class="btn-cyber-outline-dark">Shop Now</a>
-          <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&q=80&w=260" alt="iPad Pro">
-        </div>
-        <!-- Col 3 -->
-        <div class="cyber-featured-col" style="background-color: #EAEAEA;">
-          <div class="cyber-featured-col-header">
-            <h3 class="cyber-col-title">Samsung <strong>Galaxy</strong></h3>
-            <p class="cyber-col-desc">iPad combines a magnificent 10.2-inch Retina display, incredible performance, multitasking and ease of use.</p>
+          <!-- Col 3 -->
+          <div class="cyber-featured-col" style="background-color: #EAEAEA;">
+            <div class="cyber-featured-col-header">
+              <h3 class="cyber-col-title">Samsung <strong>Galaxy</strong></h3>
+              <p class="cyber-col-desc">Reimagine what a phone can do with ultimate camera quality and modern design.</p>
+            </div>
+            <a th:href="@{/products}" class="btn-cyber-outline-dark">Shop Now</a>
+            <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&q=80&w=400" alt="Z Fold">
           </div>
-          <a th:href="@{/products}" class="btn-cyber-outline-dark">Shop Now</a>
-          <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&q=80&w=260" alt="Z Fold">
-        </div>
-        <!-- Col 4 -->
-        <div class="cyber-featured-col cyber-bg-black text-white">
-          <div class="cyber-featured-col-header">
-            <h3 class="cyber-col-title cyber-text-white">Macbook <strong>Pro</strong></h3>
-            <p class="cyber-col-desc">iPad combines a magnificent 10.2-inch Retina display, incredible performance, multitasking and ease of use.</p>
+          <!-- Col 4 -->
+          <div class="cyber-featured-col cyber-bg-black text-white">
+            <div class="cyber-featured-col-header">
+              <h3 class="cyber-col-title cyber-text-white">Macbook <strong>Pro</strong></h3>
+              <p class="cyber-col-desc">Pro power to go. Mind-blowing performance and extreme battery life.</p>
+            </div>
+            <a th:href="@{/products}" class="btn-cyber-outline">Shop Now</a>
+            <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=400" alt="Macbook Pro">
           </div>
-          <a th:href="@{/products}" class="btn-cyber-outline">Shop Now</a>
-          <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=260" alt="Macbook Pro">
         </div>
       </section>
 

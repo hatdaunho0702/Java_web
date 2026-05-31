@@ -2,6 +2,8 @@ import { getFirebaseAuth } from "/js/firebase-config.js";
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   GoogleAuthProvider,
+  getRedirectResult,
+  signInWithRedirect,
   signInWithPopup,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -105,6 +107,21 @@ function setLoading(isLoading) {
   }
 }
 
+async function loginToBackend(idToken) {
+  const resp = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken }),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.message || "Đăng nhập thất bại");
+  }
+
+  return await resp.json();
+}
+
 if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -123,17 +140,7 @@ if (form) {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const token = await cred.user.getIdToken(true);
       console.log("Login success:", cred.user.uid);
-      const resp = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken: token }),
-      });
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        showError(err.message || getLoginErrorMessage(err.error));
-        return;
-      }
-      const data = await resp.json();
+      const data = await loginToBackend(token);
       localStorage.setItem("firebase_token", token);
       localStorage.setItem("userInfo", JSON.stringify(data));
       showSuccess("Đăng nhập thành công. Đang chuyển trang...");
@@ -158,6 +165,27 @@ if (form) {
   });
 }
 
+async function handleGoogleRedirectResult() {
+  try {
+    const auth = await getFirebaseAuth();
+    const result = await getRedirectResult(auth);
+    if (!result || !result.user) {
+      return;
+    }
+
+    const token = await result.user.getIdToken(true);
+    const data = await loginToBackend(token);
+    localStorage.setItem("firebase_token", token);
+    localStorage.setItem("userInfo", JSON.stringify(data));
+    window.location.href = "/";
+  } catch (err) {
+    console.error("Google redirect login error", err);
+    showError("Đăng nhập Google thất bại");
+  }
+}
+
+handleGoogleRedirectResult();
+
 // Google login
 const googleBtn = document.getElementById("googleLoginBtn");
 if (googleBtn) {
@@ -167,23 +195,27 @@ if (googleBtn) {
       const provider = new GoogleAuthProvider();
       const cred = await signInWithPopup(auth, provider);
       const token = await cred.user.getIdToken(true);
-      const resp = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken: token }),
-      });
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        alert(err.message || "Đăng nhập Google thất bại");
-        return;
-      }
-      const data = await resp.json();
+      const data = await loginToBackend(token);
       localStorage.setItem("firebase_token", token);
       localStorage.setItem("userInfo", JSON.stringify(data));
       window.location.href = "/";
     } catch (err) {
+      const code = getFirebaseErrorCode(err);
+      if (
+        code === "auth/popup-blocked" ||
+        code === "auth/cancelled-popup-request"
+      ) {
+        try {
+          const auth = await getFirebaseAuth();
+          const provider = new GoogleAuthProvider();
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectError) {
+          console.error("Google redirect fallback error", redirectError);
+        }
+      }
       console.error("Google login error", err);
-      alert("Đăng nhập Google thất bại");
+      showError("Đăng nhập Google thất bại");
     }
   });
 }

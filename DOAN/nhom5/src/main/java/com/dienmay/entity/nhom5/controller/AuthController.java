@@ -56,7 +56,13 @@ public class AuthController {
         }
 
         try {
-            User user = authService.verifyAndLoadUser(token);
+            User user;
+            try {
+                user = authService.verifyAndLoadUser(token);
+            } catch (ResourceNotFoundException ex) {
+                // First-time social login: create/sync local user from Firebase token claims.
+                user = authService.syncUser(token);
+            }
             CustomUserDetails principal = CustomUserDetails.fromUser(user);
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
@@ -68,11 +74,6 @@ public class AuthController {
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "error", "invalid_token",
-                    "message", ex.getMessage()
-            ));
-        } catch (ResourceNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                    "error", "user_not_found",
                     "message", ex.getMessage()
             ));
         }
