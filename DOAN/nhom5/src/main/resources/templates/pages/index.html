@@ -152,15 +152,25 @@
         }
 
         function productCard(product, index = 0) {
-          const price = Number(product.salePrice || product.originalPrice || 0);
+          const sale = Number(product.salePrice || 0);
+          const original = Number(product.originalPrice || 0);
           const stock = Number(product.stockQty || 0);
           const disabled = stock <= 0;
+
+          const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+          const isWishlisted = wishlist.includes(product.id);
+          const heartIconClass = isWishlisted ? "bi-heart-fill text-danger" : "bi-heart text-muted";
+          const activeClass = isWishlisted ? "active" : "";
+
+          const priceHtml = sale > 0 
+            ? `${formatVND(sale)} <span class="price-original ms-2" style="text-decoration: line-through; font-size: 12px; color: #94a3b8; font-weight: 500;">${formatVND(original)}</span>`
+            : `${formatVND(original)}`;
 
           return `
             <div class="col-6 col-md-4 col-lg-3 reveal-on-scroll" data-delay-index="${index % 4}">
               <div class="cyber-product-card" data-product-id="${product.id}" onclick="location.href='/products/${product.slug}'" style="cursor: pointer;">
-                <button class="wishlist-btn" onclick="event.stopPropagation(); this.classList.toggle('active'); window.showToast('Đã thích sản phẩm!', 'success')">
-                  <i class="bi bi-heart-fill"></i>
+                <button class="wishlist-btn ${activeClass}" onclick="event.stopPropagation(); window.toggleWishlist(${product.id}, this)">
+                  <i class="bi ${heartIconClass}"></i>
                 </button>
                 <div class="cyber-product-img-wrapper">
                   ${
@@ -170,7 +180,7 @@
                   }
                 </div>
                 <div class="cyber-product-title">${product.name}</div>
-                <div class="cyber-product-price">${formatVND(price)}</div>
+                <div class="cyber-product-price">${priceHtml}</div>
                 <button type="button" class="btn-buy-now" data-product-id="${product.id}" onclick="event.stopPropagation(); return window.addToCart(this.dataset.productId, 1, this);" ${disabled ? "disabled" : ""}>${disabled ? "Out of Stock" : "Buy Now"}</button>
               </div>
             </div>`;

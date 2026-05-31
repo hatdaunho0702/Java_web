@@ -27,16 +27,17 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/products",
+                                "/products/**",
                                 "/login",
                                 "/register",
                                 "/logout",
                                 "/favicon.ico",
                                 "/cart",
-                                "/checkout",
-                                "/orders",
-                                "/orders/**",
-                                "/products/**",
-                                "/admin/**",
+                                "/wishlist",
+                                "/about",
+                                "/contact",
+                                "/blog",
+                                "/blog/**",
                                 "/css/**",
                                 "/js/**",
                                 "/assets/**",
@@ -55,8 +56,10 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/login",
-                                "/api/auth/register")
+                                "/api/auth/register",
+                                "/api/contact")
                         .permitAll()
+                        .requestMatchers("/api/contact/my-messages").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/cart/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/cart/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/cart/**").authenticated()
@@ -65,23 +68,39 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**")
                         .permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/orders", "/orders/**", "/checkout").authenticated()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, e) -> {
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.setStatus(401);
-                            response.getWriter().write(
-                                    "{\"error\":\"Unauthorized\",\"message\":\"Vui lòng đăng nhập\"}"
-                            );
+                            String path = request.getRequestURI();
+                            if (path.startsWith("/api/")) {
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.setStatus(401);
+                                response.getWriter().write(
+                                        "{\"error\":\"Unauthorized\",\"message\":\"Vui lòng đăng nhập\"}"
+                                );
+                            } else {
+                                String redirectUrl = path;
+                                if (request.getQueryString() != null) {
+                                    redirectUrl += "?" + request.getQueryString();
+                                }
+                                response.sendRedirect("/login?redirect=" + java.net.URLEncoder.encode(redirectUrl, java.nio.charset.StandardCharsets.UTF_8));
+                            }
                         })
                         .accessDeniedHandler((request, response, e) -> {
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.setStatus(403);
-                            response.getWriter().write(
-                                    "{\"error\":\"Forbidden\",\"message\":\"Không có quyền truy cập\"}"
-                            );
+                            String path = request.getRequestURI();
+                            if (path.startsWith("/api/")) {
+                                response.setContentType("application/json;charset=UTF-8");
+                                response.setStatus(403);
+                                response.getWriter().write(
+                                        "{\"error\":\"Forbidden\",\"message\":\"Không có quyền truy cập\"}"
+                                );
+                            } else {
+                                response.sendRedirect("/login?error=forbidden");
+                            }
                         })
                 )
                 .addFilterBefore(firebaseTokenFilter, UsernamePasswordAuthenticationFilter.class);

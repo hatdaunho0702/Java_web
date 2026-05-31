@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/base :: layout(
+    ~{::title}, ~{::main})}">
+<head>
+  <title>Về chúng tôi — ĐiệnMáy Pro</title>
+</head>
+<body><main>
+
+  <!-- PAGE HERO -->
+  <section class="page-hero">
+    <div class="container">
+      <div class="page-hero-breadcrumb">
+        <a th:href="@{/}">Trang chủ</a>
+        / Về chúng tôi
+      </div>
+      <h1>Về ĐiệnMáy Pro</h1>
+      <p>Hơn 10 năm đồng hành cùng hàng triệu gia đình Việt với công nghệ chính hãng</p>
+    </div>
+  </section>
+
+  <!-- STORY SECTION -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+          <!-- Ảnh / Collage -->
+          <div class="position-relative">
+            <div style="background:var(--gradient-main);
+                        border-radius:var(--radius-lg);
+                        height:400px;
+                        display:flex;align-items:center;
+                        justify-content:center;
+                        font-size:120px">⚡</div>
+            <!-- Floating badge -->
+            <div style="position:absolute;
+                        bottom:24px; right:24px;
+                        background:white;
+                        border-radius:var(--radius);
+                        padding:16px 20px;
+                        box-shadow:var(--card-shadow-hover)">
+              <div style="font-size:28px;
+                          font-weight:800;
+                          background:var(--gradient-main);
+                          -webkit-background-clip:text;
+                          -webkit-text-fill-color:transparent">
+                10+
+              </div>
+              <div style="font-size:12px;
+                          color:var(--text-muted)">
+                Năm kinh nghiệm
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="section-title">
+            Câu chuyện <span>của chúng tôi</span>
+          </div>
+          <div class="section-divider"></div>
+          <p style="color:var(--text-muted);
+                    line-height:1.8; margin-bottom:16px">
+            ĐiệnMáy Pro được thành lập năm 2014 với sứ mệnh mang công nghệ chính hãng đến tận tay mọi gia đình Việt Nam với mức giá hợp lý nhất.
+          </p>
+          <p style="color:var(--text-muted);
+                    line-height:1.8; margin-bottom:24px">
+            Từ một cửa hàng nhỏ tại TP.HCM, chúng tôi đã phát triển thành hệ thống phân phối điện máy uy tín với hơn 50 chi nhánh trên toàn quốc, phục vụ hơn 500.000 khách hàng tin tưởng.
+          </p>
+          <div class="d-flex gap-3 flex-wrap">
+            <a th:href="@{/products}"
+               class="btn-gradient px-4 py-2">
+              Xem sản phẩm
+            </a>
+            <a th:href="@{/contact}"
+               class="btn btn-outline-secondary px-4 py-2"
+               style="border-radius:8px">
+              Liên hệ ngay
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="py-5"
+           style="background:var(--bg-light)">
+    <div class="container">
+      <div class="row g-4 text-center">
+        <!-- 4 stat cards: Năm kinh nghiệm, Khách hàng, Sản phẩm, Chi nhánh -->
+        <div class="col-6 col-md-3"
+             th:each="stat : ${ {
+               '10+|Năm kinh nghiệm|bi-clock-history',
+               '500K+|Khách hàng|bi-people',
+               '10000+|Sản phẩm|bi-box-seam',
+               '50+|Chi nhánh|bi-geo-alt'
+             } }">
+          <!-- Tách stat và render -->
+          <div class="about-stat-card">
+            <div class="about-stat-number"
+                 th:text="${#strings.arraySplit(stat,'|')[0]}">
+            </div>
+            <div class="about-stat-label"
+                 th:text="${#strings.arraySplit(stat,'|')[1]}">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GIÁ TRỊ CỐT LÕI -->
+  <section class="py-5">
+    <div class="container">
+      <div class="text-center mb-5">
+        <div class="section-title">
+          Giá trị <span>cốt lõi</span>
+        </div>
+        <div class="section-divider mx-auto"></div>
+      </div>
+      <div class="row g-4">
+        <!-- 4 value cards -->
+        <div class="col-md-6 col-lg-3">
+          <div class="about-value-card">
+            <div class="about-value-icon"
+                 style="background:#EEF2FF">
+              🛡️
+            </div>
+            <h5 style="font-weight:700">
+              Chính hãng 100%
+            </h5>
+            <p style="color:var(--text-muted);
+                      font-size:14px;line-height:1.7">
+              Tất cả sản phẩm đều có nguồn gốc rõ ràng, đầy đủ giấy tờ chứng nhận từ nhà sản xuất.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="about-value-card">
+            <div class="about-value-icon"
+                 style="background:#F0FFF4">
+              💚
+            </div>
+            <h5 style="font-weight:700">
+              Giá tốt nhất
+            </h5>
+            <p style="color:var(--text-muted);
+                      font-size:14px;line-height:1.7">
+              Cam kết hoàn tiền chênh lệch nếu bạn tìm được giá thấp hơn ở bất kỳ đâu.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="about-value-card">
+            <div class="about-value-icon"
+                 style="background:#FFF0F0">
+              🔄
+            </div>
+            <h5 style="font-weight:700">
+              Đổi trả 30 ngày
+            </h5>
+            <p style="color:var(--text-muted);
+                      font-size:14px;line-height:1.7">
+              Chính sách đổi trả linh hoạt trong 30 ngày, không cần lý do.
+            </p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="about-value-card">
+            <div class="about-value-icon"
+                 style="background:#FFF8F0">
+              💬
+            </div>
+            <h5 style="font-weight:700">
+              Hỗ trợ 24/7
+            </h5>
+            <p style="color:var(--text-muted);
+                      font-size:14px;line-height:1.7">
+              Đội ngũ tư vấn viên chuyên nghiệp sẵn sàng hỗ trợ bất cứ lúc nào.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ĐỘI NGŨ -->
+  <section class="py-5"
+           style="background:var(--bg-light)">
+    <div class="container">
+      <div class="text-center mb-5">
+        <div class="section-title">
+          Đội ngũ <span>sáng lập</span>
+        </div>
+        <div class="section-divider mx-auto"></div>
+      </div>
+      <div class="row g-4 justify-content-center">
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="team-card">
+            <div class="team-avatar">👨‍💼</div>
+            <div class="team-info">
+              <div class="team-name">
+                Nguyễn Văn An
+              </div>
+              <div class="team-role mt-1">
+                CEO & Co-founder
+              </div>
+              <p style="font-size:12px;
+                        color:var(--text-muted);
+                        margin-top:8px">
+                15 năm kinh nghiệm trong ngành phân phối điện máy
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="team-card">
+            <div class="team-avatar"
+                 style="background:var(--gradient-pink)">
+              👩‍💼
+            </div>
+            <div class="team-info">
+              <div class="team-name">
+                Trần Thị Bình
+              </div>
+              <div class="team-role mt-1">
+                COO & Co-founder
+              </div>
+              <p style="font-size:12px;
+                        color:var(--text-muted);
+                        margin-top:8px">
+                Chuyên gia vận hành và phát triển chuỗi bán lẻ
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="team-card">
+            <div class="team-avatar"
+                 style="background:var(--gradient-green)">
+              👨‍💻
+            </div>
+            <div class="team-info">
+              <div class="team-name">
+                Lê Minh Cường
+              </div>
+              <div class="team-role mt-1">
+                CTO
+              </div>
+              <p style="font-size:12px;
+                        color:var(--text-muted);
+                        margin-top:8px">
+                Kiến trúc sư hệ thống công nghệ và chuyển đổi số
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section class="py-5">
+    <div class="container">
+      <div class="promo-banner text-center">
+        <h3>Trở thành đối tác của chúng tôi</h3>
+        <p class="mb-4">
+          Cùng nhau phát triển và mang công nghệ tốt nhất đến tay người dùng Việt
+        </p>
+        <a th:href="@{/contact}"
+           class="btn-promo">
+          Liên hệ hợp tác →
+        </a>
+      </div>
+    </div>
+  </section>
+
+</main></body>
+</html>

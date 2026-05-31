@@ -36,16 +36,16 @@
         <div class="d-flex align-items-center gap-4">
           <!-- Navigation Links -->
           <div class="d-none d-lg-flex align-items-center gap-3">
-            <a th:href="@{/}" class="nav-link-cyber active">Home</a>
-            <a href="#" class="nav-link-cyber" onclick="window.showToast('Tính năng đang phát triển!', 'info')">About</a>
-            <a href="#" class="nav-link-cyber" onclick="window.showToast('Tính năng đang phát triển!', 'info')">Contact Us</a>
-            <a href="#" class="nav-link-cyber" onclick="window.showToast('Tính năng đang phát triển!', 'info')">Blog</a>
+            <a th:href="@{/}" class="nav-link-cyber" th:classappend="${pageTitle == null} ? 'active' : ''">Home</a>
+            <a th:href="@{/about}" class="nav-link-cyber" th:classappend="${pageTitle == 'Về chúng tôi'} ? 'active' : ''">About</a>
+            <a th:href="@{/contact}" class="nav-link-cyber" th:classappend="${pageTitle == 'Liên hệ'} ? 'active' : ''">Contact Us</a>
+            <a th:href="@{/blog}" class="nav-link-cyber" th:classappend="${pageTitle == 'Tin tức'} ? 'active' : ''">Blog</a>
           </div>
 
           <!-- Action Icons -->
           <div class="d-flex align-items-center gap-3">
             <!-- Wishlist -->
-            <a href="#" class="nav-link-cyber" style="font-size: 20px; padding: 0;" onclick="window.showToast('Tính năng yêu thích đang phát triển!', 'info')">
+            <a th:href="@{/wishlist}" class="nav-link-cyber" style="font-size: 20px; padding: 0;">
               <i class="bi bi-heart"></i>
             </a>
             <!-- Cart -->
@@ -55,8 +55,9 @@
             </a>
             <!-- Profile dropdown -->
             <div class="dropdown">
-              <button class="nav-link-cyber dropdown-toggle" style="font-size: 20px; padding: 0; background: none; border: none; outline: none;" data-bs-toggle="dropdown">
+              <button class="nav-link-cyber dropdown-toggle d-flex align-items-center gap-2" style="font-size: 20px; padding: 0; background: none; border: none; outline: none; transition: var(--transition);" data-bs-toggle="dropdown" id="nav-user-dropdown-btn">
                 <i class="bi bi-person"></i>
+                <span id="nav-user-name" style="font-size: 13px; font-weight: 600; color: #000000; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: none;"></span>
               </button>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li id="nav-login-item">

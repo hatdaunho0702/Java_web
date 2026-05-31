@@ -77,6 +77,26 @@
           <i class="ti ti-discount"></i>
           <span>Khuyến mãi</span>
         </a>
+        <a
+          th:href="@{/admin/contact}"
+          th:classappend="${activePage == 'contact'} ? ' active' : ''"
+          class="menu-item"
+        >
+          <i class="ti ti-message"></i>
+          <span>Tin nhắn</span>
+          <!-- Badge unread -->
+          <span id="sidebar-msg-badge"
+                style="margin-left: auto;
+                       background: var(--gradient-pink);
+                       color: white;
+                       border-radius: 12px;
+                       padding: 2px 8px;
+                       font-size: 11px;
+                       font-weight: 700;
+                       display: none">
+            0
+          </span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
@@ -85,7 +105,7 @@
           <span class="user-name" id="adminName">Admin</span>
           <span class="user-role" id="adminEmail">admin@dienmay.vn</span>
         </div>
-        <a href="#" onclick="logout(); return false;" class="sidebar-logout ms-auto" title="Đăng xuất">
+        <a href="#" onclick="doLogout(); return false;" class="sidebar-logout ms-auto" title="Đăng xuất">
           <i class="ti ti-logout"></i>
         </a>
       </div>
@@ -111,10 +131,36 @@
             <input type="text" placeholder="Tìm kiếm nhanh..." onkeyup="if(event.key === 'Enter') showToast('Tìm kiếm: ' + this.value, 'info')">
           </div>
           
-          <button class="header-btn" onclick="showToast('Không có thông báo mới', 'info')">
-            <i class="ti ti-bell"></i>
-            <span class="dot"></span>
-          </button>
+          <!-- NOTIFICATION BELL DROPDOWN -->
+          <div class="dropdown">
+            <button class="header-btn dropdown-toggle" data-bs-toggle="dropdown" id="notifBtn" style="border: none; background: transparent; position: relative;">
+              <i class="ti ti-bell"></i>
+              <!-- Badge đỏ số lượng -->
+              <span class="cart-badge" id="notifBadge" style="display: none; background: var(--gradient-pink); position: absolute; top: -5px; right: -5px; color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; border: 2px solid white;">
+                0
+              </span>
+            </button>
+
+            <!-- Dropdown notification -->
+            <div class="dropdown-menu dropdown-menu-end p-0" style="width: 320px; border-radius: 12px; box-shadow: var(--card-shadow-hover); border: 1px solid var(--border-color); background: white;">
+              <div style="padding: 16px 20px; background: var(--gradient-main); color: white; border-radius: 12px 12px 0 0;">
+                <strong>🔔 Thông báo</strong>
+              </div>
+
+              <!-- Tin nhắn chưa đọc -->
+              <div id="notif-messages" style="max-height: 300px; overflow-y: auto;">
+                <div class="text-center py-3" style="color: var(--text-muted); font-size: 13px;">
+                  Đang tải...
+                </div>
+              </div>
+
+              <div style="padding: 12px 16px; border-top: 1px solid var(--border-color); text-align: center;">
+                <a th:href="@{/admin/contact}" style="color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none;">
+                  Xem tất cả tin nhắn →
+                </a>
+              </div>
+            </div>
+          </div>
           
           <img class="admin-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" alt="Admin" onclick="showToast('Hồ sơ cá nhân Admin', 'info')">
         </div>
@@ -130,8 +176,9 @@
     </main>
 
     <!-- Javascript Assets -->
-    <script th:src="@{/js/firebase-config.js}" type="module"></script>
-    <script th:src="@{/js/auth.js}" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- admin-auth-bridge loads auth.js (ES Module) via dynamic import and exposes functions to window -->
+    <script th:src="@{/js/admin-auth-bridge.js}"></script>
     <script th:src="@{/js/admin/dashboard.js}"></script>
     <script>
       function toggleSidebarDesktop() {
@@ -142,9 +189,9 @@
         const sidebar = document.getElementById("sidebar");
         sidebar.classList.toggle("mobile-open");
       }
-      function logout() {
-        if (window.firebaseLogout) {
-          window.firebaseLogout();
+      function doLogout() {
+        if (window.logout) {
+          window.logout();
         } else {
           localStorage.clear();
           location.href = '/login';
@@ -183,6 +230,93 @@
         }, 3000);
       }
       window.showToast = showToast;
+
+      // Real-time notification badge updater
+      window.addEventListener('authReady', () => {
+        async function loadBadge() {
+          try {
+            const headers = await window.getAuthHeaders();
+            const res = await fetch('/api/admin/contact/badge', { headers });
+            if (!res.ok) return;
+            const data = await res.json();
+
+            const badge = document.getElementById('notifBadge');
+            const sidebarBadge = document.getElementById('sidebar-msg-badge');
+
+            // Set main bell badge
+            if (badge) {
+              if (data.total > 0) {
+                badge.textContent = data.total;
+                badge.style.display = 'flex';
+                // Update tab title
+                document.title = `(${data.total}) ` + document.title.replace(/^\(\d+\) /, '');
+              } else {
+                badge.style.display = 'none';
+                document.title = document.title.replace(/^\(\d+\) /, '');
+              }
+            }
+
+            // Set sidebar message badge
+            if (sidebarBadge) {
+              if (data.unreadMessages > 0) {
+                sidebarBadge.textContent = data.unreadMessages;
+                sidebarBadge.style.display = 'inline-block';
+              } else {
+                sidebarBadge.style.display = 'none';
+              }
+            }
+
+            // Render notification dropdown list
+            loadNotifDropdown(headers);
+          } catch(e) {
+            console.debug('Badge error:', e);
+          }
+        }
+
+        async function loadNotifDropdown(headers) {
+          try {
+            const res = await fetch('/api/admin/contact?status=UNREAD&size=5', { headers });
+            if (!res.ok) return;
+            const data = await res.json();
+            const msgs = data.content || [];
+            const el = document.getElementById('notif-messages');
+
+            if (!el) return;
+
+            if (msgs.length === 0) {
+              el.innerHTML = `
+                <div class="text-center py-4" style="color: var(--text-muted); font-size: 13px;">
+                  <div style="font-size: 32px;">✅</div>
+                  Không có thông báo mới
+                </div>`;
+              return;
+            }
+
+            el.innerHTML = msgs.map(m => `
+              <a href="/admin/contact" style="display: flex; gap: 12px; padding: 12px 16px; text-decoration: none; color: var(--text-main); border-bottom: 1px solid var(--border-color); transition: background 0.2s" onmouseover="this.style.background='var(--bg-light)'" onmouseout="this.style.background=''">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-main); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; flex-shrink: 0">
+                  ${m.fromRegisteredUser ? '👤' : '✉️'}
+                </div>
+                <div style="flex: 1; min-width: 0">
+                  <div style="font-weight: 700; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main);">
+                    ${m.senderName}
+                  </div>
+                  <div style="font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">
+                    ${m.subject}
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                    ${m.createdAt}
+                  </div>
+                </div>
+                <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 6px;"></div>
+              </a>`).join('');
+          } catch(e) {}
+        }
+
+        // Run immediately and poll every 30 seconds
+        loadBadge();
+        setInterval(loadBadge, 30000);
+      });
     </script>
   </body>
 </html>

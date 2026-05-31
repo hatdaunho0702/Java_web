@@ -294,45 +294,6 @@
           header.classList.toggle("collapsed");
         };
 
-        // Wishlist functionality
-        window.toggleWishlist = function(productId, btnEl) {
-          let wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-          const idx = wishlist.indexOf(productId);
-          const icon = btnEl.querySelector("i");
-          if (idx > -1) {
-            wishlist.splice(idx, 1);
-            icon.className = "bi bi-heart text-muted";
-            if (typeof window.showToast === "function") {
-              window.showToast("Đã xóa khỏi danh sách yêu thích", "info");
-            }
-          } else {
-            wishlist.push(productId);
-            icon.className = "bi bi-heart-fill text-danger";
-            if (typeof window.showToast === "function") {
-              window.showToast("Đã thêm vào danh sách yêu thích", "success");
-            }
-          }
-          localStorage.setItem("wishlist", JSON.stringify(wishlist));
-          updateWishlistCount();
-        };
-
-        function updateWishlistCount() {
-          const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-          const badge = document.querySelector(".nav-link-cyber i.bi-heart");
-          if (badge) {
-            let badgeEl = badge.parentElement.querySelector(".wishlist-badge");
-            if (!badgeEl) {
-              badgeEl = document.createElement("span");
-              badgeEl.className = "wishlist-badge";
-              badgeEl.style = "position: absolute; top: -4px; right: -6px; background: #000000; color: #fff; border-radius: 999px; font-size: 9px; font-weight: 800; min-width: 14px; height: 14px; padding: 0 3px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid #fff;";
-              badge.parentElement.appendChild(badgeEl);
-              badge.parentElement.style.position = "relative";
-            }
-            badgeEl.textContent = wishlist.length;
-            badgeEl.style.display = wishlist.length > 0 ? "inline-flex" : "none";
-          }
-        }
-
         function parseQueryState() {
           const params = new URLSearchParams(window.location.search);
           state.keyword = params.get("keyword") || "";
@@ -361,7 +322,6 @@
         function productCard(product, index = 0) {
           const sale = Number(product.salePrice || 0);
           const original = Number(product.originalPrice || 0);
-          const display = sale || original;
           const stock = Number(product.stockQty || 0);
           const disabled = stock <= 0;
           
@@ -369,11 +329,18 @@
           const isWishlisted = wishlist.includes(product.id);
           const heartIconClass = isWishlisted ? "bi-heart-fill text-danger" : "bi-heart text-muted";
 
+          const priceHtml = sale > 0 
+            ? `${formatVND(sale)} <span class="price-original ms-2" style="text-decoration: line-through; font-size: 11px; color: #94a3b8; font-weight: 500;">${formatVND(original)}</span>`
+            : `${formatVND(original)}`;
+
           return `
             <div class="col-6 col-md-6 col-lg-4 reveal-on-scroll" data-delay-index="${index % 3}">
               <div class="cyber-product-card" data-product-id="${product.id}">
                 <button class="wishlist-btn" onclick="event.stopPropagation(); toggleWishlist(${product.id}, this)">
                   <i class="bi ${heartIconClass}"></i>
+                </button>
+                <button class="btn-quick-view-icon" onclick="event.stopPropagation(); openQuickView(${product.id})">
+                  <i class="bi bi-eye"></i> Quick View
                 </button>
                 <div class="cyber-product-img-wrapper" style="cursor: pointer" onclick="location.href='/products/${product.slug}'">
                   ${product.thumbnailUrl
@@ -382,7 +349,7 @@
                 </div>
                 <div>
                   <div class="cyber-product-title" style="cursor: pointer" onclick="location.href='/products/${product.slug}'">${product.name}</div>
-                  <div class="cyber-product-price">${formatVND(display)}</div>
+                  <div class="cyber-product-price">${priceHtml}</div>
                 </div>
                 <button class="btn-buy-now btn-add-cart" data-product-id="${product.id}" ${disabled ? "disabled" : ""}>
                   ${disabled ? "Hết hàng" : "Buy Now"}
@@ -548,41 +515,73 @@
           syncQuery();
         }
 
-        function openQuickView(productId) {
-          const p = state.productMap.get(productId);
-          if (!p) return;
-          const stock = Number(p.stockQty || 0);
-          const displayPrice = p.salePrice || p.originalPrice;
+        async function openQuickView(productId) {
           document.getElementById("quickViewContent").innerHTML = `
-            <div class="row g-3">
-              <div class="col-md-5 text-center">
-                ${p.thumbnailUrl
-                  ? `<img src="${p.thumbnailUrl}" alt="${p.name}" style="width:100%;max-height:280px;object-fit:cover;border-radius:10px">`
-                  : `<div style="height:280px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;font-size:64px">📦</div>`}
-              </div>
-              <div class="col-md-7">
-                <h5 class="fw-bold">${p.name}</h5>
-                <div class="mb-2">
-                  ${p.salePrice ? `<span class="price-original">${formatVND(p.originalPrice)}</span>` : ""}
-                  <div class="${p.salePrice ? "price-sale" : "price-normal"}">${formatVND(displayPrice)}</div>
-                </div>
-                <div class="mb-3">Tồn kho: <strong>${stock}</strong></div>
-                <div class="d-flex gap-2">
-                  <button class="btn btn-dark" id="qvAddCart" ${stock <= 0 ? "disabled" : ""}>${stock <= 0 ? "Hết hàng" : "🛒 Thêm vào giỏ"}</button>
-                  <a href="/products/${p.slug}" class="btn btn-outline-secondary">Xem chi tiết</a>
-                </div>
-              </div>
+            <div class="text-center py-5">
+              <div class="spinner-border text-dark" role="status"></div>
+              <div class="mt-2 text-muted">Đang tải thông tin sản phẩm...</div>
             </div>`;
-
           const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("quickViewModal"));
           modal.show();
-          const addBtn = document.getElementById("qvAddCart");
-          if (addBtn && stock > 0) {
-            addBtn.addEventListener("click", () => {
-              if (typeof window.addToCart === "function") {
-                window.addToCart(p.id);
-              }
-            });
+
+          try {
+            const res = await fetch(`/api/products/${productId}`);
+            if (!res.ok) throw new Error("Không tải được chi tiết sản phẩm");
+            const p = await res.json();
+            const stock = Number(p.stockQty || 0);
+            const sale = Number(p.salePrice || 0);
+            const original = Number(p.originalPrice || 0);
+
+            const priceHtml = sale > 0
+              ? `<div class="price-sale" style="font-size: 20px; font-weight: 800; color: #ef4444;">${formatVND(sale)} 
+                   <span class="price-original ms-2" style="text-decoration: line-through; font-size: 14px; color: #94a3b8; font-weight: 500;">${formatVND(original)}</span>
+                 </div>`
+              : `<div class="price-normal" style="font-size: 20px; font-weight: 800; color: #000;">${formatVND(original)}</div>`;
+
+            document.getElementById("quickViewContent").innerHTML = `
+              <div class="row g-3">
+                <div class="col-md-5 text-center">
+                  ${p.thumbnailUrl
+                    ? `<img src="${p.thumbnailUrl}" alt="${p.name}" style="width:100%;max-height:280px;object-fit:contain;border-radius:10px">`
+                    : `<div style="height:280px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;font-size:64px">📦</div>`}
+                </div>
+                <div class="col-md-7">
+                  <h5 class="fw-bold" style="font-family: 'Sora', sans-serif;">${p.name}</h5>
+                  <div class="mb-2">
+                    ${priceHtml}
+                  </div>
+                  <div class="mb-3 text-muted small" style="line-height: 1.5;">${p.description || "Chưa có mô tả ngắn cho sản phẩm này."}</div>
+                  <div class="mb-3">Tồn kho: <strong class="${stock < 5 ? 'text-danger' : ''}">${stock}</strong></div>
+                  
+                  <div class="mb-3 d-flex align-items-center gap-2">
+                    <span class="small text-muted fw-bold">Số lượng:</span>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(-1)">-</button>
+                    <strong id="qv-qty" class="px-2" style="min-width: 24px; text-align: center;">1</strong>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(1)">+</button>
+                  </div>
+
+                  <div class="d-flex gap-2 mt-4">
+                    <button class="btn btn-dark" id="qvAddCart" ${stock <= 0 ? "disabled" : ""}>${stock <= 0 ? "Hết hàng" : "🛒 Thêm vào giỏ"}</button>
+                    <a href="/products/${p.slug}" class="btn btn-outline-secondary">Xem chi tiết</a>
+                  </div>
+                </div>
+              </div>`;
+
+            const addBtn = document.getElementById("qvAddCart");
+            if (addBtn && stock > 0) {
+              addBtn.addEventListener("click", () => {
+                const qty = parseInt(document.getElementById("qv-qty")?.textContent || "1");
+                if (typeof window.addToCart === "function") {
+                  window.addToCart(p.id, qty, addBtn);
+                }
+              });
+            }
+          } catch (err) {
+            document.getElementById("quickViewContent").innerHTML = `
+              <div class="text-center py-5 text-danger">
+                <i class="bi bi-exclamation-triangle" style="font-size: 40px;"></i>
+                <div class="mt-2 fw-semibold">${err.message}</div>
+              </div>`;
           }
         }
 
@@ -642,7 +641,7 @@
         parseQueryState();
         bindFilterInputs();
         await filterProducts();
-        updateWishlistCount();
+        window.updateWishlistCount();
       </script>
     </main>
   </body>

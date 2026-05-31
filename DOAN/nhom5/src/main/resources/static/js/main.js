@@ -224,16 +224,59 @@ function initScrollReveal() {
   });
 }
 
+function toggleWishlist(productId, btnEl) {
+  let wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+  const idx = wishlist.indexOf(Number(productId));
+  const icon = btnEl.querySelector("i");
+  if (idx > -1) {
+    wishlist.splice(idx, 1);
+    if (icon) {
+      icon.className = "bi bi-heart text-muted";
+    }
+    btnEl.classList.remove("active");
+    showToast("Đã xóa khỏi danh sách yêu thích", "info");
+  } else {
+    wishlist.push(Number(productId));
+    if (icon) {
+      icon.className = "bi bi-heart-fill text-danger";
+    }
+    btnEl.classList.add("active");
+    showToast("Đã thêm vào danh sách yêu thích", "success");
+  }
+  localStorage.setItem("wishlist", JSON.stringify(wishlist));
+  updateWishlistCount();
+}
+
+function updateWishlistCount() {
+  const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+  const badge = document.querySelector(".nav-link-cyber i.bi-heart");
+  if (badge) {
+    let badgeEl = badge.parentElement.querySelector(".wishlist-badge");
+    if (!badgeEl) {
+      badgeEl = document.createElement("span");
+      badgeEl.className = "wishlist-badge";
+      badgeEl.style = "position: absolute; top: -4px; right: -6px; background: #ef4444; color: #fff; border-radius: 999px; font-size: 9px; font-weight: 800; min-width: 14px; height: 14px; padding: 0 3px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid #fff; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3);";
+      badge.parentElement.appendChild(badgeEl);
+      badge.parentElement.style.position = "relative";
+    }
+    badgeEl.textContent = wishlist.length;
+    badgeEl.style.display = wishlist.length > 0 ? "inline-flex" : "none";
+  }
+}
+
 window.showToast = showToast;
 window.addToCart = addToCart;
 window.updateCartBadge = updateCartBadge;
 window.quickView = quickView;
 window.changeQty = changeQty;
 window.initScrollReveal = initScrollReveal;
+window.toggleWishlist = toggleWishlist;
+window.updateWishlistCount = updateWishlistCount;
 
 // Run initial reveal on DOM content loaded
 document.addEventListener("DOMContentLoaded", () => {
   initScrollReveal();
+  updateWishlistCount();
 });
 
 

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}">
+<head>
+  <title>Tin nhắn liên hệ — Admin</title>
+</head>
+<body>
+<div class="page-content">
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 style="font-weight: 800; margin: 0; font-family: 'Sora', sans-serif;">
+        💬 Tin nhắn liên hệ
+      </h4>
+      <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 0">
+        Quản lý và trả lời tin nhắn từ khách hàng
+      </p>
+    </div>
+    <!-- Badge tổng unread -->
+    <div th:if="${unreadCount > 0}"
+         style="background: var(--gradient-pink); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 13px; box-shadow: var(--shadow-sm);">
+      <i class="bi bi-envelope-fill me-2"></i>
+      <span th:text="${unreadCount}"></span> tin nhắn chưa đọc
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card" style="padding: 20px; position: relative; background: white; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow);">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="stat-label" style="color: var(--text-muted); font-size: 13px; font-weight: 600;">Chưa đọc</div>
+            <div class="stat-value" id="count-unread" style="font-size: 24px; font-weight: 800; margin-top: 5px; color: #d97706;">...</div>
+          </div>
+          <span style="font-size: 24px;">📬</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card" style="padding: 20px; position: relative; background: white; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow);">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="stat-label" style="color: var(--text-muted); font-size: 13px; font-weight: 600;">Đã đọc</div>
+            <div class="stat-value" id="count-read" style="font-size: 24px; font-weight: 800; margin-top: 5px; color: #2563eb;">...</div>
+          </div>
+          <span style="font-size: 24px;">👁️</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card" style="padding: 20px; position: relative; background: white; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow);">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="stat-label" style="color: var(--text-muted); font-size: 13px; font-weight: 600;">Đã trả lời</div>
+            <div class="stat-value" id="count-replied" style="font-size: 24px; font-weight: 800; margin-top: 5px; color: #16a34a;">...</div>
+          </div>
+          <span style="font-size: 24px;">✅</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card" style="padding: 20px; position: relative; background: white; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow);">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="stat-label" style="color: var(--text-muted); font-size: 13px; font-weight: 600;">Tổng cộng</div>
+            <div class="stat-value" id="count-total" style="font-size: 24px; font-weight: 800; margin-top: 5px; color: var(--text-main);">...</div>
+          </div>
+          <span style="font-size: 24px;">📊</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTER + TABLE -->
+  <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; background: white; border: 1px solid var(--border-color) !important;">
+    <div class="card-header bg-transparent py-3 px-4 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <!-- Filter tabs -->
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-sm btn-gradient px-3 py-2 text-white" id="tab-all" onclick="loadMessages('all', this)">
+          Tất cả
+        </button>
+        <button class="btn btn-sm btn-outline-warning px-3 py-2" id="tab-unread" onclick="loadMessages('UNREAD', this)">
+          <i class="bi bi-circle-fill me-1" style="font-size: 8px;"></i> Chưa đọc
+        </button>
+        <button class="btn btn-sm btn-outline-primary px-3 py-2" id="tab-read" onclick="loadMessages('READ', this)">
+          Đã đọc
+        </button>
+        <button class="btn btn-sm btn-outline-success px-3 py-2" id="tab-replied" onclick="loadMessages('REPLIED', this)">
+          Đã trả lời
+        </button>
+      </div>
+      <!-- Search -->
+      <div class="position-relative">
+        <input type="text" id="searchMsg" class="form-control form-control-sm ps-4" placeholder="Tìm theo email/tên..." style="width: 240px; border-radius: 8px; border: 1px solid var(--border-color); height: 38px;" oninput="filterLocal(this.value)">
+        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2.5 text-muted" style="font-size: 13px; left: 3px;"></i>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+      <table class="table align-middle mb-0" id="messagesTable">
+        <thead class="table-light" style="font-size: 13px; font-weight: 600;">
+          <tr>
+            <th style="width: 40px; padding-left: 24px;">
+              <input type="checkbox" id="checkAll" onchange="toggleAll(this)" style="cursor: pointer;">
+            </th>
+            <th>Người gửi</th>
+            <th>Chủ đề</th>
+            <th>Trạng thái</th>
+            <th>Ngày gửi</th>
+            <th style="width: 160px; padding-right: 24px; text-align: right;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="messagesBody" style="font-size: 14px;">
+          <tr>
+            <td colspan="6" class="text-center py-5">
+              <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+              <span>Đang tải tin nhắn...</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<!-- MODAL: Xem chi tiết + Trả lời -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: var(--card-shadow-hover);">
+      <div class="modal-header border-0 pb-0" style="padding: 24px 24px 10px;">
+        <div class="d-flex align-items-center gap-2">
+          <span style="font-size: 24px;">✉️</span>
+          <h5 class="modal-title fw-bold" style="font-family: 'Sora', sans-serif;">Chi tiết tin nhắn</h5>
+        </div>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="padding: 24px;">
+
+        <!-- Thông tin người gửi -->
+        <div class="row g-3 mb-4" style="background: var(--bg-light); border-radius: 12px; padding: 18px; margin: 0;">
+          <div class="col-md-6">
+            <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">👤 Người gửi</div>
+            <div id="modal-sender-name" style="font-weight: 700; font-size: 15px; margin-top: 2px;"></div>
+          </div>
+          <div class="col-md-6">
+            <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">📧 Email</div>
+            <div id="modal-sender-email" style="font-weight: 600; color: var(--accent); margin-top: 2px;"></div>
+          </div>
+          <div class="col-md-6">
+            <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">📱 Điện thoại</div>
+            <div id="modal-sender-phone" style="font-weight: 600; margin-top: 2px;"></div>
+          </div>
+          <div class="col-md-6">
+            <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">🕐 Ngày gửi</div>
+            <div id="modal-created-at" style="font-weight: 600; margin-top: 2px;"></div>
+          </div>
+        </div>
+
+        <!-- Chủ đề -->
+        <div class="mb-3">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; font-weight: 500;">📌 Chủ đề</div>
+          <div id="modal-subject" style="font-weight: 700; font-size: 15px; color: var(--text-main);"></div>
+        </div>
+
+        <!-- Nội dung tin nhắn -->
+        <div class="mb-4">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 500;">💬 Nội dung tin nhắn</div>
+          <div id="modal-message" style="background: var(--bg-light); border-radius: 12px; padding: 16px; line-height: 1.7; font-size: 14px; border-left: 4px solid var(--primary);"></div>
+        </div>
+
+        <!-- Phần trả lời cũ (nếu có) -->
+        <div id="existing-reply" class="mb-4" style="display: none;">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 500;">
+            ✅ Đã trả lời lúc: <span id="modal-replied-at" style="font-weight: 600; color: #16a34a;"></span>
+          </div>
+          <div id="modal-reply-content" style="background: #f0fdf4; border-radius: 12px; padding: 16px; line-height: 1.7; font-size: 14px; border-left: 4px solid #16a34a; color: #15803d;"></div>
+        </div>
+
+        <!-- Form trả lời -->
+        <div>
+          <label style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;">
+            ✍️ Trả lời khách hàng
+          </label>
+          <textarea id="replyContent" class="form-control" rows="4" placeholder="Nhập nội dung trả lời...&#10;Phản hồi sẽ được lưu lại trong lịch sử gửi của khách hàng." style="border-radius: 12px; border: 2px solid var(--border-color); padding: 12px; resize: none; font-size: 14px; outline: none; box-shadow: none;"></textarea>
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary px-3 py-2" style="border-radius: 8px;" onclick="updateStatus('CLOSED')">
+                <i class="bi bi-x-circle me-1"></i> Đóng tin
+              </button>
+              <button class="btn btn-sm btn-outline-danger px-3 py-2" style="border-radius: 8px;" onclick="deleteMessage()">
+                <i class="bi bi-trash me-1"></i> Xóa
+              </button>
+            </div>
+            <button class="btn btn-primary btn-gradient px-4 py-2" style="border: none; border-radius: 8px; font-weight: 600; cursor: pointer;" onclick="sendReply()">
+              <i class="bi bi-send me-2"></i> Gửi trả lời
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let allMessages = [];
+let currentMsgId = null;
+let _adminToken = null;
+
+// Lấy token admin
+async function getAdminToken() {
+  if (_adminToken) return _adminToken;
+  try {
+    if (window.getToken) {
+      _adminToken = await window.getToken();
+    }
+  } catch(e) {}
+  return _adminToken;
+}
+
+// Load tin nhắn
+async function loadMessages(status = 'all', btn = null) {
+  // Thay đổi style active button
+  if (btn) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('button').forEach(b => {
+      b.classList.remove('btn-gradient', 'text-white');
+      if (b.id === 'tab-all') {
+        b.className = 'btn btn-sm btn-outline-secondary px-3 py-2';
+      } else if (b.id === 'tab-unread') {
+        b.className = 'btn btn-sm btn-outline-warning px-3 py-2';
+      } else if (b.id === 'tab-read') {
+        b.className = 'btn btn-sm btn-outline-primary px-3 py-2';
+      } else if (b.id === 'tab-replied') {
+        b.className = 'btn btn-sm btn-outline-success px-3 py-2';
+      }
+    });
+    btn.className = btn.id === 'tab-all' 
+      ? 'btn btn-sm btn-gradient px-3 py-2 text-white'
+      : btn.id === 'tab-unread'
+        ? 'btn btn-sm btn-warning px-3 py-2 text-dark'
+        : btn.id === 'tab-read'
+          ? 'btn btn-sm btn-primary px-3 py-2 text-white'
+          : 'btn btn-sm btn-success px-3 py-2 text-white';
+  }
+
+  const token = await getAdminToken();
+  const url = status === 'all'
+    ? '/api/admin/contact?page=0&size=100'
+    : `/api/admin/contact?status=${status}&page=0&size=100`;
+
+  try {
+    const res = await fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('API Error');
+    const data = await res.json();
+    allMessages = data.content || [];
+    renderTable(allMessages);
+    updateStats();
+  } catch(e) {
+    if (window.showToast) {
+      window.showToast('Lỗi tải tin nhắn', 'danger');
+    }
+  }
+}
+
+// Render bảng
+function renderTable(msgs) {
+  const statusMap = {
+    UNREAD:  '<span class="badge" style="background: #fef3c7; color: #d97706; padding: 6px 12px; border-radius: 20px; font-weight: 600;">📬 Chưa đọc</span>',
+    READ:    '<span class="badge" style="background: #dbeafe; color: #2563eb; padding: 6px 12px; border-radius: 20px; font-weight: 600;">👁️ Đã đọc</span>',
+    REPLIED: '<span class="badge" style="background: #dcfce7; color: #16a34a; padding: 6px 12px; border-radius: 20px; font-weight: 600;">✅ Đã trả lời</span>',
+    CLOSED:  '<span class="badge" style="background: #fee2e2; color: #dc2626; padding: 6px 12px; border-radius: 20px; font-weight: 600;">🔒 Đóng</span>'
+  };
+
+  if (msgs.length === 0) {
+    document.getElementById('messagesBody').innerHTML = `
+      <tr><td colspan="6" class="text-center py-5">
+        <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+        <div style="color: var(--text-muted); font-weight: 500;">
+          Không có tin nhắn nào
+        </div>
+      </td></tr>`;
+    return;
+  }
+
+  document.getElementById('messagesBody').innerHTML = msgs.map(m => `
+    <tr style="${m.status === 'UNREAD' ? 'font-weight: 700; background: rgba(245, 158, 11, 0.03)' : ''}" id="row-${m.id}">
+      <td style="padding-left: 24px;">
+        <input type="checkbox" class="msg-check" value="${m.id}" style="cursor: pointer;">
+      </td>
+      <td>
+        <div style="font-weight: 600; color: var(--text-main);">
+          ${m.senderName}
+          ${m.fromRegisteredUser ? '<span class="badge bg-primary ms-1" style="font-size: 10px; padding: 3px 6px;">VIP</span>' : ''}
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+          ${m.senderEmail}
+        </div>
+      </td>
+      <td>
+        <div style="max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;">
+          ${m.subject}
+        </div>
+        <div style="font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 280px; margin-top: 2px;">
+          ${m.message}
+        </div>
+      </td>
+      <td>${statusMap[m.status] || m.status}</td>
+      <td style="font-size: 13px; white-space: nowrap; color: var(--text-muted);">
+        ${m.createdAt}
+      </td>
+      <td style="padding-right: 24px; text-align: right;">
+        <button class="btn btn-sm btn-primary btn-gradient text-white me-1 px-3" style="border: none; border-radius: 6px;" onclick="openMessage(${m.id})">
+          <i class="bi bi-envelope-open"></i> Xem
+        </button>
+        <button class="btn btn-sm btn-outline-danger" style="border-radius: 6px;" onclick="confirmDelete(${m.id})">
+          <i class="bi bi-trash"></i>
+        </button>
+      </td>
+    </tr>`).join('');
+}
+
+// Cập nhật stat cards
+function updateStats() {
+  const counts = { UNREAD: 0, READ: 0, REPLIED: 0, CLOSED: 0 };
+  allMessages.forEach(m => {
+    if (counts[m.status] !== undefined) {
+      counts[m.status]++;
+    }
+  });
+  document.getElementById('count-unread').textContent = counts.UNREAD;
+  document.getElementById('count-read').textContent = counts.READ;
+  document.getElementById('count-replied').textContent = counts.REPLIED;
+  document.getElementById('count-total').textContent = allMessages.length;
+
+  if (counts.UNREAD > 0) {
+    document.title = `(${counts.UNREAD}) Tin nhắn — Admin`;
+  } else {
+    document.title = 'Tin nhắn liên hệ — Admin';
+  }
+}
+
+// Mở modal xem chi tiết
+async function openMessage(id) {
+  currentMsgId = id;
+  const token = await getAdminToken();
+
+  try {
+    const res = await fetch(`/api/admin/contact/${id}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('API Error');
+    const msg = await res.json();
+
+    document.getElementById('modal-sender-name').textContent = msg.senderName;
+    document.getElementById('modal-sender-email').textContent = msg.senderEmail;
+    document.getElementById('modal-sender-phone').textContent = msg.senderPhone || 'Không có';
+    document.getElementById('modal-created-at').textContent = msg.createdAt;
+    document.getElementById('modal-subject').textContent = msg.subject;
+    document.getElementById('modal-message').textContent = msg.message;
+
+    const existingReply = document.getElementById('existing-reply');
+    if (msg.hasReply) {
+      existingReply.style.display = 'block';
+      document.getElementById('modal-replied-at').textContent = msg.repliedAt;
+      document.getElementById('modal-reply-content').textContent = msg.replyContent;
+      document.getElementById('replyContent').value = msg.replyContent;
+    } else {
+      existingReply.style.display = 'none';
+      document.getElementById('replyContent').value = '';
+    }
+
+    // Đánh dấu dòng là đã đọc trên UI
+    const row = document.getElementById(`row-${id}`);
+    if (row) {
+      row.style.fontWeight = 'normal';
+      row.style.background = '';
+    }
+
+    const idx = allMessages.findIndex(m => m.id === id);
+    if (idx >= 0 && allMessages[idx].status === 'UNREAD') {
+      allMessages[idx].status = 'READ';
+      updateStats();
+    }
+
+    const modalEl = document.getElementById('messageModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+  } catch(e) {
+    if (window.showToast) {
+      window.showToast('Lỗi tải chi tiết tin nhắn', 'danger');
+    }
+  }
+}
+
+// Gửi trả lời
+async function sendReply() {
+  const content = document.getElementById('replyContent').value;
+  if (!content.trim()) {
+    if (window.showToast) window.showToast('Nhập nội dung trả lời', 'warning');
+    return;
+  }
+
+  const token = await getAdminToken();
+  try {
+    const res = await fetch(`/api/admin/contact/${currentMsgId}/reply`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ replyContent: content })
+    });
+
+    if (!res.ok) throw new Error('Lỗi gửi trả lời');
+
+    if (window.showToast) window.showToast('Đã gửi phản hồi thành công!', 'success');
+
+    const idx = allMessages.findIndex(m => m.id === currentMsgId);
+    if (idx >= 0) {
+      allMessages[idx].status = 'REPLIED';
+    }
+    updateStats();
+    renderTable(allMessages);
+
+    const modalEl = document.getElementById('messageModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+  } catch(e) {
+    if (window.showToast) window.showToast(e.message, 'danger');
+  }
+}
+
+// Đổi trạng thái
+async function updateStatus(status) {
+  const token = await getAdminToken();
+  try {
+    const res = await fetch(`/api/admin/contact/${currentMsgId}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ status })
+    });
+    if (!res.ok) throw new Error('Cập nhật thất bại');
+    if (window.showToast) window.showToast('Đã cập nhật trạng thái', 'success');
+    loadMessages('all');
+    const modalEl = document.getElementById('messageModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+  } catch(e) {
+    if (window.showToast) window.showToast(e.message, 'danger');
+  }
+}
+
+// Xóa tin nhắn
+async function confirmDelete(id = currentMsgId) {
+  if (!confirm('Bạn có chắc chắn muốn xóa tin nhắn này không?')) return;
+  const token = await getAdminToken();
+  try {
+    const res = await fetch(`/api/admin/contact/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('Xóa thất bại');
+    if (window.showToast) window.showToast('Đã xóa tin nhắn thành công', 'success');
+    loadMessages('all');
+    const modalEl = document.getElementById('messageModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+  } catch(e) {
+    if (window.showToast) window.showToast(e.message, 'danger');
+  }
+}
+window.deleteMessage = confirmDelete;
+
+// Filter local (search)
+function filterLocal(keyword) {
+  if (!keyword) {
+    renderTable(allMessages);
+    return;
+  }
+  const kw = keyword.toLowerCase();
+  renderTable(allMessages.filter(m =>
+    m.senderName.toLowerCase().includes(kw) ||
+    m.senderEmail.toLowerCase().includes(kw) ||
+    m.subject.toLowerCase().includes(kw)
+  ));
+}
+
+// Checkbox all
+function toggleAll(cb) {
+  document.querySelectorAll('.msg-check').forEach(c => c.checked = cb.checked);
+}
+
+// Khởi chạy khi Auth sẵn sàng
+if (window.getToken) {
+  loadMessages('all');
+} else {
+  window.addEventListener('authReady', () => {
+    loadMessages('all');
+  });
+}
+
+// Expose functions to global window context
+window.loadMessages = loadMessages;
+window.openMessage  = openMessage;
+window.sendReply    = sendReply;
+window.updateStatus = updateStatus;
+window.filterLocal  = filterLocal;
+window.toggleAll    = toggleAll;
+</script>
+</div>
+
+</body>
+</html>

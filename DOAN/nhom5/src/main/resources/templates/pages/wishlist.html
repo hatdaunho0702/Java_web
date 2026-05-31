@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/base :: layout(
+    ~{::title}, ~{::main})}">
+<head>
+  <title>Danh sách yêu thích — ĐiệnMáy Pro</title>
+</head>
+<body><main class="container pb-5">
+
+  <!-- PAGE HERO -->
+  <section class="page-hero mb-4" style="margin-left: calc(-50vw + 50%); margin-right: calc(-50vw + 50%); width: 100vw;">
+    <div class="container">
+      <div class="page-hero-breadcrumb">
+        <a th:href="@{/}">Trang chủ</a> / Danh sách yêu thích
+      </div>
+      <h1>Sản phẩm yêu thích</h1>
+      <p>Nơi lưu giữ những sản phẩm công nghệ bạn đang quan tâm</p>
+    </div>
+  </section>
+
+  <!-- WISHLIST CONTENT -->
+  <div class="py-4">
+    <!-- Empty State -->
+    <div class="text-center py-5 bg-white rounded-4 border p-4 shadow-sm" id="wishlist-empty" style="display: none;">
+      <div style="font-size: 72px; animation: heartbeat 2s infinite;">❤️</div>
+      <h3 class="fw-bold mt-3" style="font-family: 'Sora', sans-serif;">Danh sách yêu thích trống</h3>
+      <p class="text-muted mb-4">Hãy thêm những sản phẩm bạn yêu thích để dễ dàng theo dõi và mua sắm sau.</p>
+      <a th:href="@{/products}" class="btn-gradient py-3 px-5" style="border-radius: 10px; font-weight: 600; text-decoration: none;">
+        Tiếp tục mua sắm
+      </a>
+    </div>
+
+    <!-- Loading State -->
+    <div class="text-center py-5" id="wishlist-loading">
+      <div class="spinner-border text-dark" role="status"></div>
+      <div class="mt-3 text-muted">Đang tải danh sách yêu thích của bạn...</div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row g-4" id="wishlist-grid" style="display: none;">
+      <!-- Loaded dynamically via JavaScript -->
+    </div>
+  </div>
+
+  <!-- Quick View Modal -->
+  <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content" style="border-radius: 16px;">
+        <div class="modal-header border-bottom-0">
+          <h5 class="modal-title fw-bold" style="font-family: 'Sora', sans-serif;">Quick View</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="quickViewContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyframe style block for beating empty wishlist heart -->
+  <style>
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+  </style>
+
+  <!-- Wishlist script logic -->
+  <script type="module">
+    function formatVND(v) {
+      return Number(v || 0).toLocaleString("vi-VN") + "đ";
+    }
+
+    function productCard(product, index = 0) {
+      const sale = Number(product.salePrice || 0);
+      const original = Number(product.originalPrice || 0);
+      const stock = Number(product.stockQty || 0);
+      const disabled = stock <= 0;
+
+      const priceHtml = sale > 0 
+        ? `${formatVND(sale)} <span class="price-original ms-2" style="text-decoration: line-through; font-size: 11px; color: #94a3b8; font-weight: 500;">${formatVND(original)}</span>`
+        : `${formatVND(original)}`;
+
+      return `
+        <div class="col-6 col-md-4 col-lg-3 reveal-on-scroll" id="wishlist-item-${product.id}" data-delay-index="${index % 4}">
+          <div class="cyber-product-card" data-product-id="${product.id}" style="position: relative;">
+            <button class="wishlist-btn active" onclick="event.stopPropagation(); removeWishlistItem(${product.id}, this)">
+              <i class="bi bi-heart-fill text-danger"></i>
+            </button>
+            <button class="btn-quick-view-icon" onclick="event.stopPropagation(); openQuickView(${product.id})">
+              <i class="bi bi-eye"></i> Quick View
+            </button>
+            <div class="cyber-product-img-wrapper" style="cursor: pointer" onclick="location.href='/products/${product.slug}'">
+              ${product.thumbnailUrl
+                ? `<img class="cyber-product-img" src="${product.thumbnailUrl}" alt="${product.name}">`
+                : `<div style="font-size:54px;display:flex;align-items:center;justify-content:center;height:100%;">📦</div>`}
+            </div>
+            <div>
+              <div class="cyber-product-title" style="cursor: pointer" onclick="location.href='/products/${product.slug}'">${product.name}</div>
+              <div class="cyber-product-price">${priceHtml}</div>
+            </div>
+            <button class="btn-buy-now btn-add-cart" data-product-id="${product.id}" ${disabled ? "disabled" : ""}>
+              ${disabled ? "Hết hàng" : "Buy Now"}
+            </button>
+          </div>
+        </div>`;
+    }
+
+    async function openQuickView(productId) {
+      document.getElementById("quickViewContent").innerHTML = `
+        <div class="text-center py-5">
+          <div class="spinner-border text-dark" role="status"></div>
+          <div class="mt-2 text-muted">Đang tải thông tin sản phẩm...</div>
+        </div>`;
+      const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("quickViewModal"));
+      modal.show();
+
+      try {
+        const res = await fetch(`/api/products/${productId}`);
+        if (!res.ok) throw new Error("Không tải được chi tiết sản phẩm");
+        const p = await res.json();
+        const stock = Number(p.stockQty || 0);
+        const sale = Number(p.salePrice || 0);
+        const original = Number(p.originalPrice || 0);
+
+        const priceHtml = sale > 0
+          ? `<div class="price-sale" style="font-size: 20px; font-weight: 800; color: #ef4444;">${formatVND(sale)} 
+               <span class="price-original ms-2" style="text-decoration: line-through; font-size: 14px; color: #94a3b8; font-weight: 500;">${formatVND(original)}</span>
+             </div>`
+          : `<div class="price-normal" style="font-size: 20px; font-weight: 800; color: #000;">${formatVND(original)}</div>`;
+
+        document.getElementById("quickViewContent").innerHTML = `
+          <div class="row g-3">
+            <div class="col-md-5 text-center">
+              ${p.thumbnailUrl
+                ? `<img src="${p.thumbnailUrl}" alt="${p.name}" style="width:100%;max-height:280px;object-fit:contain;border-radius:10px">`
+                : `<div style="height:280px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:10px;font-size:64px">📦</div>`}
+            </div>
+            <div class="col-md-7">
+              <h5 class="fw-bold" style="font-family: 'Sora', sans-serif;">${p.name}</h5>
+              <div class="mb-2">
+                ${priceHtml}
+              </div>
+              <div class="mb-3 text-muted small" style="line-height: 1.5;">${p.description || "Chưa có mô tả ngắn cho sản phẩm này."}</div>
+              <div class="mb-3">Tồn kho: <strong class="${stock < 5 ? 'text-danger' : ''}">${stock}</strong></div>
+              
+              <div class="mb-3 d-flex align-items-center gap-2">
+                <span class="small text-muted fw-bold">Số lượng:</span>
+                <button class="btn btn-sm btn-outline-secondary" id="qv-qty-minus">-</button>
+                <strong id="qv-qty" class="px-2" style="min-width: 24px; text-align: center;">1</strong>
+                <button class="btn btn-sm btn-outline-secondary" id="qv-qty-plus">+</button>
+              </div>
+
+              <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-dark" id="qvAddCart" ${stock <= 0 ? "disabled" : ""}>${stock <= 0 ? "Hết hàng" : "🛒 Thêm vào giỏ"}</button>
+                <a href="/products/${p.slug}" class="btn btn-outline-secondary">Xem chi tiết</a>
+              </div>
+            </div>
+          </div>`;
+
+        document.getElementById("qv-qty-minus").addEventListener("click", () => {
+          const qtyEl = document.getElementById("qv-qty");
+          qtyEl.textContent = String(Math.max(1, parseInt(qtyEl.textContent || "1") - 1));
+        });
+        document.getElementById("qv-qty-plus").addEventListener("click", () => {
+          const qtyEl = document.getElementById("qv-qty");
+          qtyEl.textContent = String(parseInt(qtyEl.textContent || "1") + 1);
+        });
+
+        const addBtn = document.getElementById("qvAddCart");
+        if (addBtn && stock > 0) {
+          addBtn.addEventListener("click", () => {
+            const qty = parseInt(document.getElementById("qv-qty")?.textContent || "1");
+            if (typeof window.addToCart === "function") {
+              window.addToCart(p.id, qty, addBtn);
+            }
+          });
+        }
+      } catch (err) {
+        document.getElementById("quickViewContent").innerHTML = `
+          <div class="text-center py-5 text-danger">
+            <i class="bi bi-exclamation-triangle" style="font-size: 40px;"></i>
+            <div class="mt-2 fw-semibold">${err.message}</div>
+          </div>`;
+      }
+    }
+    window.openQuickView = openQuickView;
+
+    window.removeWishlistItem = function(productId, btnEl) {
+      if (typeof window.toggleWishlist === "function") {
+        window.toggleWishlist(productId, btnEl);
+      }
+      
+      const card = document.getElementById(`wishlist-item-${productId}`);
+      if (card) {
+        card.style.transition = "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)";
+        card.style.opacity = "0";
+        card.style.transform = "scale(0.9) translateY(10px)";
+        setTimeout(() => {
+          card.remove();
+          
+          const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+          if (wishlist.length === 0) {
+            document.getElementById("wishlist-grid").style.display = "none";
+            document.getElementById("wishlist-empty").style.display = "block";
+          }
+        }, 350);
+      }
+    };
+
+    async function loadWishlist() {
+      const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+      const loadingEl = document.getElementById("wishlist-loading");
+      const emptyEl = document.getElementById("wishlist-empty");
+      const gridEl = document.getElementById("wishlist-grid");
+
+      if (wishlist.length === 0) {
+        loadingEl.style.display = "none";
+        emptyEl.style.display = "block";
+        gridEl.style.display = "none";
+        return;
+      }
+
+      try {
+        // Fetch details of all wishlisted products in parallel
+        const promises = wishlist.map(async (id) => {
+          try {
+            const res = await fetch(`/api/products/${id}`);
+            if (res.ok) {
+              return await res.json();
+            }
+          } catch (e) {
+            console.error(`Failed to fetch product ${id}`, e);
+          }
+          return null;
+        });
+
+        const products = (await Promise.all(promises)).filter(Boolean);
+
+        loadingEl.style.display = "none";
+        if (products.length === 0) {
+          emptyEl.style.display = "block";
+          gridEl.style.display = "none";
+        } else {
+          emptyEl.style.display = "none";
+          gridEl.style.display = "flex";
+          gridEl.innerHTML = products.map((p, idx) => productCard(p, idx)).join("");
+          if (typeof window.initScrollReveal === "function") {
+            window.initScrollReveal();
+          }
+        }
+      } catch (err) {
+        loadingEl.style.display = "none";
+        emptyEl.style.display = "block";
+        gridEl.style.display = "none";
+        if (typeof window.showToast === "function") {
+          window.showToast("Không thể tải danh sách sản phẩm yêu thích", "error");
+        }
+      }
+    }
+
+    // Load wishlist on page startup
+    await loadWishlist();
+  </script>
+</main></body>
+</html>

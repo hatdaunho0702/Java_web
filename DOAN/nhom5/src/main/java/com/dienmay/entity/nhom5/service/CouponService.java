@@ -59,6 +59,7 @@ public class CouponService {
                 .valid(true)
                 .discountAmount(discountAmount)
                 .message("Áp dụng mã giảm giá thành công")
+                .couponId(coupon.getId())
                 .build();
     }
 

@@ -50,6 +50,7 @@ export async function logout() {
 
   await signOut(auth);
   localStorage.clear();
+  sessionStorage.clear();
   window.location.href = "/login";
 }
 
@@ -76,7 +77,7 @@ export function requireAdmin() {
           window.location.href = "/login";
           return;
         }
-        const role = JSON.parse(localStorage.getItem("userInfo") || "{}").role;
+        const role = JSON.parse(localStorage.getItem("userInfo") || sessionStorage.getItem("userInfo") || "{}").role;
         if (role !== "ADMIN") {
           window.location.href = "/";
         }
@@ -96,10 +97,24 @@ function bindNavbarAuthState() {
           document
             .getElementById("nav-login-item")
             ?.style.setProperty("display", "block");
+          
+          const userNameEl = document.getElementById("nav-user-name");
+          if (userNameEl) {
+            userNameEl.textContent = "";
+            userNameEl.style.display = "none";
+          }
+          const userBtn = document.getElementById("nav-user-dropdown-btn");
+          if (userBtn) {
+            userBtn.style.background = "none";
+            userBtn.style.padding = "0";
+            userBtn.style.borderRadius = "0";
+          }
           return;
         }
 
-        const role = JSON.parse(localStorage.getItem("userInfo") || "{}").role;
+        const info = JSON.parse(localStorage.getItem("userInfo") || sessionStorage.getItem("userInfo") || "{}");
+        const role = info.role;
+        
         document
           .getElementById("nav-login-item")
           ?.style.setProperty("display", "none");
@@ -114,7 +129,21 @@ function bindNavbarAuthState() {
             .getElementById("nav-admin-item")
             ?.style.setProperty("display", "block");
         }
-        const info = JSON.parse(localStorage.getItem("userInfo") || "{}");
+        
+        // Dynamic User Chip styling
+        const displayName = info.fullName || info.email || "Tài khoản";
+        const userNameEl = document.getElementById("nav-user-name");
+        if (userNameEl) {
+          userNameEl.textContent = displayName;
+          userNameEl.style.display = "inline-block";
+        }
+        const userBtn = document.getElementById("nav-user-dropdown-btn");
+        if (userBtn) {
+          userBtn.style.background = "#f1f5f9";
+          userBtn.style.padding = "6px 14px";
+          userBtn.style.borderRadius = "20px";
+        }
+
         const adminNameEl = document.getElementById("adminName");
         if (adminNameEl) {
           adminNameEl.textContent = info.email || "";
@@ -132,8 +161,21 @@ function bindNavbarAuthState() {
 
 bindNavbarAuthState();
 
+export async function getAuthHeaders() {
+  const token = await getToken();
+  if (!token) {
+    window.location.href = '/login';
+    return null;
+  }
+  return {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  };
+}
+
 window.logout = logout;
 window.getToken = getToken;
+window.getAuthHeaders = getAuthHeaders;
 window.waitForAuthReady = waitForAuthReady;
 window.requireAuth = requireAuth;
 window.requireAdmin = requireAdmin;

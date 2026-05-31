@@ -68,7 +68,7 @@ public class ProductService {
     private final UserRepository userRepository;
     private final OrderItemRepository orderItemRepository;
 
-    @Value("${app.storage.product-image-dir:./uploads/images}")
+    @Value("${app.storage.product-image-dir:./uploads/products}")
     private String productImageDir;
 
     public Page<ProductResponse> getProducts(ProductFilterRequest filter, Pageable pageable) {
@@ -316,6 +316,8 @@ public class ProductService {
             .reviewCount(reviewCount)
             .categoryName(product.getCategory() == null ? null : product.getCategory().getName())
             .brandName(product.getBrand() == null ? null : product.getBrand().getName())
+            .categoryId(product.getCategory() == null ? null : product.getCategory().getId())
+            .brandId(product.getBrand() == null ? null : product.getBrand().getId())
                 .imageUrls(imageUrls)
                 .specs(specs)
             .reviews(reviews)
@@ -337,6 +339,10 @@ public class ProductService {
     @Transactional
     public ProductDetailResponse createProduct(CreateProductRequest req, MultipartFile[] images) {
         validateProductRequest(req);
+
+        if (productRepository.findBySlug(req.getSlug()).isPresent()) {
+            throw new BadRequestException("Slug sản phẩm đã tồn tại trong hệ thống");
+        }
 
         Category category = categoryRepository.findById(req.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
@@ -373,6 +379,10 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm"));
 
+        if (productRepository.findBySlug(req.getSlug()).stream().anyMatch(p -> !p.getId().equals(id))) {
+            throw new BadRequestException("Slug sản phẩm đã tồn tại trong hệ thống");
+        }
+
         Category category = categoryRepository.findById(req.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
         Brand brand = brandRepository.findById(req.getBrandId())
@@ -392,6 +402,7 @@ public class ProductService {
 
         if (newImages != null && newImages.length > 0) {
             productImageRepository.deleteByProductId(product.getId());
+            product.setThumbnailUrl(null);
             saveImages(product, newImages);
         }
 
@@ -419,14 +430,23 @@ public class ProductService {
         if (req.getName() == null || req.getName().isBlank()) {
             throw new BadRequestException("Tên sản phẩm không được để trống");
         }
+        if (req.getName().trim().length() > 255) {
+            throw new BadRequestException("Tên sản phẩm không được vượt quá 255 ký tự");
+        }
         if (req.getOriginalPrice() == null || req.getOriginalPrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new BadRequestException("Giá gốc phải lớn hơn 0");
+        }
+        if (req.getSalePrice() != null && req.getSalePrice().compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("Giá khuyến mãi không được âm");
         }
         if (req.getSalePrice() != null && req.getSalePrice().compareTo(req.getOriginalPrice()) >= 0) {
             throw new BadRequestException("Giá khuyến mãi phải nhỏ hơn giá gốc");
         }
         if (req.getCategoryId() == null || req.getBrandId() == null) {
             throw new BadRequestException("Danh mục và thương hiệu là bắt buộc");
+        }
+        if (req.getStockQty() != null && req.getStockQty() < 0) {
+            throw new BadRequestException("Số lượng tồn kho phải lớn hơn hoặc bằng 0");
         }
     }
 
@@ -445,19 +465,46 @@ public class ProductService {
                     continue;
                 }
                 String originalName = image.getOriginalFilename() == null ? "image" : image.getOriginalFilename();
+                
+                // Validate image content type / extension
+                String contentType = image.getContentType();
+                if (contentType != null) {
+                    if (!contentType.equals("image/jpeg") && !contentType.equals("image/png") && 
+                        !contentType.equals("image/webp") && !contentType.equals("image/gif")) {
+                        throw new BadRequestException("Chỉ chấp nhận ảnh định dạng .jpg, .jpeg, .png, .webp");
+                    }
+                } else {
+                    String ext = "";
+                    int dotIndex = originalName.lastIndexOf(".");
+                    if (dotIndex >= 0) {
+                        ext = originalName.substring(dotIndex).toLowerCase();
+                    }
+                    if (!ext.equals(".jpg") && !ext.equals(".jpeg") && !ext.equals(".png") && !ext.equals(".webp")) {
+                        throw new BadRequestException("Chỉ chấp nhận ảnh định dạng .jpg, .jpeg, .png, .webp");
+                    }
+                }
+
                 String fileName = UUID.randomUUID() + "-" + originalName.replace(" ", "_");
                 Path target = basePath.resolve(fileName);
                 Files.copy(image.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
 
+                String imageUrl = target.toString().replace("\\", "/");
+                if (imageUrl.startsWith("./")) {
+                    imageUrl = imageUrl.substring(1);
+                }
+                if (!imageUrl.startsWith("/")) {
+                    imageUrl = "/" + imageUrl;
+                }
+
                 ProductImage productImage = ProductImage.builder()
                         .product(product)
-                        .imageUrl(target.toString().replace("\\", "/"))
+                        .imageUrl(imageUrl)
                         .sortOrder(i)
                         .build();
                 savedImages.add(productImage);
             }
         } catch (IOException e) {
-            throw new BadRequestException("Không thể lưu ảnh sản phẩm");
+            throw new BadRequestException("Không thể lưu ảnh sản phẩm: " + e.getMessage());
         }
 
         if (!savedImages.isEmpty()) {

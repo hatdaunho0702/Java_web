@@ -1,5 +1,7 @@
 package com.dienmay.entity.nhom5.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -43,6 +45,7 @@ public class Category {
     @JoinColumn(name = "parent_id")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @JsonIgnoreProperties({"parent", "children", "products"})
     private Category parent;
 
     @Column(name = "icon_url", length = 255)
@@ -58,12 +61,14 @@ public class Category {
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @JsonIgnore
     private List<Category> children = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @JsonIgnore
     private List<Product> products = new ArrayList<>();
 }
 

@@ -54,6 +54,7 @@ public class AdminUserController {
                     .avatarUrl(u.getAvatarUrl())
                     .createdAt(u.getCreatedAt())
                     .isActive(u.getIsActive())
+                    .role(u.getRole() == null ? "CUSTOMER" : u.getRole().name())
                     .orderCount(userOrders)
                     .build();
         }).collect(Collectors.toList());
@@ -94,5 +95,21 @@ public class AdminUserController {
             .totalAmount(o.getTotalAmount())
             .build());
         return ResponseEntity.ok(dto);
+    }
+
+    @PutMapping("/{id}/role")
+    public ResponseEntity<Void> changeUserRole(
+            @PathVariable String id,
+            @RequestParam String role
+    ) {
+        User u = userRepository.findByUid(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+        try {
+            com.dienmay.entity.nhom5.entity.Role newRole = com.dienmay.entity.nhom5.entity.Role.valueOf(role.toUpperCase());
+            u.setRole(newRole);
+            userRepository.save(u);
+        } catch (IllegalArgumentException ex) {
+            throw new com.dienmay.entity.nhom5.exception.BadRequestException("Quyền hạn không hợp lệ");
+        }
+        return ResponseEntity.ok().build();
     }
 }

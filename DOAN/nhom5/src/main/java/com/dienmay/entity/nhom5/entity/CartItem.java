@@ -1,5 +1,6 @@
 package com.dienmay.entity.nhom5.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -38,6 +39,7 @@ public class CartItem {
     @JoinColumn(name = "user_uid", referencedColumnName = "uid", nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @JsonIgnore
     private User user;
 
     @ManyToOne(fetch = FetchType.EAGER)

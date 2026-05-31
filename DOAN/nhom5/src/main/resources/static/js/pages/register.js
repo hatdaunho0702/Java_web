@@ -87,9 +87,9 @@ function validateRegisterForm(email, password, fullName, phone) {
     showError("Vui lòng nhập họ tên.");
     return false;
   }
-  const phonePattern = /^0\d{9}$/;
+  const phonePattern = /^\d{10,11}$/;
   if (phone && !phonePattern.test(phone)) {
-    showError("SĐT phải gồm 10 số và bắt đầu bằng 0.");
+    showError("Số điện thoại chỉ được chứa số, độ dài từ 10 đến 11 số.");
     return false;
   }
   return true;

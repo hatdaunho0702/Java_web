@@ -1,25 +1,325 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
-
 >
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh mục — Admin</title>
+    <title>Quản lý danh mục — ElectraManager</title>
   </head>
   <body>
     <div class="page-content">
-      <div class="admin-card p-4">
-        <div class="section-title mb-3">Quản lý <span>danh mục</span></div>
-        <div class="row g-3">
-          <div class="col-md-4" th:each="cat : ${categories}">
-            <div class="border rounded-3 p-3 bg-white" th:text="${cat.name}">
-              Danh mục
+      <style>
+        .form-select-custom, .form-input-custom {
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          padding: 8px 12px;
+          font-size: 13.5px;
+          color: var(--text-main);
+          outline: none;
+          transition: var(--transition);
+          width: 100%;
+        }
+        .form-select-custom:focus, .form-input-custom:focus {
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+      </style>
+      <!-- Title & Action Bar -->
+      <div class="action-bar mb-3">
+        <h3 class="panel-title" style="font-size: 20px; font-weight: 700;">Quản lý danh mục</h3>
+        <button class="btn btn-primary" onclick="openCreateModal()">
+          <i class="ti ti-plus"></i> Thêm danh mục mới
+        </button>
+      </div>
+
+      <!-- Categories Table Panel -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <h4 class="panel-title" style="font-size: 14px; font-weight: 600; color: var(--text-muted);">Danh sách danh mục sản phẩm</h4>
+        </div>
+        <div class="table-container">
+          <table class="custom-table" id="categoriesTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Icon</th>
+                <th>Tên danh mục</th>
+                <th>Slug</th>
+                <th>Danh mục cha</th>
+                <th>Trạng thái</th>
+                <th style="text-align: center;">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- tplRow template -->
+              <tr id="tplCategoryRow" style="display:none">
+                <td class="col-id"></td>
+                <td class="col-icon"></td>
+                <td class="col-name fw-bold"></td>
+                <td class="col-slug text-muted"></td>
+                <td class="col-parent"></td>
+                <td><span class="col-status badge-status"></span></td>
+                <td class="col-action" style="text-align: center;"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Create/Edit Category Modal -->
+      <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content" style="border-radius: 12px;">
+            <div class="modal-header border-bottom-0">
+              <h5 class="modal-title fw-bold" id="modalTitle">Thêm danh mục mới</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <form id="categoryForm" onsubmit="saveCategory(event)">
+                <input type="hidden" id="categoryId">
+                
+                <div class="mb-3">
+                  <label class="form-label fw-bold small text-muted">Tên danh mục</label>
+                  <input type="text" class="form-input-custom" id="categoryName" placeholder="Ví dụ: Điện thoại di động" required oninput="generateSlug(this.value)">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-bold small text-muted">Slug</label>
+                  <input type="text" class="form-input-custom" id="categorySlug" placeholder="dien-thoai-di-dong" required>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-bold small text-muted">Danh mục cha</label>
+                  <select class="form-select-custom" id="categoryParent">
+                    <option value="">-- Không có danh mục cha --</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-bold small text-muted">Icon URL (Bootstrap Icon)</label>
+                  <input type="text" class="form-input-custom" id="categoryIcon" placeholder="Ví dụ: bi-phone">
+                </div>
+
+                <div class="mb-3 form-check">
+                  <input type="checkbox" class="form-check-input" id="categoryActive" checked>
+                  <label class="form-check-label small fw-bold text-muted" for="categoryActive">Đang hoạt động</label>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                  <button type="submit" class="btn btn-primary">Lưu lại</button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
+
+    <script>
+      let categoryModal;
+      let categoriesList = [];
+
+      document.addEventListener("DOMContentLoaded", () => {
+        categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+      });
+
+      window.addEventListener('authReady', () => {
+        fetchCategories();
+      });
+      // Fallback if authReady already fired before this script ran
+      if (window.getAuthHeaders) fetchCategories();
+
+      async function fetchCategories() {
+        try {
+          const headers = await window.getAuthHeaders();
+          if (!headers) return;
+          const res = await fetch('/api/admin/categories', { headers });
+          if (!res.ok) {
+            window.showToast('Không thể tải danh sách danh mục', 'danger');
+            return;
+          }
+          categoriesList = await res.json();
+          renderCategoriesTable();
+          populateParentDropdown();
+        } catch (err) {
+          window.showToast('Lỗi kết nối máy chủ', 'danger');
+        }
+      }
+
+      function renderCategoriesTable() {
+        const tbody = document.querySelector('#categoriesTable tbody');
+        tbody.querySelectorAll('tr:not(#tplCategoryRow)').forEach(el => el.remove());
+        const tpl = document.getElementById('tplCategoryRow');
+
+        if (categoriesList.length === 0) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td colspan="7" class="text-center text-muted py-4">Không có danh mục nào.</td>`;
+          tbody.appendChild(tr);
+          return;
+        }
+
+        categoriesList.forEach(c => {
+          const tr = tpl.cloneNode(true);
+          tr.style.display = '';
+          tr.id = 'category-row-' + c.id;
+
+          tr.querySelector('.col-id').textContent = c.id;
+          
+          const iconEl = tr.querySelector('.col-icon');
+          if (c.iconUrl) {
+            iconEl.innerHTML = `<i class="bi ${c.iconUrl}" style="font-size: 18px;"></i>`;
+          } else {
+            iconEl.innerHTML = `<i class="bi bi-folder" style="font-size: 18px; color: var(--text-muted);"></i>`;
+          }
+
+          tr.querySelector('.col-name').textContent = c.name;
+          tr.querySelector('.col-slug').textContent = c.slug;
+          tr.querySelector('.col-parent').textContent = c.parent ? c.parent.name : '—';
+          
+          const statusEl = tr.querySelector('.col-status');
+          statusEl.textContent = c.isActive ? 'Active' : 'Inactive';
+          statusEl.className = 'badge-status ' + (c.isActive ? 'status-completed' : 'status-cancelled');
+
+          // Thao tác
+          const actionTd = tr.querySelector('.col-action');
+          
+          const editBtn = document.createElement('button');
+          editBtn.className = 'btn-action-sm me-2';
+          editBtn.innerHTML = '<i class="ti ti-edit"></i> Sửa';
+          editBtn.addEventListener('click', () => openEditModal(c));
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'btn-action-sm text-danger';
+          delBtn.innerHTML = '<i class="ti ti-trash"></i> Xóa';
+          delBtn.addEventListener('click', () => deleteCategory(c.id, c.name));
+
+          actionTd.appendChild(editBtn);
+          actionTd.appendChild(delBtn);
+
+          tbody.appendChild(tr);
+        });
+      }
+
+      function populateParentDropdown() {
+        const select = document.getElementById('categoryParent');
+        select.innerHTML = '<option value="">-- Không có danh mục cha --</option>';
+        categoriesList.forEach(c => {
+          // Chỉ lấy danh mục làm cha nếu không có cha (hoặc tùy cấu trúc của bạn, ở đây hỗ trợ 2 tầng)
+          if (!c.parent) {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            select.appendChild(opt);
+          }
+        });
+      }
+
+      function generateSlug(text) {
+        const slug = text.toLowerCase()
+          .trim()
+          .normalize('NFD') // Chuẩn hóa ký tự Unicode tiếng Việt
+          .replace(/[\u0300-\u036f]/g, '') // Xóa dấu
+          .replace(/[đĐ]/g, 'd')
+          .replace(/[^a-z0-9\s-]/g, '') // Xóa các ký tự đặc biệt
+          .replace(/[\s_]+/g, '-') // Thay thế khoảng trắng bằng dấu -
+          .replace(/-+/g, '-'); // Tránh dấu - trùng lặp
+        document.getElementById('categorySlug').value = slug;
+      }
+
+      function openCreateModal() {
+        document.getElementById('modalTitle').textContent = 'Thêm danh mục mới';
+        document.getElementById('categoryId').value = '';
+        document.getElementById('categoryForm').reset();
+        document.getElementById('categoryActive').checked = true;
+        // Cập nhật dropdown không chứa chính nó
+        populateParentDropdown();
+        categoryModal.show();
+      }
+
+      function openEditModal(cat) {
+        document.getElementById('modalTitle').textContent = 'Chỉnh sửa danh mục';
+        document.getElementById('categoryId').value = cat.id;
+        document.getElementById('categoryName').value = cat.name;
+        document.getElementById('categorySlug').value = cat.slug;
+        document.getElementById('categoryIcon').value = cat.iconUrl || '';
+        document.getElementById('categoryActive').checked = cat.isActive === true;
+        
+        // Populate parent dropdown và loại bỏ chính nó ra khỏi các options danh mục cha
+        populateParentDropdown();
+        const select = document.getElementById('categoryParent');
+        const selfOpt = select.querySelector(`option[value="${cat.id}"]`);
+        if (selfOpt) selfOpt.remove();
+
+        select.value = cat.parent ? cat.parent.id : '';
+        categoryModal.show();
+      }
+
+      async function saveCategory(e) {
+        e.preventDefault();
+        const id = document.getElementById('categoryId').value;
+        const name = document.getElementById('categoryName').value;
+        const slug = document.getElementById('categorySlug').value;
+        const parentId = document.getElementById('categoryParent').value;
+        const iconUrl = document.getElementById('categoryIcon').value;
+        const isActive = document.getElementById('categoryActive').checked;
+
+        const payload = {
+          name,
+          slug,
+          parentId: parentId ? Number(parentId) : null,
+          iconUrl,
+          isActive
+        };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/admin/categories/${id}` : '/api/admin/categories';
+
+        try {
+          const headers = await window.getAuthHeaders();
+          if (!headers) return;
+          const res = await fetch(url, {
+            method: method,
+            headers: headers,
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            window.showToast('Lưu danh mục thành công!', 'success');
+            categoryModal.hide();
+            fetchCategories();
+          } else {
+            const err = await res.json().catch(() => ({}));
+            window.showToast(err.message || 'Lỗi khi lưu danh mục', 'danger');
+          }
+        } catch (err) {
+          window.showToast('Lỗi mạng', 'danger');
+        }
+      }
+
+      async function deleteCategory(id, name) {
+        if (!confirm(`Bạn có chắc chắn muốn xóa danh mục "${name}"?`)) return;
+
+        try {
+          const headers = await window.getAuthHeaders();
+          if (!headers) return;
+          const res = await fetch(`/api/admin/categories/${id}`, {
+            method: 'DELETE',
+            headers: headers
+          });
+
+          if (res.ok) {
+            window.showToast('Đã xóa danh mục!', 'success');
+            fetchCategories();
+          } else {
+            const err = await res.json().catch(() => ({}));
+            window.showToast(err.message || 'Lỗi khi xóa danh mục. Có thể có sản phẩm liên kết.', 'danger');
+          }
+        } catch (err) {
+          window.showToast('Lỗi mạng', 'danger');
+        }
+      }
+    </script>
     </div>
   </body>
 </html>

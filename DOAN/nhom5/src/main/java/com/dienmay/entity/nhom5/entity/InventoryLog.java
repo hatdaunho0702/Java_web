@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,6 +37,7 @@ public class InventoryLog {
     @JoinColumn(name = "product_id", nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @JsonIgnore
     private Product product;
 
     @Column(name = "change_qty", nullable = false)
@@ -55,6 +57,7 @@ public class InventoryLog {
     @JoinColumn(name = "created_by", referencedColumnName = "uid")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    @JsonIgnore
     private User createdBy;
 
     @Column(name = "created_at")

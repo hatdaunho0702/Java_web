@@ -106,6 +106,30 @@ public class PageController {
         return "pages/order-detail";
     }
 
+    @GetMapping("/about")
+    public String about(Model model) {
+        model.addAttribute("pageTitle", "Về chúng tôi");
+        return "pages/about";
+    }
+
+    @GetMapping("/contact")
+    public String contact(Model model) {
+        model.addAttribute("pageTitle", "Liên hệ");
+        return "pages/contact";
+    }
+
+    @GetMapping("/blog")
+    public String blog(Model model) {
+        model.addAttribute("pageTitle", "Tin tức");
+        return "pages/blog";
+    }
+
+    @GetMapping("/wishlist")
+    public String wishlist(Model model) {
+        model.addAttribute("pageTitle", "Danh sách yêu thích");
+        return "pages/wishlist";
+    }
+
     private BigDecimal parsePrice(String value) {
         if (value == null || value.isBlank()) {
             return null;

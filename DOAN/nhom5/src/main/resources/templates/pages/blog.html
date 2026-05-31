@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/base :: layout(
+    ~{::title}, ~{::main})}">
+<head>
+  <title>Tin tức — ĐiệnMáy Pro</title>
+</head>
+<body><main>
+
+  <!-- PAGE HERO -->
+  <section class="page-hero">
+    <div class="container">
+      <div class="page-hero-breadcrumb">
+        <a th:href="@{/}">Trang chủ</a> / Tin tức
+      </div>
+      <h1>Tin tức & Công nghệ</h1>
+      <p>Cập nhật xu hướng công nghệ mới nhất, review sản phẩm và mẹo sử dụng</p>
+    </div>
+  </section>
+
+  <!-- BLOG CONTENT -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row g-4">
+
+        <!-- LEFT: Posts -->
+        <div class="col-lg-8">
+
+          <!-- Featured post -->
+          <div class="blog-featured mb-4">
+            <div style="position:absolute;inset:0;
+                        background:var(--gradient-hero);
+                        display:flex;align-items:center;
+                        justify-content:center;
+                        font-size:100px">📱</div>
+            <div class="blog-featured-overlay"></div>
+            <div class="blog-featured-content">
+              <span style="background:var(--primary);
+                           color:white;
+                           padding:4px 12px;
+                           border-radius:20px;
+                           font-size:11px;
+                           font-weight:600;
+                           margin-bottom:12px;
+                           display:inline-block">
+                ⭐ NỔI BẬT
+              </span>
+              <h3 style="font-size:24px;
+                         font-weight:800;
+                         margin-bottom:8px">
+                Top 10 smartphone đáng mua nhất năm 2024: Từ tầm trung đến cao cấp
+              </h3>
+              <div style="font-size:13px;
+                          opacity:0.8;
+                          margin-bottom:16px">
+                <i class="bi bi-person me-1"></i>
+                Admin ĐiệnMáy Pro
+                &nbsp;·&nbsp;
+                <i class="bi bi-clock me-1"></i>
+                28/05/2024
+                &nbsp;·&nbsp;
+                <i class="bi bi-eye me-1"></i>
+                12.5K lượt xem
+              </div>
+              <a href="#" onclick="event.preventDefault(); searchTag('Smartphone')"
+                 style="background:white;
+                        color:var(--primary);
+                        padding:10px 24px;
+                        border-radius:25px;
+                        font-weight:700;
+                        font-size:14px;
+                        text-decoration:none">
+                Đọc ngay →
+              </a>
+            </div>
+          </div>
+
+          <!-- Filter tabs -->
+          <div class="d-flex gap-2 flex-wrap mb-4">
+            <button class="category-pill active"
+                    onclick="filterBlog('all', this)">
+              Tất cả
+            </button>
+            <button class="category-pill"
+                    onclick="filterBlog('phone', this)">
+              📱 Điện thoại
+            </button>
+            <button class="category-pill"
+                    onclick="filterBlog('laptop', this)">
+              💻 Laptop
+            </button>
+            <button class="category-pill"
+                    onclick="filterBlog('tv', this)">
+              📺 Tivi
+            </button>
+            <button class="category-pill"
+                    onclick="filterBlog('tips', this)">
+              💡 Mẹo hay
+            </button>
+          </div>
+
+          <!-- Blog grid -->
+          <div class="row g-4" id="blogGrid">
+
+            <div class="col-md-6" data-cat="phone">
+              <div class="blog-card">
+                <div class="blog-img"
+                     style="background:linear-gradient(135deg,#667eea,#764ba2)">
+                  📱
+                  <span class="blog-category"
+                        style="background:var(--accent)">
+                    Điện thoại
+                  </span>
+                </div>
+                <div class="blog-body">
+                  <div class="blog-meta">
+                    <span>
+                      <i class="bi bi-person me-1"></i>
+                      Admin
+                    </span>
+                    <span>
+                      <i class="bi bi-clock me-1"></i>
+                      25/05/2024
+                    </span>
+                  </div>
+                  <div class="blog-title">
+                    Samsung Galaxy S25 Ultra: Có gì mới so với thế hệ trước?
+                  </div>
+                  <div class="blog-excerpt">
+                    Samsung vừa ra mắt Galaxy S25 Ultra với nhiều cải tiến đáng kể về camera, chip xử lý và thiết kế. Hãy cùng khám phá những điểm nổi bật...
+                  </div>
+                </div>
+                <div class="blog-footer">
+                  <div>
+                    <span class="blog-tag" onclick="searchTag('Samsung')">Samsung</span>
+                    <span class="blog-tag" onclick="searchTag('Review')">Review</span>
+                  </div>
+                  <span style="font-size:12px;
+                               color:var(--text-muted)">
+                    <i class="bi bi-eye me-1"></i>5.2K
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6" data-cat="laptop">
+              <div class="blog-card">
+                <div class="blog-img"
+                     style="background:linear-gradient(135deg,#f5576c,#f093fb)">
+                  💻
+                  <span class="blog-category"
+                        style="background:linear-gradient(135deg,#f5576c,#f093fb)">
+                    Laptop
+                  </span>
+                </div>
+                <div class="blog-body">
+                  <div class="blog-meta">
+                    <span>
+                      <i class="bi bi-person me-1"></i>
+                      Tech Writer
+                    </span>
+                    <span>
+                      <i class="bi bi-clock me-1"></i>
+                      20/05/2024
+                    </span>
+                  </div>
+                  <div class="blog-title">
+                    MacBook Air M3 vs Dell XPS 15: Đâu là lựa chọn tốt hơn?
+                  </div>
+                  <div class="blog-excerpt">
+                    So sánh chi tiết giữa hai mẫu laptop cao cấp được yêu thích nhất hiện nay. Hiệu năng, pin, màn hình và giá cả...
+                  </div>
+                </div>
+                <div class="blog-footer">
+                  <div>
+                    <span class="blog-tag" onclick="searchTag('Apple')">Apple</span>
+                    <span class="blog-tag" onclick="searchTag('So sánh')">So sánh</span>
+                  </div>
+                  <span style="font-size:12px;
+                               color:var(--text-muted)">
+                    <i class="bi bi-eye me-1"></i>8.1K
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6" data-cat="tips">
+              <div class="blog-card">
+                <div class="blog-img"
+                     style="background:linear-gradient(135deg,#43e97b,#38f9d7)">
+                  💡
+                  <span class="blog-category"
+                        style="background:#43e97b">
+                    Mẹo hay
+                  </span>
+                </div>
+                <div class="blog-body">
+                  <div class="blog-meta">
+                    <span>
+                      <i class="bi bi-person me-1"></i>
+                      Admin
+                    </span>
+                    <span>
+                      <i class="bi bi-clock me-1"></i>
+                      15/05/2024
+                    </span>
+                  </div>
+                  <div class="blog-title">
+                    5 mẹo kéo dài tuổi thọ pin điện thoại mà ít ai biết
+                  </div>
+                  <div class="blog-excerpt">
+                    Pin điện thoại xuống cấp nhanh? Áp dụng ngay 5 thói quen đơn giản này để pin bền hơn gấp đôi và tiết kiệm chi phí thay pin...
+                  </div>
+                </div>
+                <div class="blog-footer">
+                  <div>
+                    <span class="blog-tag" onclick="searchTag('Tips')">Tips</span>
+                    <span class="blog-tag" onclick="searchTag('Pin')">Pin</span>
+                  </div>
+                  <span style="font-size:12px;
+                               color:var(--text-muted)">
+                    <i class="bi bi-eye me-1"></i>15.3K
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6" data-cat="tv">
+              <div class="blog-card">
+                <div class="blog-img"
+                     style="background:linear-gradient(135deg,#4facfe,#00f2fe)">
+                  📺
+                  <span class="blog-category"
+                        style="background:#4facfe">
+                    Tivi
+                  </span>
+                </div>
+                <div class="blog-body">
+                  <div class="blog-meta">
+                    <span>
+                      <i class="bi bi-person me-1"></i>
+                      Tech Writer
+                    </span>
+                    <span>
+                      <i class="bi bi-clock me-1"></i>
+                      10/05/2024
+                    </span>
+                  </div>
+                  <div class="blog-title">
+                    OLED vs QLED 2024: Công nghệ nào đáng đầu tư hơn?
+                  </div>
+                  <div class="blog-excerpt">
+                    Thị trường tivi cao cấp đang có cuộc đua giữa OLED và QLED. Chúng tôi đã test thực tế để đưa ra kết luận khách quan nhất...
+                  </div>
+                </div>
+                <div class="blog-footer">
+                  <div>
+                    <span class="blog-tag" onclick="searchTag('LG')">LG</span>
+                    <span class="blog-tag" onclick="searchTag('Samsung')">Samsung</span>
+                  </div>
+                  <span style="font-size:12px;
+                               color:var(--text-muted)">
+                    <i class="bi bi-eye me-1"></i>6.7K
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6" data-cat="phone">
+              <div class="blog-card">
+                <div class="blog-img"
+                     style="background:linear-gradient(135deg,#F7971E,#FFD200)">
+                  🔋
+                  <span class="blog-category"
+                        style="background:#F7971E">
+                    Điện thoại
+                  </span>
+                </div>
+                <div class="blog-body">
+                  <div class="blog-meta">
+                    <span>
+                      <i class="bi bi-person me-1"></i>
+                      Admin
+                    </span>
+                    <span>
+                      <i class="bi bi-clock me-1"></i>
+                      05/05/2024
+                    </span>
+                  </div>
+                  <div class="blog-title">
+                    Top 5 điện thoại pin "trâu" nhất năm 2024: Dùng cả tuần không lo cạn
+                  </div>
+                  <div class="blog-excerpt">
+                    Bạn thường xuyên ra ngoài và lo hết pin? Danh sách này tổng hợp 5 chiếc điện thoại có thời lượng pin lâu nhất hiện nay...
+                  </div>
+                </div>
+                <div class="blog-footer">
+                  <div>
+                    <span class="blog-tag" onclick="searchTag('Pin')">Pin lâu</span>
+                    <span class="blog-tag" onclick="searchTag('Smartphone')">Top 5</span>
+                  </div>
+                  <span style="font-size:12px;
+                               color:var(--text-muted)">
+                    <i class="bi bi-eye me-1"></i>9.8K
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6" data-cat="laptop">
+              <div class="blog-card">
+                <div class="blog-img"
+                     style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)">
+                  🖥️
+                  <span class="blog-category"
+                        style="background:#a18cd1">
+                    Laptop
+                  </span>
+                </div>
+                <div class="blog-body">
+                  <div class="blog-meta">
+                    <span>
+                      <i class="bi bi-person me-1"></i>
+                      Tech Writer
+                    </span>
+                    <span>
+                      <i class="bi bi-clock me-1"></i>
+                      01/05/2024
+                    </span>
+                  </div>
+                  <div class="blog-title">
+                    Gaming laptop dưới 20 triệu: Chơi game mượt không cần chi nhiều
+                  </div>
+                  <div class="blog-excerpt">
+                    Bạn muốn chơi game nhưng ngân sách hạn chế? Đây là những lựa chọn gaming laptop tốt nhất trong tầm giá 15-20 triệu đồng...
+                  </div>
+                </div>
+                <div class="blog-footer">
+                  <div>
+                    <span class="blog-tag" onclick="searchTag('Gaming')">Gaming</span>
+                    <span class="blog-tag" onclick="searchTag('Laptop')">Budget</span>
+                  </div>
+                  <span style="font-size:12px; color:var(--text-muted)">
+                    <i class="bi bi-eye me-1"></i>12.4K
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT: Sidebar -->
+        <div class="col-lg-4">
+          <!-- Search Widget -->
+          <div class="admin-card p-4 mb-4">
+            <h6 style="font-weight:700;margin-bottom:16px">Tìm kiếm bài viết</h6>
+            <div class="search-container-cyber w-100" style="background:var(--bg-light); border:1px solid var(--border-color); border-radius:10px; padding:10px 16px;">
+              <i class="bi bi-search"></i>
+              <input type="text" placeholder="Tìm kiếm tin tức..." id="blogSearchInput" onkeyup="searchBlog()" style="border:none;background:transparent;outline:none;font-size:13px;width:100%;">
+            </div>
+          </div>
+
+          <!-- Popular Posts Widget -->
+          <div class="admin-card p-4 mb-4">
+            <h6 style="font-weight:700;margin-bottom:16px">Bài viết phổ biến</h6>
+            <div class="d-flex flex-column gap-2">
+              <div class="blog-sidebar-item" onclick="searchTag('iPhone')">
+                <div class="blog-sidebar-thumb" style="background:linear-gradient(135deg,#667eea,#764ba2); color:white;">📱</div>
+                <div>
+                  <h6 style="font-size:13px; font-weight:700; margin:0 0 4px; line-height:1.4;">
+                    Đánh giá chi tiết iPhone 15 Pro sau 6 tháng sử dụng
+                  </h6>
+                  <span style="font-size:11px; color:var(--text-muted);">
+                    <i class="bi bi-eye me-1"></i>25.4K lượt xem
+                  </span>
+                </div>
+              </div>
+              <div class="blog-sidebar-item" onclick="searchTag('Laptop')">
+                <div class="blog-sidebar-thumb" style="background:linear-gradient(135deg,#f5576c,#f093fb); color:white;">💻</div>
+                <div>
+                  <h6 style="font-size:13px; font-weight:700; margin:0 0 4px; line-height:1.4;">
+                    Top 5 laptop văn phòng mỏng nhẹ đáng mua nhất 2024
+                  </h6>
+                  <span style="font-size:11px; color:var(--text-muted);">
+                    <i class="bi bi-eye me-1"></i>18.2K lượt xem
+                  </span>
+                </div>
+              </div>
+              <div class="blog-sidebar-item" onclick="searchTag('Tivi')">
+                <div class="blog-sidebar-thumb" style="background:linear-gradient(135deg,#4facfe,#00f2fe); color:white;">📺</div>
+                <div>
+                  <h6 style="font-size:13px; font-weight:700; margin:0 0 4px; line-height:1.4;">
+                    Kinh nghiệm chọn kích thước Tivi phù hợp với phòng khách
+                  </h6>
+                  <span style="font-size:11px; color:var(--text-muted);">
+                    <i class="bi bi-eye me-1"></i>14.9K lượt xem
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tags Cloud Widget -->
+          <div class="admin-card p-4">
+            <h6 style="font-weight:700;margin-bottom:16px">Thẻ tin tức</h6>
+            <div class="d-flex flex-wrap gap-1">
+              <span class="blog-tag" style="padding:6px 12px; border-radius:15px; cursor:pointer;" onclick="searchTag('Review')">#Review</span>
+              <span class="blog-tag" style="padding:6px 12px; border-radius:15px; cursor:pointer;" onclick="searchTag('Samsung')">#Samsung</span>
+              <span class="blog-tag" style="padding:6px 12px; border-radius:15px; cursor:pointer;" onclick="searchTag('Apple')">#Apple</span>
+              <span class="blog-tag" style="padding:6px 12px; border-radius:15px; cursor:pointer;" onclick="searchTag('Tips')">#Tips</span>
+              <span class="blog-tag" style="padding:6px 12px; border-radius:15px; cursor:pointer;" onclick="searchTag('Pin')">#Pin</span>
+              <span class="blog-tag" style="padding:6px 12px; border-radius:15px; cursor:pointer;" onclick="searchTag('Gaming')">#Gaming</span>
+              <span class="blog-tag" style="padding:6px 12px; border-radius:15px; cursor:pointer;" onclick="searchTag('Tivi')">#Tivi</span>
+              <span class="blog-tag" style="padding:6px 12px; border-radius:15px; cursor:pointer;" onclick="searchTag('So sánh')">#So sánh</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <script>
+  function filterBlog(cat, btn) {
+    // 1. Update active class on filter buttons
+    document.querySelectorAll('.category-pill').forEach(el => {
+      el.classList.remove('active');
+    });
+    btn.classList.add('active');
+
+    // 2. Filter posts by data-cat
+    const items = document.querySelectorAll('#blogGrid > div[data-cat]');
+    items.forEach(item => {
+      if (cat === 'all' || item.getAttribute('data-cat') === cat) {
+        item.style.display = 'block';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  function searchBlog() {
+    const query = document.getElementById('blogSearchInput').value.toLowerCase();
+    const items = document.querySelectorAll('#blogGrid > div');
+    
+    items.forEach(item => {
+      const title = item.querySelector('.blog-title').textContent.toLowerCase();
+      const excerpt = item.querySelector('.blog-excerpt').textContent.toLowerCase();
+      if (title.includes(query) || excerpt.includes(query)) {
+        item.style.display = 'block';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  function searchTag(tag) {
+    document.getElementById('blogSearchInput').value = tag;
+    searchBlog();
+  }
+  </script>
+
+</main></body>
+</html>

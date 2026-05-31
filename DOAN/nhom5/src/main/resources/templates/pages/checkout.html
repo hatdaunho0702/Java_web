@@ -334,11 +334,7 @@
 
           state.discount = Number(data.discountAmount || 0);
           state.couponCode = code;
-
-          // Resolve coupon id by code from local products API flow workaround:
-          // Backend place-order expects couponId, validate endpoint does not return id.
-          // We call a small lookup endpoint fallback using current code via order API body with null coupon id if needed.
-          state.couponId = null;
+          state.couponId = data.couponId || null;
 
           msg.textContent = data.message || "Áp dụng mã thành công";
           msg.style.color = "#16a34a";

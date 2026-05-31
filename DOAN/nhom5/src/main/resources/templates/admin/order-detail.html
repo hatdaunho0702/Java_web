@@ -1,37 +1,361 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
-
 >
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi tiết đơn hàng — Admin</title>
+    <title th:text="'Chi tiết đơn hàng ' + ${order != null ? order.orderCode : ''} + ' — ElectraManager'">Chi tiết đơn hàng</title>
   </head>
   <body>
     <div class="page-content">
-      <div class="admin-card p-4" th:if="${order != null}">
-        <div class="section-title mb-3">
-          Đơn <span th:text="${order.orderCode}">#</span>
+      <style>
+        .order-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 1.5rem;
+        }
+        @media (max-width: 991px) {
+          .order-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+        .detail-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 1.5rem;
+          box-shadow: 0 4px 12px -5px rgba(0, 0, 0, 0.05);
+          margin-bottom: 1.5rem;
+        }
+        .card-sec-title {
+          font-size: 15px;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: var(--primary);
+          letter-spacing: 0.5px;
+          margin-bottom: 1.25rem;
+          border-bottom: 2px solid rgba(37, 99, 235, 0.08);
+          padding-bottom: 6px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 10px;
+          font-size: 13.5px;
+        }
+        .info-row:last-child {
+          margin-bottom: 0;
+        }
+        .info-label {
+          color: var(--text-muted);
+          font-weight: 600;
+        }
+        .info-value {
+          color: var(--text-main);
+          font-weight: 500;
+          text-align: right;
+        }
+        .product-thumb {
+          width: 50px;
+          height: 50px;
+          object-fit: contain;
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          background: #fff;
+        }
+        .summary-divider {
+          border-top: 1px dashed var(--border);
+          margin: 12px 0;
+        }
+        .grand-total {
+          font-size: 16px;
+          font-weight: 800;
+          color: var(--danger);
+        }
+        .status-timeline {
+          position: relative;
+          padding-left: 24px;
+          margin-top: 10px;
+        }
+        .status-timeline::before {
+          content: '';
+          position: absolute;
+          left: 8px;
+          top: 6px;
+          bottom: 6px;
+          width: 2px;
+          background: var(--border);
+        }
+        .timeline-item {
+          position: relative;
+          margin-bottom: 1.5rem;
+        }
+        .timeline-item:last-child {
+          margin-bottom: 0;
+        }
+        .timeline-dot {
+          position: absolute;
+          left: -20px;
+          top: 4px;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: var(--primary);
+          border: 2px solid var(--surface);
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+        .timeline-date {
+          font-size: 11.5px;
+          color: var(--text-muted);
+          font-weight: 600;
+        }
+        .timeline-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text-main);
+          margin: 2px 0 4px 0;
+        }
+        .timeline-desc {
+          font-size: 12px;
+          color: var(--text-muted);
+          background: var(--background);
+          padding: 6px 10px;
+          border-radius: 6px;
+          border-left: 3px solid var(--primary);
+        }
+      </style>
+      <!-- Top Actions -->
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center gap-3">
+          <a th:href="@{/admin/orders}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" style="height: 38px; width: 38px; border-radius: 8px; padding: 0;">
+            <i class="ti ti-arrow-left" style="font-size: 20px;"></i>
+          </a>
+          <div>
+            <h3 class="fw-bold mb-0" style="font-size: 20px;">
+              Chi tiết đơn hàng <span th:if="${order != null}" th:text="'#' + ${order.orderCode}"></span>
+            </h3>
+            <p class="text-muted mb-0 small" th:if="${order != null}" th:text="'Ngày tạo: ' + ${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></p>
+          </div>
         </div>
-        <p class="mb-1">
-          <strong>Khách:</strong> <span th:text="${order.recipientName}"></span>
-        </p>
-        <p class="mb-1">
-          <strong>Điện thoại:</strong>
-          <span th:text="${order.recipientPhone}"></span>
-        </p>
-        <p class="mb-1">
-          <strong>Địa chỉ:</strong>
-          <span th:text="${order.shippingAddress}"></span>
-        </p>
-        <p class="mb-0">
-          <strong>Trạng thái:</strong> <span th:text="${order.status}"></span>
-        </p>
+        <div th:if="${order != null}">
+          <span th:text="${order.status}" class="badge-status" 
+                th:classappend="${order.status == 'PENDING' ? 'status-pending' : 
+                                 (order.status == 'CONFIRMED' || order.status == 'SHIPPING' ? 'status-shipping' : 
+                                 (order.status == 'COMPLETED' ? 'status-completed' : 'status-cancelled'))}">
+          </span>
+        </div>
       </div>
-      <div class="admin-card p-4" th:unless="${order != null}">
-        Không tìm thấy đơn hàng.
+
+      <!-- Main Layout Grid -->
+      <div class="order-grid" th:if="${order != null}">
+        
+        <!-- Left Column: Products & Timeline -->
+        <div>
+          <!-- Products Card -->
+          <div class="detail-card">
+            <h4 class="card-sec-title">
+              <i class="ti ti-device-tv"></i> Danh sách sản phẩm mua
+            </h4>
+            <div class="table-responsive">
+              <table class="table align-middle" style="margin-bottom: 0;">
+                <thead>
+                  <tr style="border-bottom: 2px solid var(--border);">
+                    <th class="text-muted small" style="width: 60px;">Ảnh</th>
+                    <th class="text-muted small">Sản phẩm</th>
+                    <th class="text-muted small text-end" style="width: 120px;">Đơn giá</th>
+                    <th class="text-muted small text-center" style="width: 100px;">Số lượng</th>
+                    <th class="text-muted small text-end" style="width: 140px;">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="item : ${order.items}" style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                    <td>
+                      <img th:src="${item.productImage != null ? item.productImage : '/images/placeholder.png'}" class="product-thumb" alt="Product Image">
+                    </td>
+                    <td>
+                      <div class="fw-bold" style="font-size: 13.5px;" th:text="${item.productName}">Tên sản phẩm</div>
+                      <div class="text-muted small" th:if="${item.product != null}" th:text="'Mã: SP-' + ${item.product.id}"></div>
+                    </td>
+                    <td class="text-end fw-semibold" style="font-size: 13px;" th:text="${#numbers.formatInteger(item.unitPrice, 1, 'POINT')} + ' đ'"></td>
+                    <td class="text-center fw-bold" style="font-size: 13px;" th:text="${item.quantity}">1</td>
+                    <td class="text-end fw-bold text-primary" style="font-size: 13px;" th:text="${#numbers.formatInteger(item.subtotal, 1, 'POINT')} + ' đ'"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Timeline Status Log Card -->
+          <div class="detail-card">
+            <h4 class="card-sec-title">
+              <i class="ti ti-history"></i> Lịch sử cập nhật trạng thái
+            </h4>
+            <div th:if="${#lists.isEmpty(order.statusHistories)}" class="text-center text-muted py-4 small">
+              Chưa có lịch sử thay đổi trạng thái nào cho đơn hàng này.
+            </div>
+            <div class="status-timeline" th:if="${not #lists.isEmpty(order.statusHistories)}">
+              <div class="timeline-item" th:each="hist : ${order.statusHistories}">
+                <div class="timeline-dot"></div>
+                <div class="timeline-date" th:text="${#temporals.format(hist.changedAt, 'dd/MM/yyyy HH:mm')}"></div>
+                <div class="timeline-title">
+                  Chuyển trạng thái: 
+                  <span class="badge bg-light text-dark border px-2 py-1 small" th:text="${hist.oldStatus != null ? hist.oldStatus : 'KHOI_TAO'}"></span>
+                  <i class="ti ti-arrow-narrow-right text-muted mx-1"></i>
+                  <span class="badge bg-primary text-white px-2 py-1 small" th:text="${hist.newStatus}"></span>
+                </div>
+                <div class="timeline-desc" th:if="${hist.note != null && not #strings.isEmpty(hist.note)}" th:text="${hist.note}">Ghi chú cập nhật</div>
+                <div class="text-muted mt-1" style="font-size: 11px;" th:if="${hist.changedBy != null}" th:text="'Thực hiện bởi: ' + ${hist.changedBy.fullName} + ' (' + ${hist.changedBy.email} + ')'"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Info, Status Actions, Totals -->
+        <div>
+          <!-- Recipient info card -->
+          <div class="detail-card">
+            <h4 class="card-sec-title">
+              <i class="ti ti-user"></i> Khách hàng & Giao hàng
+            </h4>
+            <div class="info-row">
+              <span class="info-label">Người nhận</span>
+              <span class="info-value" th:text="${order.recipientName}"></span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Số điện thoại</span>
+              <span class="info-value" th:text="${order.recipientPhone}"></span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Địa chỉ giao</span>
+              <span class="info-value text-start" style="max-width: 180px;" th:text="${order.shippingAddress}"></span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="info-row">
+              <span class="info-label">Phương thức</span>
+              <span class="info-value text-uppercase" th:text="${order.paymentMethod}"></span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Thanh toán</span>
+              <span class="badge px-2 py-1" th:text="${order.paymentStatus}"
+                    th:classappend="${order.paymentStatus == 'PAID' ? 'bg-success text-white' : 'bg-warning text-dark'}">
+              </span>
+            </div>
+            <div class="summary-divider" th:if="${order.note != null && not #strings.isEmpty(order.note)}"></div>
+            <div th:if="${order.note != null && not #strings.isEmpty(order.note)}">
+              <span class="info-label d-block mb-1">Ghi chú của khách:</span>
+              <div class="bg-light p-2 rounded small text-muted italic" style="font-style: italic;" th:text="${order.note}"></div>
+            </div>
+          </div>
+
+          <!-- Quick status update card -->
+          <div class="detail-card" th:if="${order.status != 'COMPLETED' && order.status != 'CANCELLED'}">
+            <h4 class="card-sec-title">
+              <i class="ti ti-edit"></i> Xử lý đơn hàng
+            </h4>
+            <form id="statusUpdateForm" onsubmit="updateStatus(event)">
+              <div class="mb-3">
+                <label class="form-label fw-bold small text-muted">Trạng thái mới</label>
+                <select class="form-select-custom" id="newStatusSelect" required>
+                  <option value="">-- Chọn trạng thái tiếp theo --</option>
+                  <!-- Only show transitions based on current status -->
+                  <option value="CONFIRMED" th:if="${order.status == 'PENDING'}">Xác nhận đơn hàng (CONFIRMED)</option>
+                  <option value="SHIPPING" th:if="${order.status == 'CONFIRMED'}">Bắt đầu giao hàng (SHIPPING)</option>
+                  <option value="COMPLETED" th:if="${order.status == 'SHIPPING'}">Hoàn thành giao hàng (COMPLETED)</option>
+                  <option value="CANCELLED">Hủy đơn hàng này (CANCELLED)</option>
+                </select>
+              </div>
+              <button type="submit" id="btnUpdateStatus" class="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-center gap-1">
+                <i class="ti ti-check"></i> Cập nhật trạng thái
+              </button>
+            </form>
+          </div>
+
+          <!-- Billing Totals Card -->
+          <div class="detail-card">
+            <h4 class="card-sec-title">
+              <i class="ti ti-receipt"></i> Tóm tắt hóa đơn
+            </h4>
+            <div class="info-row">
+              <span class="info-label">Tạm tính</span>
+              <span class="info-value fw-semibold" th:text="${#numbers.formatInteger(order.subtotal, 1, 'POINT')} + ' đ'"></span>
+            </div>
+            <div class="info-row" th:if="${order.discountAmount != null && order.discountAmount > 0}">
+              <span class="info-label">Khuyến mãi</span>
+              <span class="info-value text-success" th:text="'- ' + ${#numbers.formatInteger(order.discountAmount, 1, 'POINT')} + ' đ'"></span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Phí vận chuyển</span>
+              <span class="info-value fw-semibold" th:text="${order.shippingFee != null && order.shippingFee > 0 ? #numbers.formatInteger(order.shippingFee, 1, 'POINT') + ' đ' : 'Miễn phí'}"></span>
+            </div>
+            <div class="summary-divider"></div>
+            <div class="info-row">
+              <span class="info-label fw-bold">Tổng thanh toán</span>
+              <span class="info-value grand-total" th:text="${#numbers.formatInteger(order.totalAmount, 1, 'POINT')} + ' đ'"></span>
+            </div>
+          </div>
+        </div>
+
       </div>
+
+      <!-- Not found box -->
+      <div class="panel-card p-5 text-center" th:unless="${order != null}">
+        <i class="ti ti-alert-triangle text-warning mb-3" style="font-size: 4rem;"></i>
+        <h4 class="fw-bold">Không tìm thấy thông tin đơn hàng</h4>
+        <p class="text-muted">Đơn hàng này không tồn tại trong hệ thống hoặc đã bị xóa bỏ.</p>
+        <a th:href="@{/admin/orders}" class="btn btn-primary mt-2">Quay lại danh sách</a>
+      </div>
+
+    <!-- Script for AJAX status update -->
+    <script th:inline="javascript">
+      /*<![CDATA[*/
+      const orderId = /*[[${orderId}]]*/ 0;
+      
+      async function updateStatus(e) {
+        e.preventDefault();
+        const select = document.getElementById('newStatusSelect');
+        const newStatus = select.value;
+        if (!newStatus) return;
+
+        if (!confirm(`Bạn có chắc chắn muốn chuyển trạng thái đơn hàng sang ${newStatus}?`)) {
+          return;
+        }
+
+        const btn = document.getElementById('btnUpdateStatus');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang xử lý...';
+
+        try {
+          const headers = await window.getAuthHeaders();
+          if (!headers) return;
+          const res = await fetch(`/api/admin/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: headers,
+            body: JSON.stringify({ status: newStatus })
+          });
+
+          if (res.ok) {
+            window.showToast('Cập nhật trạng thái đơn hàng thành công!', 'success');
+            setTimeout(() => {
+              window.location.reload();
+            }, 800);
+          } else {
+            const err = await res.json().catch(() => ({}));
+            window.showToast(err.message || 'Lỗi khi cập nhật trạng thái đơn hàng', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ti ti-check"></i> Cập nhật trạng thái';
+          }
+        } catch (err) {
+          window.showToast('Lỗi kết nối máy chủ', 'danger');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ti ti-check"></i> Cập nhật trạng thái';
+        }
+      }
+      /*]]>*/
+    </script>
     </div>
   </body>
 </html>

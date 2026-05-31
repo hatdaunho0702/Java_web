@@ -9,23 +9,25 @@
     <title>Đăng nhập — ĐiệnMáy Pro</title>
   </head>
   <body>
-    <main class="container py-5">
-      <div class="login-panel reveal-on-scroll" style="max-width: 480px; margin: 0 auto">
+    <main class="container py-5 d-flex align-items-center justify-content-center" style="min-height: calc(100vh - 280px);">
+      <div class="login-panel reveal-on-scroll" style="width: 100%; max-width: 480px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(226, 232, 240, 0.8); border-radius: var(--radius-lg); box-shadow: var(--card-shadow-hover); padding: 40px; margin: 0 auto;">
         <div class="text-center mb-4">
-          <div style="font-size: 44px">⚡</div>
-          <h3 class="fw-bold mb-1">Đăng nhập / Đăng ký</h3>
-          <p class="text-muted mb-0">Firebase Auth + Lưu trữ SQLite Local</p>
+          <div style="font-size: 56px; margin-bottom: 12px; background: var(--gradient-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block;">⚡</div>
+          <h3 class="fw-bold mb-1" style="font-family: 'Sora', sans-serif;">Chào mừng trở lại</h3>
+          <p class="text-muted small mb-0">Đăng nhập vào tài khoản ĐiệnMáy Pro của bạn</p>
         </div>
+        
         <div
           id="error-message"
           style="
             display: none;
             background: #fee2e2;
             color: #dc2626;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 16px;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
             border: 1px solid #fca5a5;
+            font-size: 13px;
           "
         ></div>
         <div
@@ -34,129 +36,244 @@
             display: none;
             background: #dcfce7;
             color: #16a34a;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 16px;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
             border: 1px solid #86efac;
+            font-size: 13px;
           "
         ></div>
-        <div
-          style="
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-bottom: 16px;
-          "
-        >
-          <button id="tabLogin" class="btn btn-sm btn-outline-primary">
+
+        <!-- Custom tabs toggle -->
+        <div class="d-flex p-1 mb-4" style="background: var(--bg-light); border-radius: 12px; border: 1px solid var(--border-color);">
+          <button id="tabLogin" class="btn w-50 py-2 fw-semibold text-white btn-gradient" style="border-radius: 10px; font-size: 14px; border: none; transition: var(--transition);">
             Đăng nhập
           </button>
-          <button id="tabRegister" class="btn btn-sm btn-outline-secondary">
+          <button id="tabRegister" class="btn w-50 py-2 fw-semibold text-muted" style="border-radius: 10px; font-size: 14px; border: none; transition: var(--transition); background: transparent;">
             Đăng ký
           </button>
         </div>
 
+        <!-- Login Form -->
         <form id="loginForm">
           <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input
-              id="email"
-              type="email"
-              class="form-control"
-              placeholder="you@example.com"
-              required
-            />
+            <label class="form-label" style="font-size: 13px; font-weight: 600;">Email</label>
+            <div class="input-group" style="border: 2px solid var(--border-color); border-radius: 12px; background: white; overflow: hidden; transition: var(--transition);" id="email-group">
+              <span class="input-group-text border-0 bg-transparent text-muted"><i class="bi bi-envelope"></i></span>
+              <input
+                id="email"
+                type="email"
+                class="form-control border-0 shadow-none ps-0"
+                placeholder="you@example.com"
+                required
+                style="font-size: 14px; height: 44px; outline: none; box-shadow: none;"
+                onfocus="document.getElementById('email-group').style.borderColor='var(--accent)'"
+                onblur="document.getElementById('email-group').style.borderColor='var(--border-color)'"
+              />
+            </div>
           </div>
+          
           <div class="mb-3">
-            <label class="form-label">Mật khẩu</label>
-            <div style="display: flex; gap: 8px">
+            <label class="form-label" style="font-size: 13px; font-weight: 600;">Mật khẩu</label>
+            <div class="input-group" style="border: 2px solid var(--border-color); border-radius: 12px; background: white; overflow: hidden; transition: var(--transition);" id="pwd-group">
+              <span class="input-group-text border-0 bg-transparent text-muted"><i class="bi bi-lock"></i></span>
               <input
                 id="password"
                 type="password"
-                class="form-control"
+                class="form-control border-0 shadow-none ps-0"
                 placeholder="••••••••"
                 required
+                style="font-size: 14px; height: 44px; outline: none; box-shadow: none;"
+                onfocus="document.getElementById('pwd-group').style.borderColor='var(--accent)'"
+                onblur="document.getElementById('pwd-group').style.borderColor='var(--border-color)'"
               />
               <button
                 id="togglePassword"
                 type="button"
-                class="btn btn-outline-secondary"
+                class="btn border-0 bg-transparent text-muted px-3"
+                style="font-size: 13px; font-weight: 600;"
               >
                 Hiện
               </button>
             </div>
           </div>
-          <div class="mb-3 form-check">
-            <input id="rememberMe" type="checkbox" class="form-check-input" />
-            <label class="form-check-label">Ghi nhớ đăng nhập</label>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+              <input id="rememberMe" type="checkbox" class="form-check-input" style="cursor: pointer;" />
+              <label class="form-check-label small text-muted" for="rememberMe" style="cursor: pointer; user-select: none;">Ghi nhớ đăng nhập</label>
+            </div>
+            <a href="#" id="forgotPasswordLink" class="small text-decoration-none fw-semibold" style="color: var(--primary);">Quên mật khẩu?</a>
           </div>
+
           <button
             type="submit"
-            class="btn-add-cart w-100"
+            class="btn-gradient w-100 py-3"
             id="login-submit-btn"
+            style="border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; border: none;"
           >
             Đăng nhập
           </button>
-          <div class="text-center mt-3">hoặc</div>
-          <div class="d-grid gap-2 mt-2">
-            <button
-              type="button"
-              id="googleLoginBtn"
-              class="btn btn-outline-secondary"
-            >
-              Đăng nhập với Google
-            </button>
+          
+          <div class="position-relative text-center my-4">
+            <hr class="text-muted opacity-25" />
+            <span class="position-absolute top-50 start-50 translate-middle px-3 bg-white text-muted small" style="border-radius: 10px;">hoặc</span>
           </div>
+
+          <button
+            type="button"
+            id="googleLoginBtn"
+            class="btn btn-outline-secondary w-100 py-2.5 d-flex align-items-center justify-content-center gap-2"
+            style="border-radius: 12px; font-size: 14px; font-weight: 600;"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48" class="me-1">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.5 24c0-1.55-.15-3.24-.47-4.77H24v9.03h12.75c-.53 2.87-2.14 5.3-4.57 6.92l7.15 5.54C43.5 36.24 46.5 30.66 46.5 24z"/>
+              <path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.15-5.54c-2.11 1.41-4.8 2.3-8.74 2.3-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            Đăng nhập với Google
+          </button>
         </form>
 
+        <!-- Register Form (Toggleable inside Login page) -->
         <form id="registerForm" style="display: none; margin-top: 16px">
           <div class="mb-3">
-            <label class="form-label">Họ và tên</label>
-            <input id="regName" type="text" class="form-control" required />
+            <label class="form-label" style="font-size: 13px; font-weight: 600;">Họ và tên</label>
+            <div class="input-group" style="border: 2px solid var(--border-color); border-radius: 12px; background: white; overflow: hidden; transition: var(--transition);" id="reg-name-group">
+              <span class="input-group-text border-0 bg-transparent text-muted"><i class="bi bi-person"></i></span>
+              <input id="regName" type="text" class="form-control border-0 shadow-none ps-0" placeholder="Nguyen Van A" required style="font-size: 14px; height: 44px; outline: none; box-shadow: none;"
+                onfocus="document.getElementById('reg-name-group').style.borderColor='var(--accent)'"
+                onblur="document.getElementById('reg-name-group').style.borderColor='var(--border-color)'" />
+            </div>
           </div>
           <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input id="regEmail" type="email" class="form-control" required />
+            <label class="form-label" style="font-size: 13px; font-weight: 600;">Email</label>
+            <div class="input-group" style="border: 2px solid var(--border-color); border-radius: 12px; background: white; overflow: hidden; transition: var(--transition);" id="reg-email-group">
+              <span class="input-group-text border-0 bg-transparent text-muted"><i class="bi bi-envelope"></i></span>
+              <input id="regEmail" type="email" class="form-control border-0 shadow-none ps-0" placeholder="email@example.com" required style="font-size: 14px; height: 44px; outline: none; box-shadow: none;"
+                onfocus="document.getElementById('reg-email-group').style.borderColor='var(--accent)'"
+                onblur="document.getElementById('reg-email-group').style.borderColor='var(--border-color)'" />
+            </div>
           </div>
           <div class="mb-3">
-            <label class="form-label">Số điện thoại</label>
-            <input
-              id="regPhone"
-              type="text"
-              class="form-control"
-              pattern="[0-9]{10}"
-            />
+            <label class="form-label" style="font-size: 13px; font-weight: 600;">Số điện thoại</label>
+            <div class="input-group" style="border: 2px solid var(--border-color); border-radius: 12px; background: white; overflow: hidden; transition: var(--transition);" id="reg-phone-group">
+              <span class="input-group-text border-0 bg-transparent text-muted"><i class="bi bi-telephone"></i></span>
+              <input id="regPhone" type="tel" class="form-control border-0 shadow-none ps-0" placeholder="0901234567" pattern="[0-9]{10}" style="font-size: 14px; height: 44px; outline: none; box-shadow: none;"
+                onfocus="document.getElementById('reg-phone-group').style.borderColor='var(--accent)'"
+                onblur="document.getElementById('reg-phone-group').style.borderColor='var(--border-color)'" />
+            </div>
           </div>
           <div class="mb-3">
-            <label class="form-label">Mật khẩu</label>
-            <input
-              id="regPassword"
-              type="password"
-              class="form-control"
-              minlength="6"
-              required
-            />
+            <label class="form-label" style="font-size: 13px; font-weight: 600;">Mật khẩu</label>
+            <div class="input-group" style="border: 2px solid var(--border-color); border-radius: 12px; background: white; overflow: hidden; transition: var(--transition);" id="reg-pwd-group">
+              <span class="input-group-text border-0 bg-transparent text-muted"><i class="bi bi-lock"></i></span>
+              <input id="regPassword" type="password" class="form-control border-0 shadow-none ps-0" placeholder="••••••••" minlength="6" required style="font-size: 14px; height: 44px; outline: none; box-shadow: none;"
+                onfocus="document.getElementById('reg-pwd-group').style.borderColor='var(--accent)'"
+                onblur="document.getElementById('reg-pwd-group').style.borderColor='var(--border-color)'" />
+            </div>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Xác nhận mật khẩu</label>
-            <input
-              id="regConfirm"
-              type="password"
-              class="form-control"
-              required
-            />
+          <div class="mb-4">
+            <label class="form-label" style="font-size: 13px; font-weight: 600;">Xác nhận mật khẩu</label>
+            <div class="input-group" style="border: 2px solid var(--border-color); border-radius: 12px; background: white; overflow: hidden; transition: var(--transition);" id="reg-confirm-group">
+              <span class="input-group-text border-0 bg-transparent text-muted"><i class="bi bi-lock-fill"></i></span>
+              <input id="regConfirm" type="password" class="form-control border-0 shadow-none ps-0" placeholder="••••••••" required style="font-size: 14px; height: 44px; outline: none; box-shadow: none;"
+                onfocus="document.getElementById('reg-confirm-group').style.borderColor='var(--accent)'"
+                onblur="document.getElementById('reg-confirm-group').style.borderColor='var(--border-color)'" />
+            </div>
           </div>
           <button
             id="register-submit-btn"
             type="submit"
-            class="btn btn-primary w-100"
+            class="btn-gradient w-100 py-3"
+            style="border-radius: 12px; font-weight: 700; font-size: 15px; border: none; cursor: pointer;"
           >
-            Đăng ký
+            Đăng ký tài khoản
           </button>
         </form>
+      </div>
 
-        <div class="text-center mt-3">
-          <a href="#" id="forgotPasswordLink">Quên mật khẩu?</a>
+      <!-- Add inline tab-switching scripts for login.html -->
+      <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          const tabLogin = document.getElementById("tabLogin");
+          const tabRegister = document.getElementById("tabRegister");
+          const loginForm = document.getElementById("loginForm");
+          const registerForm = document.getElementById("registerForm");
+
+          if (tabLogin && tabRegister && loginForm && registerForm) {
+            tabLogin.addEventListener("click", () => {
+              tabLogin.classList.add("btn-gradient", "text-white");
+              tabLogin.classList.remove("text-muted");
+              tabLogin.style.background = "";
+              tabRegister.classList.remove("btn-gradient", "text-white");
+              tabRegister.classList.add("text-muted");
+              tabRegister.style.background = "transparent";
+              loginForm.style.display = "block";
+              registerForm.style.display = "none";
+            });
+
+            tabRegister.addEventListener("click", () => {
+              tabRegister.classList.add("btn-gradient", "text-white");
+              tabRegister.classList.remove("text-muted");
+              tabRegister.style.background = "";
+              tabLogin.classList.remove("btn-gradient", "text-white");
+              tabLogin.classList.add("text-muted");
+              tabLogin.style.background = "transparent";
+              loginForm.style.display = "none";
+              registerForm.style.display = "block";
+            });
+          }
+        });
+      </script>
+
+      <!-- Forgot Password Modal -->
+      <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 16px; box-shadow: var(--card-shadow-hover); padding: 15px;">
+            <div class="modal-header border-0 pb-0">
+              <div class="d-flex align-items-center gap-2">
+                <span style="font-size: 24px;">🔑</span>
+                <h5 class="modal-title fw-bold" id="forgotPasswordModalLabel" style="font-family: 'Sora', sans-serif;">Quên mật khẩu?</h5>
+              </div>
+              <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close" style="font-size: 14px;"></button>
+            </div>
+            <div class="modal-body py-4">
+              <p class="text-muted small mb-4">Nhập địa chỉ email của bạn để nhận liên kết đặt lại mật khẩu từ hệ thống.</p>
+              
+              <!-- Modal Alert messages -->
+              <div id="modal-error-message" style="display: none; background: #fee2e2; color: #dc2626; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid #fca5a5; font-size: 13px;"></div>
+              <div id="modal-success-message" style="display: none; background: #dcfce7; color: #16a34a; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid #86efac; font-size: 13px;"></div>
+
+              <form id="forgotPasswordForm">
+                <div class="mb-3">
+                  <label class="form-label" style="font-size: 13px; font-weight: 600;">Email</label>
+                  <div class="input-group" style="border: 2px solid var(--border-color); border-radius: 12px; background: white; overflow: hidden; transition: var(--transition);" id="forgot-email-group">
+                    <span class="input-group-text border-0 bg-transparent text-muted"><i class="bi bi-envelope"></i></span>
+                    <input
+                      id="forgotEmail"
+                      type="email"
+                      class="form-control border-0 shadow-none ps-0"
+                      placeholder="you@example.com"
+                      required
+                      style="font-size: 14px; height: 44px; outline: none; box-shadow: none;"
+                      onfocus="document.getElementById('forgot-email-group').style.borderColor='var(--accent)'"
+                      onblur="document.getElementById('forgot-email-group').style.borderColor='var(--border-color)'"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  class="btn-gradient w-100 py-3 mt-3"
+                  id="forgot-submit-btn"
+                  style="border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; border: none;"
+                >
+                  Gửi yêu cầu đặt lại mật khẩu
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
 

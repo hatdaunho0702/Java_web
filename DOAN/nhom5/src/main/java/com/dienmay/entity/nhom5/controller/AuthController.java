@@ -63,6 +63,14 @@ public class AuthController {
                 // First-time social login: create/sync local user from Firebase token claims.
                 user = authService.syncUser(token);
             }
+
+            if (!Boolean.TRUE.equals(user.getIsActive())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                        "error", "user_blocked",
+                        "message", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên."
+                ));
+            }
+
             CustomUserDetails principal = CustomUserDetails.fromUser(user);
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());

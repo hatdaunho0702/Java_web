@@ -5,14 +5,20 @@ import com.dienmay.entity.nhom5.dto.response.ProductDetailResponse;
 import com.dienmay.entity.nhom5.entity.OrderStatus;
 import com.dienmay.entity.nhom5.repository.BrandRepository;
 import com.dienmay.entity.nhom5.repository.CategoryRepository;
+import com.dienmay.entity.nhom5.repository.OrderRepository;
 import com.dienmay.entity.nhom5.service.DashboardService;
 import com.dienmay.entity.nhom5.service.ProductService;
 import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
+import com.dienmay.entity.nhom5.dto.response.ContactMessageResponse;
+import com.dienmay.entity.nhom5.repository.ContactMessageRepository;
+import com.dienmay.entity.nhom5.service.ContactMessageService;
+import org.springframework.data.domain.Page;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +33,9 @@ public class AdminPageController {
     private final ProductService productService;
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
+    private final OrderRepository orderRepository;
+    private final ContactMessageService contactMessageService;
+    private final ContactMessageRepository contactMessageRepository;
 
     @GetMapping
     public String index() {
@@ -74,6 +83,10 @@ public class AdminPageController {
         ProductDetailResponse product = productService.getProductById(id);
         model.addAttribute("pageTitle", "Sửa sản phẩm");
         model.addAttribute("activePage", "products");
+        List<com.dienmay.entity.nhom5.dto.request.ProductSpecRequest> specs = product.getSpecs() == null ? null : product.getSpecs().stream()
+                .map(s -> new com.dienmay.entity.nhom5.dto.request.ProductSpecRequest(s.getKey(), s.getValue()))
+                .toList();
+
         model.addAttribute("product", CreateProductRequest.builder()
                 .name(product.getName())
                 .slug(product.getSlug())
@@ -81,7 +94,12 @@ public class AdminPageController {
                 .originalPrice(product.getOriginalPrice())
                 .salePrice(product.getSalePrice())
                 .stockQty(product.getStockQty())
+                .categoryId(product.getCategoryId())
+                .brandId(product.getBrandId())
+                .specs(specs)
                 .build());
+        model.addAttribute("imageUrls", product.getImageUrls());
+        model.addAttribute("id", id);
         model.addAttribute("categories", categoryRepository.findAll());
         model.addAttribute("brands", brandRepository.findAll());
         model.addAttribute("isEdit", true);
@@ -100,6 +118,7 @@ public class AdminPageController {
     public String orderDetail(@PathVariable Long id, Model model) {
         model.addAttribute("pageTitle", "Chi tiết đơn hàng");
         model.addAttribute("activePage", "orders");
+        model.addAttribute("order", orderRepository.findById(id).orElse(null));
         model.addAttribute("orderId", id);
         return "admin/order-detail";
     }
@@ -124,5 +143,15 @@ public class AdminPageController {
         model.addAttribute("pageTitle", "Quản lý khuyến mãi");
         model.addAttribute("activePage", "coupons");
         return "admin/coupons";
+    }
+
+    @GetMapping("/contact")
+    public String contact(Model model) {
+        Page<ContactMessageResponse> messages = contactMessageService.getAll(null, PageRequest.of(0, 20));
+        model.addAttribute("messages", messages);
+        model.addAttribute("activePage", "contact");
+        model.addAttribute("pageTitle", "Tin nhắn liên hệ");
+        model.addAttribute("unreadCount", contactMessageRepository.countUnread());
+        return "admin/contact";
     }
 }

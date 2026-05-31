@@ -17,5 +17,6 @@ public class AdminUserDto {
     private String avatarUrl;
     private LocalDateTime createdAt;
     private Boolean isActive;
+    private String role;
     private Long orderCount;
 }

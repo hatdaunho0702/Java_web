@@ -314,6 +314,9 @@ public class OrderService {
     }
 
     private boolean isValidTransition(OrderStatus oldStatus, OrderStatus newStatus) {
+        if (newStatus == OrderStatus.CANCELLED) {
+            return oldStatus == OrderStatus.PENDING || oldStatus == OrderStatus.CONFIRMED || oldStatus == OrderStatus.SHIPPING;
+        }
         return (oldStatus == OrderStatus.PENDING && newStatus == OrderStatus.CONFIRMED)
                 || (oldStatus == OrderStatus.CONFIRMED && newStatus == OrderStatus.SHIPPING)
                 || (oldStatus == OrderStatus.SHIPPING && newStatus == OrderStatus.COMPLETED);

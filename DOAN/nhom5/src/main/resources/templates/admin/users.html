@@ -28,6 +28,7 @@
               <th>Tên</th>
               <th>Email</th>
               <th>Ngày tạo</th>
+              <th>Quyền hạn</th>
               <th>Trạng thái</th>
               <th>Tổng đơn</th>
               <th></th>
@@ -39,6 +40,7 @@
               <td class="col-name"></td>
               <td class="col-email"></td>
               <td class="col-created"></td>
+              <td class="col-role"></td>
               <td class="col-status"></td>
               <td class="col-count"></td>
               <td class="col-action"></td>
@@ -83,15 +85,16 @@
         </div>
         <div id="ordersList"></div>
       </div>
-    </div>
 
     <script>
       async function fetchUsers(page = 0, size = 20) {
         const keyword = document.getElementById("filterKeyword").value;
         const qs = new URLSearchParams({ page, size });
         if (keyword) qs.set("keyword", keyword);
+        const headers = await window.getAuthHeaders();
+        if (!headers) return;
         const res = await fetch("/api/admin/users?" + qs.toString(), {
-          credentials: "same-origin",
+          headers: headers,
         });
         if (!res.ok) {
           alert("Không thể tải danh sách người dùng");
@@ -122,6 +125,56 @@
           tr.querySelector(".col-created").textContent = u.createdAt
             ? new Date(u.createdAt).toLocaleString()
             : "";
+
+          // Render role selection dropdown
+          const roleCell = tr.querySelector(".col-role");
+          const roleSelect = document.createElement("select");
+          roleSelect.className = "form-select form-select-sm d-inline-block w-auto";
+          roleSelect.style.fontSize = "12.5px";
+          
+          const roles = [
+            { value: "CUSTOMER", label: "CUSTOMER" },
+            { value: "ADMIN", label: "ADMIN" },
+            { value: "STAFF", label: "STAFF" }
+          ];
+          roles.forEach(r => {
+            const opt = document.createElement("option");
+            opt.value = r.value;
+            opt.textContent = r.label;
+            if (u.role === r.value) {
+              opt.selected = true;
+            }
+            roleSelect.appendChild(opt);
+          });
+          
+          roleSelect.addEventListener("change", async () => {
+            const newRole = roleSelect.value;
+            if (!confirm(`Bạn có chắc chắn muốn thay đổi quyền hạn của tài khoản sang ${newRole}?`)) {
+              roleSelect.value = u.role;
+              return;
+            }
+            try {
+              const headers = await window.getAuthHeaders();
+              if (!headers) return;
+              const res = await fetch(`/api/admin/users/${u.uid}/role?role=${newRole}`, {
+                method: "PUT",
+                headers: headers
+              });
+              if (res.ok) {
+                alert("Cập nhật quyền hạn thành công!");
+                u.role = newRole;
+              } else {
+                const err = await res.json().catch(() => ({}));
+                alert(err.message || "Lỗi khi cập nhật quyền hạn");
+                roleSelect.value = u.role;
+              }
+            } catch (err) {
+              alert("Lỗi kết nối máy chủ");
+              roleSelect.value = u.role;
+            }
+          });
+          roleCell.appendChild(roleSelect);
+
           const statusEl = tr.querySelector(".col-status");
           statusEl.textContent = u.isActive ? "Active" : "Locked";
           statusEl.className =
@@ -146,7 +199,9 @@
               return;
             const url =
               "/api/admin/users/" + u.uid + (u.isActive ? "/lock" : "/unlock");
-            const r = await fetch(url, { method: "PUT" });
+            const headers = await window.getAuthHeaders();
+            if (!headers) return;
+            const r = await fetch(url, { method: "PUT", headers: headers });
             if (r.ok) {
               alert("Thành công");
               fetchUsers(page, size);
@@ -161,7 +216,9 @@
       }
 
       async function showUserOrders(uid) {
-        const res = await fetch("/api/admin/users/" + uid + "/orders");
+        const headers = await window.getAuthHeaders();
+        if (!headers) return;
+        const res = await fetch("/api/admin/users/" + uid + "/orders", { headers });
         if (!res.ok) {
           alert("Không tải được đơn hàng");
           return;
@@ -186,7 +243,9 @@
       document
         .getElementById("btnSearch")
         .addEventListener("click", () => fetchUsers());
-      window.addEventListener("load", () => fetchUsers());
+      window.addEventListener("authReady", () => fetchUsers());
+      if (window.getAuthHeaders) fetchUsers();
     </script>
+    </div>
   </body>
 </html>

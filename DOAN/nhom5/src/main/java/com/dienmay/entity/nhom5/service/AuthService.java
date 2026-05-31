@@ -71,8 +71,14 @@ public class AuthService {
         if (!normalizedAvatarUrl.isBlank()) {
             user.setAvatarUrl(normalizedAvatarUrl);
         }
-        if (user.getRole() == null) {
-            user.setRole(Role.CUSTOMER);
+        if (user.getRole() == null || user.getRole() == Role.CUSTOMER) {
+            if (normalizedEmail.equalsIgnoreCase("admin@dienmaydemo.vn") || 
+                normalizedEmail.equalsIgnoreCase("admin@dienmay.vn") || 
+                normalizedEmail.endsWith("@electramanager.vn")) {
+                user.setRole(Role.ADMIN);
+            } else if (user.getRole() == null) {
+                user.setRole(Role.CUSTOMER);
+            }
         }
         if (user.getIsActive() == null) {
             user.setIsActive(true);

@@ -31,6 +31,10 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             "/api/auth/register"
     };
 
+    private static final String[] STATIC_PATHS = {
+            "/css/", "/js/", "/assets/", "/uploads/", "/favicon.ico", "/webjars/"
+    };
+
     private final AuthService authService;
     private final Environment env;
 
@@ -42,7 +46,12 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
                 return true;
             }
         }
-        return SecurityContextHolder.getContext().getAuthentication() != null;
+        for (String staticPath : STATIC_PATHS) {
+            if (path.startsWith(staticPath)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -51,10 +60,48 @@ public class FirebaseTokenFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-        // Production: only accept Firebase ID Token in Authorization header
-
         String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+            // Check session authentication if it exists
+            org.springframework.security.core.Authentication sessionAuth = SecurityContextHolder.getContext().getAuthentication();
+            if (sessionAuth != null && sessionAuth.isAuthenticated() && !"anonymousUser".equals(sessionAuth.getPrincipal())) {
+                Object principal = sessionAuth.getPrincipal();
+                String uid = null;
+                if (principal instanceof String) {
+                    uid = (String) principal;
+                } else if (principal instanceof com.dienmay.entity.nhom5.security.CustomUserDetails cud && cud.getUser() != null) {
+                    uid = cud.getUser().getUid();
+                }
+                if (uid != null) {
+                    try {
+                        User user = authService.loadUserByUid(uid);
+                        if (!Boolean.TRUE.equals(user.getIsActive())) {
+                            SecurityContextHolder.clearContext();
+                            if (request.getSession(false) != null) {
+                                request.getSession().invalidate();
+                            }
+                            if (request.getRequestURI().startsWith("/api/")) {
+                                writeJsonResponse(
+                                        response,
+                                        HttpServletResponse.SC_FORBIDDEN,
+                                        "Forbidden",
+                                        "Tài khoản đã bị khóa"
+                                );
+                            } else {
+                                response.sendRedirect("/login?error=blocked");
+                            }
+                            return;
+                        }
+                    } catch (Exception ex) {
+                        SecurityContextHolder.clearContext();
+                        if (request.getSession(false) != null) {
+                            request.getSession().invalidate();
+                        }
+                        response.sendRedirect("/login");
+                        return;
+                    }
+                }
+            }
             filterChain.doFilter(request, response);
             return;
         }

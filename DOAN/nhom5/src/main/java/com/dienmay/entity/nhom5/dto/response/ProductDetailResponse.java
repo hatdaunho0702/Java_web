@@ -26,6 +26,8 @@ public class ProductDetailResponse {
     private Integer reviewCount;
     private String categoryName;
     private String brandName;
+    private Long categoryId;
+    private Long brandId;
     private List<String> imageUrls;
     private List<ProductSpecDto> specs;
     private List<ReviewDto> reviews;
