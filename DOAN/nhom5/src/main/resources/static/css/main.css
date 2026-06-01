@@ -826,12 +826,13 @@ a {
 .cyber-promo-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-gap: 0px;
+  grid-gap: 24px;
   overflow: hidden;
 }
 .cyber-promo-left {
   display: flex;
   flex-direction: column;
+  gap: 24px;
 }
 .cyber-promo-block {
   padding: 48px;
@@ -839,7 +840,13 @@ a {
   align-items: center;
   position: relative;
   overflow: hidden;
-  height: 300px;
+  height: 280px;
+  border-radius: 20px;
+  transition: transform 0.3s var(--transition), box-shadow 0.3s var(--transition);
+}
+.cyber-promo-block:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.05);
 }
 .cyber-promo-block-content {
   z-index: 5;
@@ -872,6 +879,7 @@ a {
 .cyber-promo-sub-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-gap: 24px;
 }
 .cyber-promo-sub-block {
   padding: 32px;
@@ -881,6 +889,12 @@ a {
   position: relative;
   overflow: hidden;
   height: 280px;
+  border-radius: 20px;
+  transition: transform 0.3s var(--transition), box-shadow 0.3s var(--transition);
+}
+.cyber-promo-sub-block:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.05);
 }
 .cyber-promo-sub-block img {
   position: absolute;
@@ -902,7 +916,13 @@ a {
   justify-content: space-between;
   position: relative;
   overflow: hidden;
-  height: 580px;
+  height: 584px;
+  border-radius: 20px;
+  transition: transform 0.3s var(--transition), box-shadow 0.3s var(--transition);
+}
+.cyber-promo-right:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.05);
 }
 .cyber-promo-right-content {
   z-index: 5;
@@ -913,11 +933,36 @@ a {
   right: 0;
   bottom: 0;
   max-height: 85%;
+  max-width: 55%;
   object-fit: contain;
   transition: transform 0.5s var(--transition);
 }
 .cyber-promo-right:hover img {
   transform: scale(1.03) translateY(-4px);
+}
+
+@media (max-width: 991px) {
+  .cyber-promo-grid {
+    grid-template-columns: 1fr;
+  }
+  .cyber-promo-right {
+    height: 420px;
+    padding: 40px;
+  }
+  .cyber-promo-block {
+    height: 260px;
+    padding: 32px;
+  }
+  .cyber-promo-sub-block {
+    height: 240px;
+    padding: 24px;
+  }
+}
+
+@media (max-width: 576px) {
+  .cyber-promo-sub-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Category Grid */

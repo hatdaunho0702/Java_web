@@ -400,11 +400,50 @@ public class ProductService {
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
 
-        if (newImages != null && newImages.length > 0) {
+        // Đồng bộ ảnh cũ nếu danh sách remainImages được chỉ định
+        if (req.getRemainImages() != null) {
+            List<ProductImage> existingImages = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId());
+            List<ProductImage> toDelete = new ArrayList<>();
+            for (ProductImage img : existingImages) {
+                if (!req.getRemainImages().contains(img.getImageUrl())) {
+                    toDelete.add(img);
+                }
+            }
+            for (ProductImage img : toDelete) {
+                try {
+                    String relativePath = img.getImageUrl();
+                    if (relativePath.startsWith("/")) {
+                        relativePath = "." + relativePath;
+                    }
+                    Files.deleteIfExists(Paths.get(relativePath));
+                } catch (Exception e) {
+                    log.error("Lỗi xóa file ảnh vật lý: {}", e.getMessage());
+                }
+                productImageRepository.delete(img);
+            }
+        } else if (newImages != null && newImages.length > 0) {
             productImageRepository.deleteByProductId(product.getId());
             product.setThumbnailUrl(null);
+        }
+
+        // Lưu thêm ảnh mới
+        if (newImages != null && newImages.length > 0) {
             saveImages(product, newImages);
         }
+
+        // Sắp xếp và cập nhật lại ảnh thu nhỏ (thumbnail)
+        List<ProductImage> finalImages = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId());
+        for (int i = 0; i < finalImages.size(); i++) {
+            ProductImage img = finalImages.get(i);
+            img.setSortOrder(i);
+            productImageRepository.save(img);
+        }
+        if (!finalImages.isEmpty()) {
+            product.setThumbnailUrl(finalImages.get(0).getImageUrl());
+        } else {
+            product.setThumbnailUrl(null);
+        }
+        productRepository.save(product);
 
         if (req.getSpecs() != null) {
             productSpecRepository.deleteByProductId(product.getId());
@@ -421,6 +460,45 @@ public class ProductService {
         product.setIsActive(!Boolean.TRUE.equals(product.getIsActive()));
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
+    }
+
+    @Transactional
+    public void deleteProduct(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + id));
+
+        boolean hasOrders = orderItemRepository.existsByProductId(product.getId());
+        if (hasOrders) {
+            // Soft delete: chuyển sang inactive
+            product.setIsActive(false);
+            product.setUpdatedAt(LocalDateTime.now());
+            productRepository.save(product);
+        } else {
+            // Hard delete: xóa tất cả thực thể liên quan
+            productImageRepository.deleteByProductId(product.getId());
+            productSpecRepository.deleteByProductId(product.getId());
+            reviewRepository.deleteByProductId(product.getId());
+            
+            // Xóa file ảnh vật lý trên đĩa
+            Path basePath = Paths.get(productImageDir, String.valueOf(product.getId()));
+            try {
+                if (Files.exists(basePath)) {
+                    Files.walk(basePath)
+                            .sorted((p1, p2) -> p2.compareTo(p1))
+                            .forEach(p -> {
+                                try {
+                                    Files.delete(p);
+                                } catch (IOException e) {
+                                    log.error("Lỗi xóa tệp vật lý {}: {}", p, e.getMessage());
+                                }
+                            });
+                }
+            } catch (Exception e) {
+                log.error("Lỗi xóa thư mục ảnh sản phẩm {}: {}", basePath, e.getMessage());
+            }
+
+            productRepository.delete(product);
+        }
     }
 
     private void validateProductRequest(CreateProductRequest req) {

@@ -143,9 +143,9 @@
         </div>
         <div th:if="${order != null}">
           <span th:text="${order.status}" class="badge-status" 
-                th:classappend="${order.status == 'PENDING' ? 'status-pending' : 
-                                 (order.status == 'CONFIRMED' || order.status == 'SHIPPING' ? 'status-shipping' : 
-                                 (order.status == 'COMPLETED' ? 'status-completed' : 'status-cancelled'))}">
+                th:classappend="${order.status?.name() == 'PENDING' ? 'status-pending' : 
+                                 (order.status?.name() == 'CONFIRMED' || order.status?.name() == 'SHIPPING' ? 'status-shipping' : 
+                                 (order.status?.name() == 'COMPLETED' ? 'status-completed' : 'status-cancelled'))}">
           </span>
         </div>
       </div>
@@ -241,7 +241,7 @@
             <div class="info-row">
               <span class="info-label">Thanh toán</span>
               <span class="badge px-2 py-1" th:text="${order.paymentStatus}"
-                    th:classappend="${order.paymentStatus == 'PAID' ? 'bg-success text-white' : 'bg-warning text-dark'}">
+                    th:classappend="${order.paymentStatus?.name() == 'PAID' ? 'bg-success text-white' : 'bg-warning text-dark'}">
               </span>
             </div>
             <div class="summary-divider" th:if="${order.note != null && not #strings.isEmpty(order.note)}"></div>
@@ -252,7 +252,7 @@
           </div>
 
           <!-- Quick status update card -->
-          <div class="detail-card" th:if="${order.status != 'COMPLETED' && order.status != 'CANCELLED'}">
+          <div class="detail-card" th:if="${order.status?.name() != 'COMPLETED' && order.status?.name() != 'CANCELLED'}">
             <h4 class="card-sec-title">
               <i class="ti ti-edit"></i> Xử lý đơn hàng
             </h4>
@@ -262,9 +262,9 @@
                 <select class="form-select-custom" id="newStatusSelect" required>
                   <option value="">-- Chọn trạng thái tiếp theo --</option>
                   <!-- Only show transitions based on current status -->
-                  <option value="CONFIRMED" th:if="${order.status == 'PENDING'}">Xác nhận đơn hàng (CONFIRMED)</option>
-                  <option value="SHIPPING" th:if="${order.status == 'CONFIRMED'}">Bắt đầu giao hàng (SHIPPING)</option>
-                  <option value="COMPLETED" th:if="${order.status == 'SHIPPING'}">Hoàn thành giao hàng (COMPLETED)</option>
+                  <option value="CONFIRMED" th:if="${order.status?.name() == 'PENDING'}">Xác nhận đơn hàng (CONFIRMED)</option>
+                  <option value="SHIPPING" th:if="${order.status?.name() == 'CONFIRMED'}">Bắt đầu giao hàng (SHIPPING)</option>
+                  <option value="COMPLETED" th:if="${order.status?.name() == 'SHIPPING'}">Hoàn thành giao hàng (COMPLETED)</option>
                   <option value="CANCELLED">Hủy đơn hàng này (CANCELLED)</option>
                 </select>
               </div>

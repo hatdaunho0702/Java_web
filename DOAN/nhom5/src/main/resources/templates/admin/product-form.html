@@ -160,6 +160,7 @@
           padding: 0;
           box-shadow: 0 2px 4px rgba(0,0,0,0.15);
           transition: transform 0.15s ease;
+          z-index: 10;
         }
         
         .image-preview-remove:hover {
@@ -287,12 +288,13 @@
             
             <div class="image-preview-container" id="imagePreviews">
               <!-- Hiện các ảnh cũ nếu đang chỉnh sửa -->
-              <div th:if="${isEdit and imageUrls != null}" th:each="img : ${imageUrls}" class="image-preview-item preview-old">
+              <div th:if="${isEdit and imageUrls != null}" th:each="img, iter : ${imageUrls}" class="image-preview-item preview-old" th:id="'preview-old-' + ${iter.index}">
                 <img th:src="${img}" alt="Current image">
+                <button type="button" class="image-preview-remove" th:onclick="'removeOldImage(' + ${iter.index} + ', \'' + ${img} + '\')'">&times;</button>
               </div>
             </div>
             <small th:if="${isEdit}" class="text-muted d-block mt-2" style="font-size: 12px; font-weight: 500;">
-              💡 <em>Lưu ý: Tải lên các hình ảnh mới sẽ thay thế hoàn toàn danh sách hình ảnh hiện có của sản phẩm.</em>
+              💡 <em>Lưu ý: Nhấp vào dấu &times; đỏ trên từng ảnh để xóa ảnh đó, hoặc chọn thêm ảnh mới để tải lên bổ sung.</em>
             </small>
           </div>
 
@@ -330,9 +332,16 @@
 
     <script>
       let specCount = 0;
-      let selectedFiles = [];
+      let nextFileId = 0;
+      const selectedFilesMap = new Map();
+      let remainImages = [];
 
       document.addEventListener("DOMContentLoaded", () => {
+        // Khởi tạo remainImages với danh sách ảnh cũ đang hiển thị
+        document.querySelectorAll('#imagePreviews .preview-old img').forEach(img => {
+          remainImages.push(img.getAttribute('src'));
+        });
+
         // Đếm số lượng spec đã hiển thị để tránh trùng ID hàng mới
         specCount = document.querySelectorAll('#specsContainer .spec-row').length;
         if (specCount === 0) {
@@ -409,50 +418,64 @@
       function previewImages() {
         const input = document.getElementById('productImages');
         const container = document.getElementById('imagePreviews');
-        
-        // Chỉ xóa preview của các ảnh vừa chọn mới, giữ các ảnh cũ hiển thị tĩnh
-        container.querySelectorAll('.preview-new').forEach(el => el.remove());
-        
-        selectedFiles = Array.from(input.files);
+        const files = Array.from(input.files);
 
         let isValid = true;
-        selectedFiles.forEach((file, index) => {
+        files.forEach(file => {
           const ext = file.name.split('.').pop().toLowerCase();
           const allowed = ['jpg', 'jpeg', 'png', 'webp'];
           if (!allowed.includes(ext)) {
             isValid = false;
-            return;
           }
-
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const item = document.createElement('div');
-            item.className = 'image-preview-item preview-new';
-            item.id = 'preview-new-' + index;
-            item.innerHTML = `
-              <img src="${e.target.result}" alt="Preview image">
-              <button type="button" class="image-preview-remove" onclick="removeNewImage(${index})">&times;</button>
-            `;
-            container.appendChild(item);
-          }
-          reader.readAsDataURL(file);
         });
 
         const errEl = document.getElementById('err-productImages');
         if (!isValid) {
           errEl.style.display = 'flex';
           input.value = '';
-          selectedFiles = [];
-          container.querySelectorAll('.preview-new').forEach(el => el.remove());
+          return;
         } else {
           errEl.style.display = 'none';
         }
+
+        files.forEach(file => {
+          const fileId = nextFileId++;
+          selectedFilesMap.set(fileId, file);
+
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const item = document.createElement('div');
+            item.className = 'image-preview-item preview-new';
+            item.id = 'preview-new-' + fileId;
+            item.innerHTML = `
+              <img src="${e.target.result}" alt="Preview image">
+              <button type="button" class="image-preview-remove" onclick="removeNewImage(${fileId})">&times;</button>
+            `;
+            container.appendChild(item);
+          }
+          reader.readAsDataURL(file);
+        });
+
+        // Reset input value to allow selecting same files again
+        input.value = '';
       }
 
-      function removeNewImage(index) {
-        const item = document.getElementById('preview-new-' + index);
+      function removeNewImage(fileId) {
+        const item = document.getElementById('preview-new-' + fileId);
         if (item) item.remove();
-        selectedFiles[index] = null; // Đánh dấu đã hủy chọn tệp này
+        selectedFilesMap.delete(fileId);
+        if (typeof window.showToast === 'function') {
+          window.showToast("Đã loại bỏ ảnh khỏi danh sách tải lên", "info");
+        }
+      }
+
+      function removeOldImage(index, url) {
+        const item = document.getElementById('preview-old-' + index);
+        if (item) item.remove();
+        remainImages = remainImages.filter(imgUrl => imgUrl !== url);
+        if (typeof window.showToast === 'function') {
+          window.showToast("Đã xóa ảnh", "info");
+        }
       }
 
       async function submitProductForm(e) {
@@ -532,18 +555,17 @@
           salePrice: salePriceInput ? Number(salePriceInput) : null,
           description,
           isFeatured: false,
-          specs
+          specs,
+          remainImages: remainImages
         };
 
         const formData = new FormData();
         formData.append("product", JSON.stringify(productPayload));
         
         // Append ảnh mới
-        selectedFiles.forEach(file => {
-          if (file) {
-            formData.append("images", file);
-          }
-        });
+        for (const file of selectedFilesMap.values()) {
+          formData.append("images", file);
+        }
 
         const method = id ? 'PUT' : 'POST';
         const url = id ? `/api/admin/products/${id}` : '/api/admin/products';

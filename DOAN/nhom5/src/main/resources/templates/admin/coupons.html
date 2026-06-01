@@ -166,9 +166,8 @@
         document.getElementById('couponEndDate').value = formatDateForInput(future);
       });
 
-      window.addEventListener("load", () => {
-        fetchCoupons();
-      });
+      window.addEventListener('authReady', () => fetchCoupons());
+      if (window.getAuthHeaders) fetchCoupons();
 
       function formatDateForInput(date) {
         const pad = (n) => String(n).padStart(2, '0');

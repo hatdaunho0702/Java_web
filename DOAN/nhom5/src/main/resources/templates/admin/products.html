@@ -69,6 +69,15 @@
                   <a th:href="@{/admin/products/{id}/edit(id=${p.id})}" class="btn-action-sm" title="Sửa">
                     <i class="ti ti-edit"></i> Sửa
                   </a>
+                  <button class="btn-action-sm text-danger btn-delete" 
+                          style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 6px 12px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; margin-left: 6px;" 
+                          onmouseover="this.style.background='#dc2626'; this.style.color='white';"
+                          onmouseout="this.style.background='#fef2f2'; this.style.color='#dc2626';"
+                          th:attr="data-id=${p.id}" 
+                          onclick="deleteProduct(this.getAttribute('data-id'))" 
+                          title="Xóa">
+                    <i class="ti ti-trash"></i> Xóa
+                  </button>
                 </td>
               </tr>
               <tr th:if="${products == null || products.content.isEmpty()}">
@@ -78,6 +87,38 @@
           </table>
         </div>
       </div>
+      
+      <script>
+        async function deleteProduct(id) {
+          if (!confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
+            return;
+          }
+          try {
+            const token = await window.getToken();
+            if (!token) {
+              window.location.href = '/login';
+              return;
+            }
+            const res = await fetch(`/api/admin/products/${id}`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (res.ok) {
+              window.showToast("Xóa sản phẩm thành công!", "success");
+              setTimeout(() => {
+                window.location.reload();
+              }, 800);
+            } else {
+              const err = await res.json().catch(() => ({}));
+              window.showToast(err.message || "Lỗi khi xóa sản phẩm từ máy chủ", "danger");
+            }
+          } catch (err) {
+            window.showToast("Lỗi kết nối máy chủ", "danger");
+          }
+        }
+      </script>
     </div>
   </body>
 </html>

@@ -21,5 +21,6 @@ public class CreateProductRequest {
     private BigDecimal salePrice;
     private Integer stockQty;
     private Boolean isFeatured;
+    private List<String> remainImages;
     private List<ProductSpecRequest> specs;
 }

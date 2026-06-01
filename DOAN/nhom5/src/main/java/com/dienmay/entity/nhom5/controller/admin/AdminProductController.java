@@ -44,8 +44,8 @@ public class AdminProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> toggleActive(@PathVariable Long id) {
-        productService.toggleActive(id);
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
 }

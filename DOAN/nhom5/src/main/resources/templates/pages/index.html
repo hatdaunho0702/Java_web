@@ -12,7 +12,7 @@
     <main>
 
       <!-- 2. Grid Banners Section (PS5, Macbook, etc.) -->
-      <section class="cyber-promo-grid reveal-on-scroll">
+      <section class="container py-5 cyber-promo-grid reveal-on-scroll">
         <!-- Left column: PS5 and sub-grid -->
         <div class="cyber-promo-left">
           <!-- Playstation 5 -->
@@ -27,7 +27,7 @@
           <!-- Sub grid: Airpods Max & Vision Pro -->
           <div class="cyber-promo-sub-grid">
             <!-- AirPods Max -->
-            <div class="cyber-promo-sub-block cyber-bg-light">
+            <div class="cyber-promo-sub-block" style="background: linear-gradient(135deg, #fce7f3 0%, #ffdcd7 100%);">
               <div class="cyber-promo-block-content" style="max-width: 140px;">
                 <h3 class="cyber-promo-block-title" style="font-size: 20px;">Apple<br>AirPods <strong>Max</strong></h3>
                 <p class="cyber-promo-block-desc" style="font-size: 11px;">An entirely reimagined over-ear headphone.</p>
@@ -46,11 +46,11 @@
         </div>
 
         <!-- Right column: Macbook Air -->
-        <div class="cyber-promo-right">
+        <div class="cyber-promo-right text-white" style="background: linear-gradient(135deg, #18131d 0%, #000000 100%);">
           <div class="cyber-promo-right-content">
-            <h2 class="cyber-promo-block-title" style="font-size: 40px; font-weight: 300;">Macbook <strong>Air</strong></h2>
+            <h2 class="cyber-promo-block-title cyber-text-white" style="font-size: 40px; font-weight: 300;">Macbook <strong>Air</strong></h2>
             <p class="cyber-promo-block-desc" style="margin-bottom: 24px;">The new 15-inch MacBook Air makes room for more of what you love with a spacious Liquid Retina display.</p>
-            <a th:href="@{/products}" class="btn-cyber-outline-dark">Shop Now</a>
+            <a th:href="@{/products}" class="btn-cyber-outline">Shop Now</a>
           </div>
           <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=500" alt="Macbook Air">
         </div>

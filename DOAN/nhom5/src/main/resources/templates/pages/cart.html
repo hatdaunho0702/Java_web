@@ -11,10 +11,58 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     />
+    <style>
+      /* Ẩn các nút tăng giảm số lượng mặc định của trình duyệt */
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type=number] {
+        -moz-appearance: textfield;
+      }
+
+      /* Hiệu ứng hover cho thẻ sản phẩm giỏ hàng */
+      .cart-item-card {
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        background: white;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .cart-item-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--card-shadow-hover) !important;
+        border-color: rgba(79, 70, 229, 0.15);
+      }
+
+      /* Nút xóa sản phẩm tinh tế */
+      .btn-delete-item {
+        width: 38px; height: 38px;
+        border-radius: 10px;
+        border: 1px solid #fecaca;
+        background: #fef2f2;
+        color: #dc2626;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s ease;
+      }
+      .btn-delete-item:hover {
+        background: #dc2626;
+        color: white;
+        transform: scale(1.05);
+      }
+
+      /* Hiệu ứng float cho biểu tượng giỏ hàng trống */
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+      }
+      .animate-float-icon {
+        animation: float 3s ease-in-out infinite;
+      }
+    </style>
   </head>
   <body>
     <main class="container py-5">
-      <div id="cart-content" class="admin-card p-4 reveal-on-scroll"></div>
+      <div id="cart-content" class="reveal-on-scroll"></div>
 
       <script type="module">
         import { getFirebaseAuth } from "/js/firebase-config.js";
@@ -39,50 +87,48 @@
           return await user.getIdToken(true);
         }
 
-        async function loadCart() {
-          const auth = await getFirebaseAuth();
-          onAuthStateChanged(auth, async (user) => {
-            if (!user) {
+        async function fetchAndRenderCart(user) {
+          if (!user) {
+            document.getElementById("cart-content").innerHTML = `
+              <div class="text-center py-5 px-4" style="background: white; border-radius: var(--radius-lg); box-shadow: var(--card-shadow); border: 1px solid rgba(0,0,0,0.03); max-width: 600px; margin: 40px auto;">
+                <div style="font-size:80px; margin-bottom: 20px;">🔒</div>
+                <h4 style="font-weight: 800; color: var(--text-main);">Đăng nhập vào giỏ hàng</h4>
+                <p class="text-muted" style="font-size: 14px; margin-bottom: 24px;">Vui lòng đăng nhập tài khoản của bạn để xem, lưu trữ và thanh toán các sản phẩm trong giỏ hàng.</p>
+                <a href="/login" class="btn-gradient px-5 py-3 text-white" style="text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-block; font-size: 15px; box-shadow: 0 4px 12px rgba(79,70,229,0.25);">Đăng nhập ngay</a>
+              </div>`;
+            return;
+          }
+
+          try {
+            const token = await user.getIdToken(true);
+            const res = await fetch("/api/cart", {
+              headers: { Authorization: "Bearer " + token },
+            });
+
+            if (!res.ok) {
+              throw new Error("Lỗi tải giỏ hàng");
+            }
+
+            const items = await res.json();
+
+            if (!items || items.length === 0) {
               document.getElementById("cart-content").innerHTML = `
-                <div class="text-center py-5">
-                  <div style="font-size:80px">🛒</div>
-                  <h4>Giỏ hàng trống</h4>
-                  <p class="text-muted">Vui lòng đăng nhập để xem giỏ hàng</p>
-                  <a href="/login" class="btn btn-primary px-4 py-2">Đăng nhập</a>
+                <div class="text-center py-5 px-4" style="background: white; border-radius: var(--radius-lg); box-shadow: var(--card-shadow); border: 1px solid rgba(0,0,0,0.03); max-width: 600px; margin: 40px auto;">
+                  <div class="animate-float-icon" style="font-size:100px; margin-bottom: 20px; display: inline-block;">🛒</div>
+                  <h4 style="font-weight: 800; color: var(--text-main);">Giỏ hàng của bạn đang trống</h4>
+                  <p class="text-muted" style="font-size: 14px; margin-bottom: 24px;">Có vẻ như bạn chưa chọn được sản phẩm ưng ý. Hãy khám phá hàng ngàn công nghệ chính hãng tuyệt vời của chúng tôi.</p>
+                  <a href="/products" class="btn-gradient px-5 py-3 text-white" style="text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-block; font-size: 15px; box-shadow: 0 4px 12px rgba(79,70,229,0.25);">
+                    <i class="bi bi-compass me-1"></i> Khám phá sản phẩm
+                  </a>
                 </div>`;
               return;
             }
 
-            try {
-              const token = await user.getIdToken(true);
-              const res = await fetch("/api/cart", {
-                headers: { Authorization: "Bearer " + token },
-              });
-
-              if (!res.ok) {
-                throw new Error("Lỗi tải giỏ hàng");
-              }
-
-              const items = await res.json();
-
-              if (!items || items.length === 0) {
-                document.getElementById("cart-content").innerHTML = `
-                  <div class="text-center py-5">
-                    <div style="font-size:80px">🛒</div>
-                    <h4>Giỏ hàng của bạn đang trống</h4>
-                    <a href="/products" class="btn btn-primary px-4 py-2 mt-3">
-                      Tiếp tục mua sắm
-                    </a>
-                  </div>`;
-                return;
-              }
-
-              renderCartTable(items, token);
-            } catch (err) {
-              document.getElementById("cart-content").innerHTML =
-                '<div class="alert alert-danger">Lỗi tải giỏ hàng</div>';
-            }
-          });
+            renderCartTable(items, token);
+          } catch (err) {
+            document.getElementById("cart-content").innerHTML =
+              '<div class="alert alert-danger">Lỗi tải giỏ hàng</div>';
+          }
         }
 
         function renderCartTable(items, token) {
@@ -93,37 +139,72 @@
               const lineTotal = unitPrice * Number(item.quantity || 0);
               subtotal += lineTotal;
               const imgOrEmoji = item.thumbnailUrl
-                ? `<img src="${item.thumbnailUrl}" style="width:70px;height:70px;object-fit:cover;border-radius:8px">`
-                : `<div style="width:70px;height:70px;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:32px">📦</div>`;
+                ? `<img src="${item.thumbnailUrl}" style="width:100%;height:100%;object-fit:cover;">`
+                : `<div style="width:100%;height:100%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:32px">📦</div>`;
 
               return `
-                <tr id="row-${item.cartItemId}">
-                  <td>
-                    <div class="d-flex align-items-center gap-3">
+                <div class="cart-item-card mb-3 p-3 p-md-4 d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3" id="row-${item.cartItemId}" style="border-radius: var(--radius-lg); box-shadow: var(--card-shadow);">
+                  <!-- Left Side: Product Info -->
+                  <div class="d-flex align-items-center gap-3 w-100">
+                    <div class="cart-item-img-container" style="position: relative; width: 80px; height: 80px; border-radius: var(--radius); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); flex-shrink: 0;">
                       ${imgOrEmoji}
-                      <div>
-                        <div style="font-weight:600">${item.productName}</div>
-                        <small class="text-muted">Còn ${item.stockQty} trong kho</small>
+                    </div>
+                    <div class="flex-grow-1" style="min-width: 0;">
+                      <div style="font-weight: 700; font-size: 15px; color: var(--text-main); margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                        ${item.productName}
+                      </div>
+                      <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge ${item.stockQty > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}" style="font-size: 10px; padding: 3px 6px; border-radius: 6px; font-weight: 600;">
+                          ${item.stockQty > 0 ? `Còn ${item.stockQty} trong kho` : 'Hết hàng'}
+                        </span>
+                      </div>
+                      <div style="font-size: 13px; font-weight: 500; color: var(--text-muted);">
+                        Đơn giá: <span style="color: var(--text-main); font-weight: 700;">${formatVnd(unitPrice)}</span>
                       </div>
                     </div>
-                  </td>
-                  <td class="text-center">${formatVnd(unitPrice)}</td>
-                  <td class="text-center">
-                    <div class="d-flex align-items-center justify-content-center gap-2">
-                      <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(${item.cartItemId}, ${item.quantity - 1}, ${item.stockQty})">-</button>
-                      <span id="qty-${item.cartItemId}" style="min-width:30px;text-align:center;font-weight:600">${item.quantity}</span>
-                      <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(${item.cartItemId}, ${item.quantity + 1}, ${item.stockQty})">+</button>
+                  </div>
+                  
+                  <!-- Divider on Mobile -->
+                  <hr class="d-md-none w-100 my-2" style="border-color: var(--border-color);">
+
+                  <!-- Right Side: Controls and Pricing -->
+                  <div class="d-flex align-items-center justify-content-between justify-content-md-end gap-3 gap-md-4 w-100 w-md-auto">
+                    <!-- Quantity control -->
+                    <div class="d-flex flex-column align-items-start align-items-md-center gap-1">
+                      <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em;">Số lượng</span>
+                      <div class="d-flex align-items-center" style="background: var(--bg-light); border-radius: 8px; padding: 2px; border: 1px solid var(--border-color);">
+                        <button class="btn btn-link px-2 text-dark" style="text-decoration: none; padding: 2px 6px; font-weight: 700; font-size: 14px;" onclick="updateCartItemQty(${item.cartItemId}, ${item.quantity - 1}, ${item.stockQty})">-</button>
+                        <input type="number" 
+                               id="qty-${item.cartItemId}" 
+                               value="${item.quantity}" 
+                               data-old-val="${item.quantity}"
+                               min="1" 
+                               max="${item.stockQty}" 
+                               class="text-center bg-transparent border-0" 
+                               style="width: 40px; font-weight: 700; font-size: 14px; color: var(--text-main); outline: none;" 
+                               onchange="updateCartItemQty(${item.cartItemId}, parseInt(this.value, 10), ${item.stockQty})"
+                               onkeydown="if(event.key === 'Enter') this.blur();"
+                        />
+                        <button class="btn btn-link px-2 text-dark" style="text-decoration: none; padding: 2px 6px; font-weight: 700; font-size: 14px;" onclick="updateCartItemQty(${item.cartItemId}, ${item.quantity + 1}, ${item.stockQty})">+</button>
+                      </div>
                     </div>
-                  </td>
-                  <td class="text-center" id="sub-${item.cartItemId}" style="font-weight:700;color:var(--primary)">
-                    ${formatVnd(lineTotal)}
-                  </td>
-                  <td class="text-center">
-                    <button class="btn btn-sm btn-outline-danger" onclick="removeItem(${item.cartItemId})">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </td>
-                </tr>`;
+                    
+                    <!-- Subtotal -->
+                    <div class="text-end" style="min-width: 110px;">
+                      <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; display: block; margin-bottom: 2px;">Thành tiền</span>
+                      <span id="sub-${item.cartItemId}" style="font-weight: 800; font-size: 15px; color: var(--primary);">
+                        ${formatVnd(lineTotal)}
+                      </span>
+                    </div>
+                    
+                    <!-- Delete button -->
+                    <div>
+                      <button class="btn-delete-item" onclick="removeItem(${item.cartItemId})">
+                        <i class="bi bi-trash3"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>`;
             })
             .join("");
 
@@ -133,63 +214,64 @@
 
           document.getElementById("cart-content").innerHTML = `
             <div class="row g-4">
+              <!-- Left side: Products List -->
               <div class="col-lg-8">
-                <div class="admin-card">
-                  <div class="admin-card-header d-flex justify-content-between align-items-center">
-                    <span>🛒 Giỏ hàng của bạn</span>
-                    <span class="badge bg-primary">${items.length} sản phẩm</span>
-                  </div>
-                  <div class="table-responsive">
-                    <table class="table admin-table mb-0">
-                      <thead>
-                        <tr>
-                          <th>Sản phẩm</th>
-                          <th class="text-center">Đơn giá</th>
-                          <th class="text-center">Số lượng</th>
-                          <th class="text-center">Thành tiền</th>
-                          <th class="text-center">Xóa</th>
-                        </tr>
-                      </thead>
-                      <tbody>${rows}</tbody>
-                    </table>
-                  </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h4 class="mb-0" style="font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px;">
+                    <i class="bi bi-cart3 text-primary"></i> Giỏ hàng <span style="font-size: 14px; font-weight: 500; color: var(--text-muted);">(${items.length} sản phẩm)</span>
+                  </h4>
+                </div>
+                <div class="cart-items-list">
+                  ${rows}
                 </div>
               </div>
 
+              <!-- Right side: Summary Card -->
               <div class="col-lg-4">
-                <div class="admin-card">
-                  <div class="admin-card-header">📋 Tóm tắt đơn hàng</div>
-                  <div class="p-4">
-                    <div class="d-flex gap-2 mb-3">
-                      <input type="text" id="couponInput" class="form-control" placeholder="Nhập mã giảm giá">
-                      <button class="btn btn-primary px-3" onclick="applyCoupon()">Áp dụng</button>
+                <div class="summary-card p-4" style="background: white; border-radius: var(--radius-lg); box-shadow: var(--card-shadow); border: 1px solid rgba(0,0,0,0.03); position: sticky; top: 100px;">
+                  <h5 style="font-weight: 800; color: var(--text-main); margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-file-earmark-text text-primary"></i> Tóm tắt đơn hàng
+                  </h5>
+                  
+                  <!-- Coupon section -->
+                  <div class="mb-4">
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px;">Mã giảm giá</label>
+                    <div class="d-flex gap-2" style="background: var(--bg-light); padding: 6px; border-radius: 12px; border: 1px solid var(--border-color);">
+                      <input type="text" id="couponInput" class="bg-transparent border-0 flex-grow-1 px-2" style="font-size: 14px; outline: none; font-weight: 600; width: 10px;" placeholder="Nhập mã ưu đãi...">
+                      <button class="btn-gradient px-4 py-2" style="border: none; border-radius: 8px; font-size: 13px; font-weight: 600;" onclick="applyCoupon()">Áp dụng</button>
                     </div>
-                    <div id="coupon-msg" class="mb-3" style="font-size:13px"></div>
-
-                    <div class="d-flex justify-content-between mb-2">
-                      <span>Tạm tính:</span>
-                      <span id="subtotal-display">${formatVnd(subtotal)}</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                      <span>Giảm giá:</span>
-                      <span id="discount-display" style="color:var(--primary)">-0đ</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                      <span>Phí vận chuyển:</span>
-                      <span id="shipping-display">${shipping === 0 ? "Miễn phí" : formatVnd(shipping)}</span>
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-between mb-4">
-                      <strong>Tổng thanh toán:</strong>
-                      <strong id="total-display" style="font-size:20px;color:var(--primary)">${formatVnd(total)}</strong>
-                    </div>
-                    <a href="/checkout" class="btn btn-primary d-block text-center py-3" style="border-radius:10px;font-size:16px">
-                      Tiến hành thanh toán →
-                    </a>
-                    <a href="/products" class="d-block text-center mt-2 text-muted" style="font-size:14px">
-                      ← Tiếp tục mua sắm
-                    </a>
+                    <div id="coupon-msg" class="mt-2" style="font-size:12px"></div>
                   </div>
+
+                  <!-- Details -->
+                  <div class="d-flex flex-column gap-3 mb-4">
+                    <div class="d-flex justify-content-between" style="font-size: 14px;">
+                      <span style="color: var(--text-muted); font-weight: 500;">Tạm tính:</span>
+                      <span id="subtotal-display" style="font-weight: 700; color: var(--text-main);">${formatVnd(subtotal)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between" style="font-size: 14px;">
+                      <span style="color: var(--text-muted); font-weight: 500;">Giảm giá:</span>
+                      <span id="discount-display" style="color: #16a34a; font-weight: 700;">-0đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between" style="font-size: 14px;">
+                      <span style="color: var(--text-muted); font-weight: 500;">Phí vận chuyển:</span>
+                      <span id="shipping-display" style="font-weight: 700; color: var(--text-main);">${shipping === 0 ? "Miễn phí" : formatVnd(shipping)}</span>
+                    </div>
+                  </div>
+
+                  <hr style="border-color: var(--border-color); margin-bottom: 20px;">
+
+                  <div class="d-flex justify-content-between align-items-center mb-4">
+                    <strong style="font-size: 16px; color: var(--text-main);">Tổng thanh toán:</strong>
+                    <strong id="total-display" style="font-size: 24px; font-weight: 800; background: var(--gradient-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${formatVnd(total)}</strong>
+                  </div>
+
+                  <a href="/checkout" class="btn-gradient d-block text-center py-3 mb-3 text-white" style="border: none; border-radius: 12px; font-size: 16px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);">
+                    Tiến hành thanh toán <i class="bi bi-arrow-right ms-1"></i>
+                  </a>
+                  <a href="/products" class="d-block text-center text-muted" style="font-size: 13px; font-weight: 600; text-decoration: none; transition: var(--transition);" onmouseover="this.style.color='var(--primary)';" onmouseout="this.style.color='var(--text-muted)';">
+                    <i class="bi bi-arrow-left me-1"></i> Tiếp tục mua sắm
+                  </a>
                 </div>
               </div>
             </div>`;
@@ -200,10 +282,13 @@
           }
         }
 
-        window.changeQty = async function (cartItemId, newQty, stockQty) {
-          if (newQty < 1) {
-            if (confirm("Xóa sản phẩm này khỏi giỏ hàng?")) {
-              removeItem(cartItemId);
+        window.updateCartItemQty = async function (cartItemId, newQty, stockQty) {
+          const inputEl = document.getElementById("qty-" + cartItemId);
+          if (isNaN(newQty) || newQty < 1) {
+            if (!isNaN(newQty) && confirm("Xóa sản phẩm này khỏi giỏ hàng?")) {
+              await removeItem(cartItemId);
+            } else if (inputEl) {
+              inputEl.value = inputEl.dataset.oldVal || "1";
             }
             return;
           }
@@ -213,6 +298,9 @@
               "Chỉ còn " + stockQty + " sản phẩm trong kho",
               "warning",
             );
+            if (inputEl) {
+              inputEl.value = inputEl.dataset.oldVal || "1";
+            }
             return;
           }
 
@@ -230,13 +318,17 @@
               const err = await res.json().catch(() => ({}));
               throw new Error(err.message || "Không thể cập nhật giỏ hàng");
             }
-            await loadCart();
+            const auth = await getFirebaseAuth();
+            await fetchAndRenderCart(auth.currentUser);
             if (typeof window.updateCartBadge === "function") {
               await window.updateCartBadge();
             }
             showToastSafe("Đã cập nhật", "success");
           } catch (err) {
             showToastSafe(err.message || "Lỗi cập nhật", "error");
+            if (inputEl) {
+              inputEl.value = inputEl.dataset.oldVal || "1";
+            }
           }
         };
 
@@ -255,7 +347,8 @@
               throw new Error(err.message || "Không thể xóa sản phẩm");
             }
             document.getElementById("row-" + cartItemId)?.remove();
-            await loadCart();
+            const auth = await getFirebaseAuth();
+            await fetchAndRenderCart(auth.currentUser);
             if (typeof window.updateCartBadge === "function") {
               await window.updateCartBadge();
             }
@@ -313,7 +406,9 @@
           }
         };
 
-        loadCart();
+        onAuthStateChanged(await getFirebaseAuth(), async (user) => {
+          await fetchAndRenderCart(user);
+        });
       </script>
     </main>
   </body>

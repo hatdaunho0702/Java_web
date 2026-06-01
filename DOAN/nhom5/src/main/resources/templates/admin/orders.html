@@ -139,9 +139,22 @@
               const opt = document.createElement('option');
               opt.value = st.value;
               opt.textContent = st.label;
-              if (st.value === o.status) opt.selected = true;
+              if (st.value === o.status) {
+                opt.selected = true;
+              } else {
+                const isValid = (o.status === 'PENDING' && (st.value === 'CONFIRMED' || st.value === 'CANCELLED'))
+                             || (o.status === 'CONFIRMED' && (st.value === 'SHIPPING' || st.value === 'CANCELLED'))
+                             || (o.status === 'SHIPPING' && (st.value === 'COMPLETED' || st.value === 'CANCELLED'));
+                if (!isValid) {
+                  opt.disabled = true;
+                }
+              }
               sel.appendChild(opt);
             });
+
+            if (o.status === 'COMPLETED' || o.status === 'CANCELLED') {
+              sel.disabled = true;
+            }
 
             sel.addEventListener('change', async () => {
               const newStatus = sel.value;

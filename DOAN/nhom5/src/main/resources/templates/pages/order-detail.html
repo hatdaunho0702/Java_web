@@ -2,22 +2,244 @@
 <html
   xmlns:th="http://www.thymeleaf.org"
   th:replace="~{layout/base :: layout(~{::title}, ~{::main})}"
-
 >
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chi tiết đơn hàng — ĐiệnMáy Pro</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
   </head>
   <body>
-    <main class="container py-5">
-      <div class="section-title mb-3">Chi tiết đơn hàng</div>
-      <div class="admin-card p-4">
-        <div th:if="${orderId != null}">
-          Mã đơn: <strong th:text="${orderId}">0</strong>
-        </div>
-        <div th:unless="${orderId != null}">Chưa có dữ liệu đơn hàng.</div>
+    <main class="container py-5" th:attr="data-order-id=${orderId}" id="order-detail-root">
+      <!-- Breadcrumbs -->
+      <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb cyber-breadcrumb">
+          <li class="breadcrumb-item cyber-breadcrumb-item"><a href="/">Home</a></li>
+          <li class="breadcrumb-item cyber-breadcrumb-item"><a href="/orders">Đơn hàng</a></li>
+          <li class="breadcrumb-item active fw-bold text-black" aria-current="page">Chi tiết đơn hàng</li>
+        </ol>
+      </nav>
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="section-title mb-0">Chi tiết <span>đơn hàng</span></div>
+        <a href="/orders" class="btn btn-outline-dark" style="border-radius: 8px;">
+          <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
+        </a>
       </div>
+
+      <div id="order-detail-content" class="reveal-on-scroll">
+        <div class="text-center py-5 bg-white rounded-4 border">
+          <div class="spinner-border text-dark" role="status">
+            <span class="visually-hidden">Đang tải...</span>
+          </div>
+          <div class="mt-2 text-muted">Đang tải thông tin đơn hàng...</div>
+        </div>
+      </div>
+
+      <script type="module">
+        import { getFirebaseAuth } from "/js/firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        const orderId = document.getElementById("order-detail-root").dataset.orderId;
+
+        function formatVnd(value) {
+          return Number(value || 0).toLocaleString("vi-VN") + "đ";
+        }
+
+        const statusLabel = {
+          PENDING: "⏳ Chờ xác nhận",
+          CONFIRMED: "✅ Đã xác nhận",
+          SHIPPING: "🚚 Đang giao",
+          COMPLETED: "🎉 Hoàn thành",
+          CANCELLED: "❌ Đã hủy",
+        };
+
+        const paymentMethodLabel = {
+          COD: "💵 Thanh toán khi giao hàng (COD)",
+          BANK: "💳 Chuyển khoản ngân hàng",
+        };
+
+        const paymentStatusLabel = {
+          UNPAID: "🔴 Chưa thanh toán",
+          PAID: "🟢 Đã thanh toán",
+          REFUNDED: "🔵 Đã hoàn tiền",
+        };
+
+        onAuthStateChanged(await getFirebaseAuth(), async (user) => {
+          if (!user) {
+            window.location.href = `/login?redirect=/orders/${orderId}`;
+            return;
+          }
+          const token = await user.getIdToken();
+          try {
+            const res = await fetch(`/api/orders/${orderId}`, {
+              headers: { Authorization: "Bearer " + token },
+            });
+            if (!res.ok) {
+              throw new Error("Không thể tải thông tin đơn hàng");
+            }
+            const order = await res.json();
+            renderOrderDetail(order);
+          } catch (err) {
+            console.error(err);
+            document.getElementById("order-detail-content").innerHTML = `
+              <div class="alert alert-danger py-4 text-center">
+                <i class="bi bi-exclamation-triangle-fill fs-3 mb-2 d-block"></i>
+                <h5>Lỗi tải thông tin đơn hàng</h5>
+                <p class="mb-0 text-muted">${err.message || ""}</p>
+              </div>`;
+          }
+        });
+
+        function renderOrderDetail(order) {
+          const itemsHtml = order.items.map(item => {
+            const imgOrEmoji = item.productImage
+              ? `<img src="${item.productImage}" style="width:60px;height:60px;object-fit:cover;border-radius:8px">`
+              : `<div style="width:60px;height:60px;background:#f0f0f0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px">📦</div>`;
+            return `
+              <div class="d-flex align-items-center justify-content-between py-3 border-bottom">
+                <div class="d-flex align-items-center gap-3">
+                  ${imgOrEmoji}
+                  <div>
+                    <div class="fw-bold" style="font-size:14px">${item.productName}</div>
+                    <small class="text-muted">Số lượng: ${item.quantity} x ${formatVnd(item.unitPrice)}</small>
+                  </div>
+                </div>
+                <div class="fw-bold text-dark">${formatVnd(item.subtotal)}</div>
+              </div>`;
+          }).join("");
+
+          const statusBadgeClass = `badge-${order.status}`;
+          const isCancelable = order.status === "PENDING";
+
+          document.getElementById("order-detail-content").innerHTML = `
+            <div class="row g-4">
+              <!-- Left Column: Items and Billing -->
+              <div class="col-lg-8">
+                <div class="admin-card mb-4">
+                  <div class="admin-card-header d-flex justify-content-between align-items-center">
+                    <span>📦 Danh sách sản phẩm</span>
+                    <span class="badge bg-dark">${order.items.length} mặt hàng</span>
+                  </div>
+                  <div class="p-3">
+                    ${itemsHtml}
+                  </div>
+                </div>
+
+                <div class="admin-card">
+                  <div class="admin-card-header">💸 Chi tiết thanh toán</div>
+                  <div class="p-4">
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="text-muted">Tạm tính:</span>
+                      <span>${formatVnd(order.subtotal)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="text-muted">Giảm giá:</span>
+                      <span style="color:var(--primary)">-${formatVnd(order.discountAmount)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="text-muted">Phí vận chuyển:</span>
+                      <span>${Number(order.shippingFee) === 0 ? "Miễn phí" : formatVnd(order.shippingFee)}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-0">
+                      <strong class="fs-5">Tổng thanh toán:</strong>
+                      <strong class="fs-5 text-dark" style="color:var(--primary)!important">${formatVnd(order.totalAmount)}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Delivery and Status -->
+              <div class="col-lg-4">
+                <div class="admin-card mb-4">
+                  <div class="admin-card-header">ℹ️ Thông tin đơn hàng</div>
+                  <div class="p-4">
+                    <div class="mb-3">
+                      <small class="text-muted d-block">Mã đơn hàng</small>
+                      <strong class="fs-6">#${order.orderCode}</strong>
+                    </div>
+                    <div class="mb-3">
+                      <small class="text-muted d-block">Thời gian đặt hàng</small>
+                      <span>${new Date(order.createdAt).toLocaleString("vi-VN")}</span>
+                    </div>
+                    <div class="mb-3">
+                      <small class="text-muted d-block">Trạng thái đơn hàng</small>
+                      <span class="badge-status ${statusBadgeClass}">${statusLabel[order.status]}</span>
+                    </div>
+                    <div class="mb-3">
+                      <small class="text-muted d-block">Phương thức thanh toán</small>
+                      <span>${paymentMethodLabel[order.paymentMethod] || order.paymentMethod}</span>
+                    </div>
+                    <div class="mb-0">
+                      <small class="text-muted d-block">Trạng thái thanh toán</small>
+                      <span>${paymentStatusLabel[order.paymentStatus] || order.paymentStatus}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="admin-card mb-4">
+                  <div class="admin-card-header">🚚 Thông tin nhận hàng</div>
+                  <div class="p-4">
+                    <div class="mb-3">
+                      <small class="text-muted d-block">Người nhận</small>
+                      <strong>${order.recipientName}</strong>
+                    </div>
+                    <div class="mb-3">
+                      <small class="text-muted d-block">Số điện thoại</small>
+                      <span>${order.recipientPhone}</span>
+                    </div>
+                    <div class="mb-3">
+                      <small class="text-muted d-block">Địa chỉ giao hàng</small>
+                      <span>${order.shippingAddress}</span>
+                    </div>
+                    <div class="mb-0">
+                      <small class="text-muted d-block">Ghi chú từ khách hàng</small>
+                      <span class="text-muted italic">${order.note || "Không có ghi chú"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                ${isCancelable ? `
+                  <div class="d-grid gap-2">
+                    <button class="btn btn-danger py-3" style="border-radius:12px;font-weight:600" onclick="cancelOrderDetail(${order.id})">
+                      <i class="bi bi-trash-fill me-2"></i>Hủy đơn hàng
+                    </button>
+                  </div>
+                ` : ""}
+              </div>
+            </div>`;
+
+          if (typeof window.initScrollReveal === "function") {
+            window.initScrollReveal();
+          }
+        }
+
+        window.cancelOrderDetail = async function (orderId) {
+          if (!confirm("Bạn chắc chắn muốn hủy đơn hàng này?")) return;
+          const auth = await getFirebaseAuth();
+          const token = await auth.currentUser.getIdToken();
+          try {
+            const res = await fetch(`/api/orders/${orderId}/cancel`, {
+              method: "PATCH",
+              headers: { Authorization: "Bearer " + token },
+            });
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err.message || "Không thể hủy đơn hàng");
+            }
+            window.showToast?.("Đã hủy đơn hàng thành công", "success");
+            setTimeout(() => {
+              window.location.href = "/orders";
+            }, 1000);
+          } catch (e) {
+            window.showToast?.(e.message || "Không thể hủy đơn hàng", "error");
+          }
+        };
+      </script>
     </main>
   </body>
 </html>

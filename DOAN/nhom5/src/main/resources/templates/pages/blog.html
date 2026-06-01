@@ -28,11 +28,9 @@
 
           <!-- Featured post -->
           <div class="blog-featured mb-4">
-            <div style="position:absolute;inset:0;
-                        background:var(--gradient-hero);
-                        display:flex;align-items:center;
-                        justify-content:center;
-                        font-size:100px">📱</div>
+            <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&h=600&q=80"
+                 alt="Featured Post"
+                 style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">
             <div class="blog-featured-overlay"></div>
             <div class="blog-featured-content">
               <span style="background:var(--primary);
@@ -104,11 +102,10 @@
 
             <div class="col-md-6" data-cat="phone">
               <div class="blog-card">
-                <div class="blog-img"
-                     style="background:linear-gradient(135deg,#667eea,#764ba2)">
-                  📱
+                <div class="blog-img" style="background: none;">
+                  <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=600&h=400&q=80" alt="Samsung Galaxy S25 Ultra" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
                   <span class="blog-category"
-                        style="background:var(--accent)">
+                        style="background:var(--accent); z-index: 1;">
                     Điện thoại
                   </span>
                 </div>
@@ -145,11 +142,10 @@
 
             <div class="col-md-6" data-cat="laptop">
               <div class="blog-card">
-                <div class="blog-img"
-                     style="background:linear-gradient(135deg,#f5576c,#f093fb)">
-                  💻
+                <div class="blog-img" style="background: none;">
+                  <img src="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=600&h=400&q=80" alt="MacBook vs Dell" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
                   <span class="blog-category"
-                        style="background:linear-gradient(135deg,#f5576c,#f093fb)">
+                        style="background:linear-gradient(135deg,#f5576c,#f093fb); z-index: 1;">
                     Laptop
                   </span>
                 </div>
@@ -186,11 +182,10 @@
 
             <div class="col-md-6" data-cat="tips">
               <div class="blog-card">
-                <div class="blog-img"
-                     style="background:linear-gradient(135deg,#43e97b,#38f9d7)">
-                  💡
+                <div class="blog-img" style="background: none;">
+                  <img src="https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=600&h=400&q=80" alt="Phone battery tips" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
                   <span class="blog-category"
-                        style="background:#43e97b">
+                        style="background:#43e97b; z-index: 1;">
                     Mẹo hay
                   </span>
                 </div>
@@ -227,11 +222,10 @@
 
             <div class="col-md-6" data-cat="tv">
               <div class="blog-card">
-                <div class="blog-img"
-                     style="background:linear-gradient(135deg,#4facfe,#00f2fe)">
-                  📺
+                <div class="blog-img" style="background: none;">
+                  <img src="https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=600&h=400&q=80" alt="OLED vs QLED TV" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
                   <span class="blog-category"
-                        style="background:#4facfe">
+                        style="background:#4facfe; z-index: 1;">
                     Tivi
                   </span>
                 </div>
@@ -268,11 +262,10 @@
 
             <div class="col-md-6" data-cat="phone">
               <div class="blog-card">
-                <div class="blog-img"
-                     style="background:linear-gradient(135deg,#F7971E,#FFD200)">
-                  🔋
+                <div class="blog-img" style="background: none;">
+                  <img src="https://images.unsplash.com/photo-1565849906663-bd4718c8e19e?auto=format&fit=crop&w=600&h=400&q=80" alt="Rugged phone" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
                   <span class="blog-category"
-                        style="background:#F7971E">
+                        style="background:#F7971E; z-index: 1;">
                     Điện thoại
                   </span>
                 </div>
@@ -309,11 +302,10 @@
 
             <div class="col-md-6" data-cat="laptop">
               <div class="blog-card">
-                <div class="blog-img"
-                     style="background:linear-gradient(135deg,#a18cd1,#fbc2eb)">
-                  🖥️
+                <div class="blog-img" style="background: none;">
+                  <img src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&h=400&q=80" alt="Gaming Laptop" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
                   <span class="blog-category"
-                        style="background:#a18cd1">
+                        style="background:#a18cd1; z-index: 1;">
                     Laptop
                   </span>
                 </div>
@@ -366,7 +358,7 @@
             <h6 style="font-weight:700;margin-bottom:16px">Bài viết phổ biến</h6>
             <div class="d-flex flex-column gap-2">
               <div class="blog-sidebar-item" onclick="searchTag('iPhone')">
-                <div class="blog-sidebar-thumb" style="background:linear-gradient(135deg,#667eea,#764ba2); color:white;">📱</div>
+                <img class="blog-sidebar-thumb" src="https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=150&h=150&q=80" alt="iPhone 15 Pro" style="object-fit:cover;">
                 <div>
                   <h6 style="font-size:13px; font-weight:700; margin:0 0 4px; line-height:1.4;">
                     Đánh giá chi tiết iPhone 15 Pro sau 6 tháng sử dụng
@@ -377,7 +369,7 @@
                 </div>
               </div>
               <div class="blog-sidebar-item" onclick="searchTag('Laptop')">
-                <div class="blog-sidebar-thumb" style="background:linear-gradient(135deg,#f5576c,#f093fb); color:white;">💻</div>
+                <img class="blog-sidebar-thumb" src="https://images.unsplash.com/photo-1496181130204-755241544e35?auto=format&fit=crop&w=150&h=150&q=80" alt="Office laptop" style="object-fit:cover;">
                 <div>
                   <h6 style="font-size:13px; font-weight:700; margin:0 0 4px; line-height:1.4;">
                     Top 5 laptop văn phòng mỏng nhẹ đáng mua nhất 2024
@@ -388,7 +380,7 @@
                 </div>
               </div>
               <div class="blog-sidebar-item" onclick="searchTag('Tivi')">
-                <div class="blog-sidebar-thumb" style="background:linear-gradient(135deg,#4facfe,#00f2fe); color:white;">📺</div>
+                <img class="blog-sidebar-thumb" src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=150&h=150&q=80" alt="TV sizing" style="object-fit:cover;">
                 <div>
                   <h6 style="font-size:13px; font-weight:700; margin:0 0 4px; line-height:1.4;">
                     Kinh nghiệm chọn kích thước Tivi phù hợp với phòng khách
