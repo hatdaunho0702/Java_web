@@ -20,6 +20,7 @@ public class ProductDetailResponse {
     private BigDecimal salePrice;
     private Integer stockQty;
     private boolean active;
+    private boolean featured;
     private String thumbnailUrl;
     private Double avgRating;
     private Double averageRating;
@@ -29,6 +30,7 @@ public class ProductDetailResponse {
     private Long categoryId;
     private Long brandId;
     private List<String> imageUrls;
+    private List<com.dienmay.entity.nhom5.entity.ProductImage> images;
     private List<ProductSpecDto> specs;
     private List<ReviewDto> reviews;
     private List<ProductResponse> related;

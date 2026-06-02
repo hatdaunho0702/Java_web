@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface InventoryLogRepository extends JpaRepository<InventoryLog, Long> {
+    void deleteByProductId(Long productId);
 }

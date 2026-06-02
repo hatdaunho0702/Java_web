@@ -20,4 +20,5 @@ public class ProductResponse {
     private Double avgRating;
     private Integer stockQty;
     private Integer soldQty;
+    private Boolean active;
 }

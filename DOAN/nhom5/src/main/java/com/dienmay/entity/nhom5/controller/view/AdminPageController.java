@@ -23,6 +23,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 @RequestMapping("/admin")
@@ -57,13 +61,22 @@ public class AdminPageController {
     }
 
     @GetMapping("/products")
-    public String products(Model model) {
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+    public String products(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(size, 1), Sort.by(Sort.Direction.DESC, "createdAt"));
         model.addAttribute("pageTitle", "Quản lý sản phẩm");
         model.addAttribute("activePage", "products");
-        model.addAttribute("products", productService.getAdminProducts(null, null, null, pageable));
+        model.addAttribute("products", productService.getAdminProducts(keyword, categoryId, isActive, pageable));
         model.addAttribute("categories", categoryRepository.findAll());
         model.addAttribute("brands", brandRepository.findAll());
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("categoryId", categoryId);
+        model.addAttribute("isActive", isActive);
         return "admin/products";
     }
 
@@ -80,30 +93,96 @@ public class AdminPageController {
 
     @GetMapping("/products/{id}/edit")
     public String editProduct(@PathVariable Long id, Model model) {
-        ProductDetailResponse product = productService.getProductById(id);
-        model.addAttribute("pageTitle", "Sửa sản phẩm");
-        model.addAttribute("activePage", "products");
-        List<com.dienmay.entity.nhom5.dto.request.ProductSpecRequest> specs = product.getSpecs() == null ? null : product.getSpecs().stream()
-                .map(s -> new com.dienmay.entity.nhom5.dto.request.ProductSpecRequest(s.getKey(), s.getValue()))
-                .toList();
+        try {
+            ProductDetailResponse product = productService.getProductById(id);
 
-        model.addAttribute("product", CreateProductRequest.builder()
-                .name(product.getName())
-                .slug(product.getSlug())
-                .description(product.getDescription())
-                .originalPrice(product.getOriginalPrice())
-                .salePrice(product.getSalePrice())
-                .stockQty(product.getStockQty())
-                .categoryId(product.getCategoryId())
-                .brandId(product.getBrandId())
-                .specs(specs)
-                .build());
-        model.addAttribute("imageUrls", product.getImageUrls());
-        model.addAttribute("id", id);
-        model.addAttribute("categories", categoryRepository.findAll());
-        model.addAttribute("brands", brandRepository.findAll());
-        model.addAttribute("isEdit", true);
-        return "admin/product-form";
+            model.addAttribute("activePage", "products");
+            model.addAttribute("pageTitle", "Sửa sản phẩm — " + product.getName());
+            model.addAttribute("product", product);
+            model.addAttribute("isEdit", true);
+            model.addAttribute("productId", id);
+
+            // Load danh mục + thương hiệu
+            model.addAttribute("categories", categoryRepository.findAll());
+            model.addAttribute("brands", brandRepository.findAll());
+
+            return "admin/product-form";
+
+        } catch (com.dienmay.entity.nhom5.exception.ResourceNotFoundException e) {
+            return "redirect:/admin/products";
+        } catch (Exception e) {
+            return "redirect:/admin/products";
+        }
+    }
+
+    @PostMapping("/products")
+    public String saveProduct(
+            @ModelAttribute CreateProductRequest req,
+            @RequestParam(value = "specKeys", required = false) List<String> specKeys,
+            @RequestParam(value = "specValues", required = false) List<String> specValues,
+            @RequestParam("images") MultipartFile[] images,
+            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        try {
+            List<com.dienmay.entity.nhom5.dto.request.ProductSpecRequest> specs = new java.util.ArrayList<>();
+            if (specKeys != null && specValues != null) {
+                for (int i = 0; i < Math.min(specKeys.size(), specValues.size()); i++) {
+                    String k = specKeys.get(i);
+                    String v = specValues.get(i);
+                    if (k != null && !k.isBlank() && v != null && !v.isBlank()) {
+                        specs.add(com.dienmay.entity.nhom5.dto.request.ProductSpecRequest.builder()
+                                .key(k.trim())
+                                .value(v.trim())
+                                .build());
+                    }
+                }
+            }
+            req.setSpecs(specs);
+
+            productService.createProduct(req, images);
+            redirectAttributes.addFlashAttribute("toastMessage", "Thêm sản phẩm thành công!");
+            redirectAttributes.addFlashAttribute("toastType", "success");
+            return "redirect:/admin/products";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("toastMessage", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("toastType", "danger");
+            return "redirect:/admin/products/new";
+        }
+    }
+
+    @PostMapping("/products/{id}/edit")
+    public String updateProduct(
+            @PathVariable Long id,
+            @ModelAttribute CreateProductRequest req,
+            @RequestParam(value = "specKeys", required = false) List<String> specKeys,
+            @RequestParam(value = "specValues", required = false) List<String> specValues,
+            @RequestParam(value = "images", required = false) MultipartFile[] images,
+            @RequestParam(value = "deleteImageIds", required = false) List<Long> deleteImageIds,
+            org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        try {
+            List<com.dienmay.entity.nhom5.dto.request.ProductSpecRequest> specs = new java.util.ArrayList<>();
+            if (specKeys != null && specValues != null) {
+                for (int i = 0; i < Math.min(specKeys.size(), specValues.size()); i++) {
+                    String k = specKeys.get(i);
+                    String v = specValues.get(i);
+                    if (k != null && !k.isBlank() && v != null && !v.isBlank()) {
+                        specs.add(com.dienmay.entity.nhom5.dto.request.ProductSpecRequest.builder()
+                                .key(k.trim())
+                                .value(v.trim())
+                                .build());
+                    }
+                }
+            }
+            req.setSpecs(specs);
+
+            productService.updateProductFromForm(id, req, images, deleteImageIds);
+            redirectAttributes.addFlashAttribute("toastMessage", "Cập nhật sản phẩm thành công!");
+            redirectAttributes.addFlashAttribute("toastType", "success");
+            return "redirect:/admin/products";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("toastMessage", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("toastType", "danger");
+            return "redirect:/admin/products/" + id + "/edit";
+        }
     }
 
     @GetMapping("/orders")
@@ -153,5 +232,12 @@ public class AdminPageController {
         model.addAttribute("pageTitle", "Tin nhắn liên hệ");
         model.addAttribute("unreadCount", contactMessageRepository.countUnread());
         return "admin/contact";
+    }
+
+    @GetMapping("/reviews")
+    public String reviews(Model model) {
+        model.addAttribute("pageTitle", "Quản lý đánh giá");
+        model.addAttribute("activePage", "reviews");
+        return "admin/reviews";
     }
 }

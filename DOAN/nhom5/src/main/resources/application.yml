@@ -68,6 +68,10 @@ app:
     product-image-dir: ${upload.dir}
   inventory:
     low-stock-threshold: ${inventory.low-stock-threshold}
+  ai:
+    github-token: ${GITHUB_MODELS_TOKEN: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}
+    model: gpt-4o-mini
+    endpoint: https://models.inference.ai.azure.com
 
 springdoc:
   api-docs:

@@ -27,6 +27,8 @@ import com.dienmay.entity.nhom5.repository.ProductRepository;
 import com.dienmay.entity.nhom5.repository.ProductSpecRepository;
 import com.dienmay.entity.nhom5.repository.ReviewRepository;
 import com.dienmay.entity.nhom5.repository.UserRepository;
+import com.dienmay.entity.nhom5.repository.CartItemRepository;
+import com.dienmay.entity.nhom5.repository.InventoryLogRepository;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import java.io.IOException;
@@ -67,6 +69,8 @@ public class ProductService {
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final OrderItemRepository orderItemRepository;
+    private final CartItemRepository cartItemRepository;
+    private final InventoryLogRepository inventoryLogRepository;
 
     @Value("${app.storage.product-image-dir:./uploads/products}")
     private String productImageDir;
@@ -259,7 +263,7 @@ public class ProductService {
                 .order(eligibleItem.getOrder())
                 .rating(request.getRating())
                 .comment(request.getComment().trim())
-                .status(ReviewStatus.PENDING)
+                .status(ReviewStatus.APPROVED)
                 .createdAt(LocalDateTime.now())
                 .build());
 
@@ -268,8 +272,8 @@ public class ProductService {
 
     private ProductDetailResponse toProductDetailResponse(Product product) {
 
-        List<String> imageUrls = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId())
-                .stream()
+        List<ProductImage> images = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId());
+        List<String> imageUrls = images.stream()
                 .map(ProductImage::getImageUrl)
                 .toList();
 
@@ -309,7 +313,8 @@ public class ProductService {
                 .originalPrice(product.getOriginalPrice())
                 .salePrice(product.getSalePrice())
                 .stockQty(product.getStockQty())
-            .active(Boolean.TRUE.equals(product.getIsActive()))
+                .active(Boolean.TRUE.equals(product.getIsActive()))
+                .featured(Boolean.TRUE.equals(product.getIsFeatured()))
                 .thumbnailUrl(product.getThumbnailUrl())
                 .avgRating(avgRating)
             .averageRating(avgRating)
@@ -319,6 +324,7 @@ public class ProductService {
             .categoryId(product.getCategory() == null ? null : product.getCategory().getId())
             .brandId(product.getBrand() == null ? null : product.getBrand().getId())
                 .imageUrls(imageUrls)
+                .images(images)
                 .specs(specs)
             .reviews(reviews)
             .related(related)
@@ -338,6 +344,9 @@ public class ProductService {
 
     @Transactional
     public ProductDetailResponse createProduct(CreateProductRequest req, MultipartFile[] images) {
+        if (images == null || images.length == 0 || java.util.Arrays.stream(images).allMatch(MultipartFile::isEmpty)) {
+            throw new BadRequestException("Sản phẩm phải có ít nhất 1 hình ảnh");
+        }
         validateProductRequest(req);
 
         if (productRepository.findBySlug(req.getSlug()).isPresent()) {
@@ -377,7 +386,7 @@ public class ProductService {
         validateProductRequest(req);
 
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm id=" + id));
 
         if (productRepository.findBySlug(req.getSlug()).stream().anyMatch(p -> !p.getId().equals(id))) {
             throw new BadRequestException("Slug sản phẩm đã tồn tại trong hệ thống");
@@ -396,13 +405,15 @@ public class ProductService {
         product.setOriginalPrice(req.getOriginalPrice());
         product.setSalePrice(req.getSalePrice());
         product.setStockQty(req.getStockQty() == null ? product.getStockQty() : req.getStockQty());
+        product.setIsActive(req.getIsActive() != null ? req.getIsActive() : true);
         product.setIsFeatured(Boolean.TRUE.equals(req.getIsFeatured()));
         product.setUpdatedAt(LocalDateTime.now());
-        productRepository.save(product);
+        
+        Product saved = productRepository.save(product);
 
         // Đồng bộ ảnh cũ nếu danh sách remainImages được chỉ định
         if (req.getRemainImages() != null) {
-            List<ProductImage> existingImages = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId());
+            List<ProductImage> existingImages = productImageRepository.findByProductIdOrderBySortOrderAsc(saved.getId());
             List<ProductImage> toDelete = new ArrayList<>();
             for (ProductImage img : existingImages) {
                 if (!req.getRemainImages().contains(img.getImageUrl())) {
@@ -421,36 +432,33 @@ public class ProductService {
                 }
                 productImageRepository.delete(img);
             }
-        } else if (newImages != null && newImages.length > 0) {
-            productImageRepository.deleteByProductId(product.getId());
-            product.setThumbnailUrl(null);
         }
 
         // Lưu thêm ảnh mới
         if (newImages != null && newImages.length > 0) {
-            saveImages(product, newImages);
+            saveImages(saved, newImages);
         }
 
         // Sắp xếp và cập nhật lại ảnh thu nhỏ (thumbnail)
-        List<ProductImage> finalImages = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId());
+        List<ProductImage> finalImages = productImageRepository.findByProductIdOrderBySortOrderAsc(saved.getId());
         for (int i = 0; i < finalImages.size(); i++) {
             ProductImage img = finalImages.get(i);
             img.setSortOrder(i);
             productImageRepository.save(img);
         }
         if (!finalImages.isEmpty()) {
-            product.setThumbnailUrl(finalImages.get(0).getImageUrl());
+            saved.setThumbnailUrl(finalImages.get(0).getImageUrl());
         } else {
-            product.setThumbnailUrl(null);
+            saved.setThumbnailUrl(null);
         }
-        productRepository.save(product);
+        productRepository.save(saved);
 
         if (req.getSpecs() != null) {
-            productSpecRepository.deleteByProductId(product.getId());
-            saveSpecs(product, req.getSpecs());
+            productSpecRepository.deleteByProductId(saved.getId());
+            saveSpecs(saved, req.getSpecs());
         }
 
-        return getProductBySlug(product.getSlug());
+        return getProductById(saved.getId());
     }
 
     @Transactional
@@ -463,41 +471,48 @@ public class ProductService {
     }
 
     @Transactional
-    public void deleteProduct(Long id) {
+    public String deleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm với ID: " + id));
 
-        boolean hasOrders = orderItemRepository.existsByProductId(product.getId());
+        boolean hasOrders = orderItemRepository.existsByProductId(id);
+
         if (hasOrders) {
-            // Soft delete: chuyển sang inactive
+            // Chuyển sang inactive thay vì xóa thật để giữ lịch sử đơn hàng
             product.setIsActive(false);
             product.setUpdatedAt(LocalDateTime.now());
             productRepository.save(product);
+            log.info("Product deactivated id={} because it has associated orders", id);
+            return "Sản phẩm đã có lịch sử đơn hàng, hệ thống đã chuyển sang 'Đã ẩn' để bảo toàn dữ liệu.";
         } else {
-            // Hard delete: xóa tất cả thực thể liên quan
-            productImageRepository.deleteByProductId(product.getId());
-            productSpecRepository.deleteByProductId(product.getId());
-            reviewRepository.deleteByProductId(product.getId());
-            
-            // Xóa file ảnh vật lý trên đĩa
-            Path basePath = Paths.get(productImageDir, String.valueOf(product.getId()));
-            try {
-                if (Files.exists(basePath)) {
-                    Files.walk(basePath)
-                            .sorted((p1, p2) -> p2.compareTo(p1))
-                            .forEach(p -> {
-                                try {
-                                    Files.delete(p);
-                                } catch (IOException e) {
-                                    log.error("Lỗi xóa tệp vật lý {}: {}", p, e.getMessage());
-                                }
-                            });
+            // Xóa thật nếu chưa có đơn hàng
+            // 1. Xóa specs
+            productSpecRepository.deleteByProductId(id);
+            // 2. Xóa cart items
+            cartItemRepository.deleteByProductId(id);
+            // 3. Xóa reviews
+            reviewRepository.deleteByProductId(id);
+            // 4. Xóa inventory logs
+            inventoryLogRepository.deleteByProductId(id);
+            // 5. Xóa images (vật lý và db)
+            List<ProductImage> images = productImageRepository.findByProductIdOrderBySortOrderAsc(id);
+            for (ProductImage img : images) {
+                try {
+                    String relativePath = img.getImageUrl();
+                    if (relativePath.startsWith("/")) {
+                        relativePath = "." + relativePath;
+                    }
+                    Files.deleteIfExists(Paths.get(relativePath));
+                } catch (Exception e) {
+                    log.error("Lỗi xóa file ảnh vật lý khi xóa sản phẩm: {}", e.getMessage());
                 }
-            } catch (Exception e) {
-                log.error("Lỗi xóa thư mục ảnh sản phẩm {}: {}", basePath, e.getMessage());
             }
+            productImageRepository.deleteByProductId(id);
 
+            // 6. Xóa product
             productRepository.delete(product);
+            log.info("Product deleted permanently id={}", id);
+            return "Đã xóa vĩnh viễn sản phẩm khỏi hệ thống.";
         }
     }
 
@@ -533,10 +548,14 @@ public class ProductService {
             return;
         }
 
+        List<ProductImage> existingImages = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId());
+        boolean hasPrimary = existingImages.stream().anyMatch(img -> Boolean.TRUE.equals(img.getIsPrimary()));
+
         List<ProductImage> savedImages = new ArrayList<>();
         Path basePath = Paths.get(productImageDir, String.valueOf(product.getId()));
         try {
             Files.createDirectories(basePath);
+            int validCount = 0;
             for (int i = 0; i < images.length; i++) {
                 MultipartFile image = images[i];
                 if (image == null || image.isEmpty()) {
@@ -574,12 +593,19 @@ public class ProductService {
                     imageUrl = "/" + imageUrl;
                 }
 
+                boolean isPrimary = false;
+                if (!hasPrimary && savedImages.isEmpty()) {
+                    isPrimary = true;
+                }
+
                 ProductImage productImage = ProductImage.builder()
                         .product(product)
                         .imageUrl(imageUrl)
-                        .sortOrder(i)
+                        .isPrimary(isPrimary)
+                        .sortOrder(existingImages.size() + validCount)
                         .build();
                 savedImages.add(productImage);
+                validCount++;
             }
         } catch (IOException e) {
             throw new BadRequestException("Không thể lưu ảnh sản phẩm: " + e.getMessage());
@@ -587,10 +613,14 @@ public class ProductService {
 
         if (!savedImages.isEmpty()) {
             productImageRepository.saveAll(savedImages);
-            if (product.getThumbnailUrl() == null || product.getThumbnailUrl().isBlank()) {
-                product.setThumbnailUrl(savedImages.get(0).getImageUrl());
-                productRepository.save(product);
-            }
+            List<ProductImage> finalImages = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId());
+            ProductImage primaryImg = finalImages.stream()
+                .filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
+                .findFirst()
+                .orElse(finalImages.get(0));
+
+            product.setThumbnailUrl(primaryImg.getImageUrl());
+            productRepository.save(product);
         }
     }
 
@@ -630,6 +660,81 @@ public class ProductService {
                 .avgRating(avgRating)
                 .stockQty(product.getStockQty())
                 .soldQty(product.getSoldQty())
+                .active(Boolean.TRUE.equals(product.getIsActive()))
                 .build();
+    }
+
+    @Transactional
+    public void updateProductFromForm(Long id, CreateProductRequest req, MultipartFile[] newImages, List<Long> deleteImageIds) {
+        validateProductRequest(req);
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm id=" + id));
+
+        if (productRepository.findBySlug(req.getSlug()).stream().anyMatch(p -> !p.getId().equals(id))) {
+            throw new BadRequestException("Slug sản phẩm đã tồn tại trong hệ thống");
+        }
+
+        Category category = categoryRepository.findById(req.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
+        Brand brand = brandRepository.findById(req.getBrandId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thương hiệu"));
+
+        product.setName(req.getName().trim());
+        product.setSlug(req.getSlug());
+        product.setDescription(req.getDescription());
+        product.setCategory(category);
+        product.setBrand(brand);
+        product.setOriginalPrice(req.getOriginalPrice());
+        product.setSalePrice(req.getSalePrice());
+        product.setStockQty(req.getStockQty() == null ? product.getStockQty() : req.getStockQty());
+        product.setIsActive(req.getIsActive() != null ? req.getIsActive() : true);
+        product.setIsFeatured(Boolean.TRUE.equals(req.getIsFeatured()));
+        product.setUpdatedAt(LocalDateTime.now());
+        
+        Product saved = productRepository.save(product);
+
+        // Delete image records from DB (without deleting file physically as requested)
+        if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
+            for (Long imgId : deleteImageIds) {
+                productImageRepository.deleteById(imgId);
+            }
+        }
+
+        // Save new images
+        if (newImages != null && newImages.length > 0 && java.util.Arrays.stream(newImages).anyMatch(img -> img != null && !img.isEmpty())) {
+            saveImages(saved, newImages);
+        }
+
+        // Ensure primary image logic
+        List<ProductImage> finalImages = productImageRepository.findByProductIdOrderBySortOrderAsc(saved.getId());
+        if (finalImages.isEmpty()) {
+            saved.setThumbnailUrl(null);
+        } else {
+            boolean hasPrimary = finalImages.stream().anyMatch(img -> Boolean.TRUE.equals(img.getIsPrimary()));
+            if (!hasPrimary) {
+                ProductImage first = finalImages.get(0);
+                first.setIsPrimary(true);
+                productImageRepository.save(first);
+            }
+
+            for (int i = 0; i < finalImages.size(); i++) {
+                ProductImage img = finalImages.get(i);
+                img.setSortOrder(i);
+                productImageRepository.save(img);
+            }
+
+            ProductImage primaryImg = finalImages.stream()
+                .filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
+                .findFirst()
+                .orElse(finalImages.get(0));
+            saved.setThumbnailUrl(primaryImg.getImageUrl());
+        }
+        productRepository.save(saved);
+
+        if (req.getSpecs() != null) {
+            productSpecRepository.deleteByProductId(saved.getId());
+            saveSpecs(saved, req.getSpecs());
+        }
     }
 }

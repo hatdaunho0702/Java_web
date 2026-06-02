@@ -1,0 +1,273 @@
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đánh giá — Admin</title>
+  </head>
+  <body>
+    <div class="page-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h4 style="font-weight: 800; margin: 0; font-family: 'Sora', sans-serif;">
+            ⭐ Quản lý đánh giá
+          </h4>
+          <p style="color: var(--text-muted); font-size: 13px; margin: 4px 0 0">
+            Xem và kiểm duyệt các đánh giá của khách hàng đối với sản phẩm
+          </p>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; background: white; border: 1px solid var(--border-color) !important;">
+        <div class="card-header bg-transparent py-3 px-4 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <span>Danh sách đánh giá</span>
+          <div style="display: flex; gap: 8px; align-items: center">
+            <input
+              id="filterKeyword"
+              class="form-control form-control-sm"
+              placeholder="Tìm theo sản phẩm, người dùng hoặc nội dung"
+              style="width: 320px; border-radius: 8px; border: 1px solid var(--border-color); height: 38px;"
+            />
+            <button class="btn btn-sm btn-primary px-3 py-2 text-white btn-gradient" style="border: none;" id="btnSearch">Tìm</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table align-middle mb-0 admin-table" id="reviewsTable">
+            <thead class="table-light" style="font-size: 13px; font-weight: 600;">
+              <tr>
+                <th style="padding-left: 24px; width: 60px;">ID</th>
+                <th style="min-width: 200px;">Sản phẩm</th>
+                <th style="min-width: 180px;">Khách hàng</th>
+                <th style="width: 120px;">Đánh giá</th>
+                <th>Nhận xét</th>
+                <th style="width: 150px;">Ngày tạo</th>
+                <th style="width: 100px; padding-right: 24px; text-align: right;">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="reviewsBody" style="font-size: 14px;">
+              <tr id="tplRow" style="display: none">
+                <td style="padding-left: 24px;" class="col-id"></td>
+                <td class="col-product"></td>
+                <td class="col-user"></td>
+                <td class="col-rating"></td>
+                <td class="col-comment"></td>
+                <td class="col-created"></td>
+                <td style="padding-right: 24px; text-align: right;" class="col-action"></td>
+              </tr>
+              <tr>
+                <td colspan="7" class="text-center py-5">
+                  <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                  <span>Đang tải đánh giá...</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination controls -->
+        <div class="card-footer bg-transparent py-3 px-4 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span id="pageInfo" style="font-size: 13px; color: var(--text-muted);">Hiển thị 0 của 0 đánh giá</span>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" id="btnPrev" disabled>Trước</button>
+            <button class="btn btn-sm btn-outline-secondary" id="btnNext" disabled>Sau</button>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        let currentPage = 0;
+        let totalPages = 0;
+        const pageSize = 15;
+        let _adminToken = null;
+
+        async function getAdminToken() {
+          if (_adminToken) return _adminToken;
+          try {
+            if (window.getToken) {
+              _adminToken = await window.getToken();
+            }
+          } catch(e) {}
+          return _adminToken;
+        }
+
+        async function fetchReviews(page = 0) {
+          const keyword = document.getElementById("filterKeyword").value;
+          const qs = new URLSearchParams({ page, size: pageSize });
+          if (keyword) qs.set("keyword", keyword);
+
+          const token = await getAdminToken();
+          const headers = token ? { 'Authorization': 'Bearer ' + token } : await window.getAuthHeaders();
+          if (!headers) return;
+
+          try {
+            const res = await fetch("/api/admin/reviews?" + qs.toString(), {
+              headers: headers,
+            });
+            if (!res.ok) {
+              if (window.showToast) window.showToast("Không thể tải danh sách đánh giá", "danger");
+              return;
+            }
+            const pageData = await res.json();
+            currentPage = pageData.number;
+            totalPages = pageData.totalPages;
+            
+            renderTable(pageData.content);
+            updatePagination(pageData);
+          } catch (e) {
+            console.error(e);
+            if (window.showToast) window.showToast("Lỗi tải đánh giá", "danger");
+          }
+        }
+
+        function renderTable(reviews) {
+          const tbody = document.getElementById("reviewsBody");
+          // Remove all rows except the template row
+          tbody.querySelectorAll("tr:not(#tplRow)").forEach((el) => el.remove());
+          
+          if (!reviews || reviews.length === 0) {
+            tbody.innerHTML = `
+              <tr><td colspan="7" class="text-center py-5">
+                <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
+                <div style="color: var(--text-muted); font-weight: 500;">
+                  Không có đánh giá nào
+                </div>
+              </td></tr>`;
+            return;
+          }
+
+          const tpl = document.getElementById("tplRow");
+          
+          reviews.forEach(rv => {
+            const tr = tpl.cloneNode(true);
+            tr.style.display = "";
+            tr.id = `row-${rv.id}`;
+            
+            tr.querySelector(".col-id").textContent = rv.id;
+            
+            // Product cell with link
+            const prodCell = tr.querySelector(".col-product");
+            if (rv.productName) {
+              const link = document.createElement("a");
+              link.href = `/products/${rv.productSlug}`;
+              link.target = "_blank";
+              link.textContent = rv.productName;
+              link.style.fontWeight = "600";
+              link.style.textDecoration = "none";
+              link.style.color = "var(--text-main)";
+              prodCell.appendChild(link);
+            } else {
+              prodCell.textContent = "(Sản phẩm đã bị xóa)";
+              prodCell.style.color = "var(--text-muted)";
+            }
+
+            // User info cell
+            const userCell = tr.querySelector(".col-user");
+            userCell.innerHTML = `
+              <div style="font-weight: 600;">${rv.userName || "Khách hàng"}</div>
+              <div style="font-size: 12px; color: var(--text-muted);">${rv.userEmail || ""}</div>
+            `;
+
+            // Stars representation
+            const starCell = tr.querySelector(".col-rating");
+            let stars = "";
+            for (let i = 1; i <= 5; i++) {
+              if (i <= rv.rating) {
+                stars += "<span style='color: #f59e0b;'>★</span>";
+              } else {
+                stars += "<span style='color: #ccc;'>☆</span>";
+              }
+            }
+            starCell.innerHTML = `<div style="font-size: 16px;">${stars}</div>`;
+
+            // Comment cell
+            tr.querySelector(".col-comment").textContent = rv.comment || "";
+
+            // Created Date cell
+            tr.querySelector(".col-created").textContent = rv.createdAt
+              ? new Date(rv.createdAt).toLocaleString("vi-VN")
+              : "";
+
+            // Action delete button
+            const actionTd = tr.querySelector(".col-action");
+            const btn = document.createElement("button");
+            btn.className = "btn btn-sm btn-outline-danger";
+            btn.style.borderRadius = "6px";
+            btn.innerHTML = "<i class='ti ti-trash'></i>";
+            btn.title = "Xóa đánh giá";
+            btn.addEventListener("click", () => confirmDelete(rv.id));
+            actionTd.appendChild(btn);
+
+            tbody.appendChild(tr);
+          });
+        }
+
+        function updatePagination(pageData) {
+          const info = document.getElementById("pageInfo");
+          const total = pageData.totalElements;
+          const start = pageData.numberOfElements > 0 ? (pageData.number * pageSize) + 1 : 0;
+          const end = (pageData.number * pageSize) + pageData.numberOfElements;
+          
+          info.textContent = `Hiển thị từ ${start} đến ${end} của ${total} đánh giá`;
+
+          const btnPrev = document.getElementById("btnPrev");
+          const btnNext = document.getElementById("btnNext");
+
+          btnPrev.disabled = pageData.first;
+          btnNext.disabled = pageData.last;
+        }
+
+        async function confirmDelete(id) {
+          if (!confirm("Bạn có chắc chắn muốn xóa đánh giá này không? Hành động này không thể hoàn tác.")) {
+            return;
+          }
+          
+          const token = await getAdminToken();
+          const headers = token ? { 'Authorization': 'Bearer ' + token } : await window.getAuthHeaders();
+          if (!headers) return;
+
+          try {
+            const res = await fetch(`/api/admin/reviews/${id}`, {
+              method: "DELETE",
+              headers: headers
+            });
+
+            if (res.ok) {
+              if (window.showToast) window.showToast("Xóa đánh giá thành công", "success");
+              fetchReviews(currentPage);
+            } else {
+              const err = await res.json().catch(() => ({}));
+              if (window.showToast) window.showToast(err.message || "Xóa đánh giá thất bại", "danger");
+            }
+          } catch(e) {
+            console.error(e);
+            if (window.showToast) window.showToast("Lỗi khi kết nối máy chủ", "danger");
+          }
+        }
+
+        // Search trigger
+        document.getElementById("btnSearch").addEventListener("click", () => fetchReviews(0));
+        document.getElementById("filterKeyword").addEventListener("keyup", (e) => {
+          if (e.key === "Enter") fetchReviews(0);
+        });
+
+        // Prev/Next buttons trigger
+        document.getElementById("btnPrev").addEventListener("click", () => {
+          if (currentPage > 0) fetchReviews(currentPage - 1);
+        });
+        document.getElementById("btnNext").addEventListener("click", () => {
+          if (currentPage < totalPages - 1) fetchReviews(currentPage + 1);
+        });
+
+        // Initialization when token is ready
+        if (window.getToken) {
+          fetchReviews(0);
+        } else {
+          window.addEventListener("authReady", () => fetchReviews(0));
+        }
+      </script>
+    </div>
+  </body>
+</html>

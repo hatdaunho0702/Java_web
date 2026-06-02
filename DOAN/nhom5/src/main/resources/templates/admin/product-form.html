@@ -3,9 +3,13 @@
   th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
 >
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${isEdit ? 'Sửa sản phẩm — ElectraManager' : 'Thêm sản phẩm — ElectraManager'}">Form sản phẩm</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title
+      th:text="${isEdit ? 'Sửa sản phẩm — ElectraManager' : 'Thêm sản phẩm — ElectraManager'}"
+    >
+      Form sản phẩm
+    </title>
   </head>
   <body>
     <div class="page-content">
@@ -17,7 +21,7 @@
           --input-focus: var(--primary);
           --input-text: var(--text-main);
         }
-        
+
         .premium-form-container {
           background: var(--form-bg);
           border: 1px solid var(--border);
@@ -26,7 +30,7 @@
           padding: 2rem;
           transition: var(--transition);
         }
-        
+
         .form-section-title {
           font-size: 15px;
           font-weight: 700;
@@ -40,11 +44,11 @@
           align-items: center;
           gap: 8px;
         }
-        
+
         .form-group-custom {
           margin-bottom: 1.25rem;
         }
-        
+
         .form-label-custom {
           font-size: 13px;
           font-weight: 600;
@@ -52,8 +56,10 @@
           margin-bottom: 6px;
           display: block;
         }
-        
-        .form-input-custom, .form-select-custom, .form-textarea-custom {
+
+        .form-input-custom,
+        .form-select-custom,
+        .form-textarea-custom {
           background: var(--input-bg);
           border: 1px solid var(--input-border);
           border-radius: 8px;
@@ -64,13 +70,15 @@
           transition: all 0.2s ease-in-out;
           width: 100%;
         }
-        
-        .form-input-custom:focus, .form-select-custom:focus, .form-textarea-custom:focus {
+
+        .form-input-custom:focus,
+        .form-select-custom:focus,
+        .form-textarea-custom:focus {
           border-color: var(--input-focus);
           box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
           background: var(--surface);
         }
-        
+
         /* Premium File Upload Dropzone */
         .upload-dropzone {
           border: 2px dashed var(--border);
@@ -88,40 +96,41 @@
           position: relative;
           overflow: hidden;
         }
-        
-        .upload-dropzone:hover, .upload-dropzone.dragover {
+
+        .upload-dropzone:hover,
+        .upload-dropzone.dragover {
           border-color: var(--primary);
           background: rgba(37, 99, 235, 0.02);
         }
-        
+
         .upload-icon {
           font-size: 2.5rem;
           color: var(--primary);
           transition: transform 0.2s ease-in-out;
         }
-        
+
         .upload-dropzone:hover .upload-icon {
           transform: translateY(-4px);
         }
-        
+
         .upload-title {
           font-size: 13.5px;
           font-weight: 600;
           color: var(--text-main);
         }
-        
+
         .upload-subtitle {
           font-size: 11.5px;
           color: var(--text-muted);
         }
-        
+
         .image-preview-container {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
           gap: 12px;
           margin-top: 1rem;
         }
-        
+
         .image-preview-item {
           position: relative;
           aspect-ratio: 1;
@@ -132,16 +141,16 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
           animation: fadeIn 0.3s ease-out;
         }
-        
+
         .image-preview-item img {
           max-width: 100%;
           max-height: 100%;
           object-fit: contain;
         }
-        
+
         .image-preview-remove {
           position: absolute;
           top: 4px;
@@ -158,15 +167,15 @@
           cursor: pointer;
           border: none;
           padding: 0;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
           transition: transform 0.15s ease;
           z-index: 10;
         }
-        
+
         .image-preview-remove:hover {
           transform: scale(1.15);
         }
-        
+
         /* Specs dynamic layout */
         .spec-row {
           display: grid;
@@ -176,76 +185,143 @@
           margin-bottom: 10px;
           animation: slideDown 0.25s ease-out;
         }
-        
+
         .invalid-feedback-custom {
           color: var(--danger);
           font-size: 11.5px;
           font-weight: 600;
           margin-top: 4px;
           display: none;
-          display: flex;
           align-items: center;
           gap: 4px;
         }
-        
+
         .invalid-feedback-custom::before {
-          content: '⚠️';
+          content: "⚠️";
         }
-        
+
         @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.9); }
-          to { opacity: 1; transform: scale(1); }
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
-        
+
         @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-8px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       </style>
       <div class="premium-form-container">
-        <h3 class="panel-title mb-4" th:text="${isEdit ? '✏️ Chỉnh sửa thông tin sản phẩm' : '📦 Thêm sản phẩm mới'}">Form sản phẩm</h3>
-        
-        <form id="productForm" onsubmit="submitProductForm(event)" novalidate>
-          <input type="hidden" id="productId" th:value="${isEdit ? id : ''}">
- 
+        <h3
+          class="panel-title mb-4"
+          th:text="${isEdit ? '✏️ Chỉnh sửa thông tin sản phẩm' : '📦 Thêm sản phẩm mới'}"
+        >
+          Form sản phẩm
+        </h3>
+
+        <form id="productForm" th:action="${isEdit} ? @{/admin/products/{id}/edit(id=${productId})} : @{/admin/products}" method="POST" enctype="multipart/form-data" onsubmit="return validateForm(event)">
+          <input type="hidden" th:if="${isEdit}" name="_method" value="PUT">
+          <input
+            type="hidden"
+            id="productId"
+            th:value="${isEdit ? productId : ''}"
+          />
+          <input
+            type="hidden"
+            id="isEditMode"
+            th:value="${isEdit ? 'true' : 'false'}"
+          />
+
           <!-- BỘ 1: THÔNG TIN CƠ BẢN -->
           <div class="form-section-title">
             <i class="ti ti-info-circle"></i> Thông tin cơ bản
           </div>
           <div class="row g-3 mb-4">
             <div class="col-md-6 form-group-custom">
-              <label class="form-label-custom">Tên sản phẩm</label>
-              <input type="text" class="form-input-custom" id="productName" th:value="${product.name}" placeholder="Ví dụ: iPhone 15 Pro Max 256GB" required oninput="generateSlug(this.value)">
-              <div class="invalid-feedback-custom" id="err-productName" style="display:none">Tên sản phẩm không được để trống và dưới 255 ký tự.</div>
+              <label class="form-label-custom">Tên sản phẩm *</label>
+              <input
+                type="text"
+                class="form-input-custom"
+                id="productName"
+                name="name"
+                th:value="${product?.name}"
+                placeholder="Ví dụ: iPhone 15 Pro Max 256GB"
+                required
+              />
+              <div class="invalid-feedback-custom" id="err-productName">
+                Vui lòng nhập tên sản phẩm.
+              </div>
             </div>
-            
+
             <div class="col-md-6 form-group-custom">
-              <label class="form-label-custom">Slug (Đường dẫn tĩnh)</label>
-              <input type="text" class="form-input-custom" id="productSlug" th:value="${product.slug}" placeholder="iphone-15-pro-max-256gb" required>
-              <div class="invalid-feedback-custom" id="err-productSlug" style="display:none">Slug đường dẫn không được để trống.</div>
+              <label class="form-label-custom">Slug (Đường dẫn tĩnh) *</label>
+              <input
+                type="text"
+                class="form-input-custom"
+                id="productSlug"
+                name="slug"
+                th:value="${product?.slug}"
+                placeholder="iphone-15-pro-max-256gb"
+                required
+              />
+              <div class="invalid-feedback-custom" id="err-productSlug">
+                Vui lòng nhập slug sản phẩm.
+              </div>
             </div>
-            
+
             <div class="col-md-6 form-group-custom">
-              <label class="form-label-custom">Danh mục sản phẩm</label>
-              <select class="form-select-custom" id="productCategory" required>
+              <label class="form-label-custom">Danh mục sản phẩm *</label>
+              <select class="form-select-custom" id="productCategory" name="categoryId" required>
                 <option value="">-- Chọn danh mục --</option>
-                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}" th:selected="${cat.id == product.categoryId}"></option>
+                <option
+                  th:each="cat : ${categories}"
+                  th:value="${cat.id}"
+                  th:text="${cat.name}"
+                  th:selected="${product?.categoryId == cat.id}"
+                ></option>
               </select>
-              <div class="invalid-feedback-custom" id="err-productCategory" style="display:none">Vui lòng chọn một danh mục.</div>
+              <div class="invalid-feedback-custom" id="err-productCategory">
+                Vui lòng chọn danh mục.
+              </div>
             </div>
-            
+
             <div class="col-md-6 form-group-custom">
-              <label class="form-label-custom">Thương hiệu</label>
-              <select class="form-select-custom" id="productBrand" required>
+              <label class="form-label-custom">Thương hiệu *</label>
+              <select class="form-select-custom" id="productBrand" name="brandId" required>
                 <option value="">-- Chọn thương hiệu --</option>
-                <option th:each="brand : ${brands}" th:value="${brand.id}" th:text="${brand.name}" th:selected="${brand.id == product.brandId}"></option>
+                <option
+                  th:each="brand : ${brands}"
+                  th:value="${brand.id}"
+                  th:text="${brand.name}"
+                  th:selected="${product?.brandId == brand.id}"
+                ></option>
               </select>
-              <div class="invalid-feedback-custom" id="err-productBrand" style="display:none">Vui lòng chọn thương hiệu sản phẩm.</div>
+              <div class="invalid-feedback-custom" id="err-productBrand">
+                Vui lòng chọn thương hiệu.
+              </div>
             </div>
 
             <div class="col-md-12 form-group-custom">
               <label class="form-label-custom">Mô tả sản phẩm</label>
-              <textarea class="form-textarea-custom" id="productDescription" rows="4" placeholder="Nhập cấu hình, đặc điểm nổi bật..." th:text="${product.description}"></textarea>
+              <textarea
+                class="form-textarea-custom"
+                id="productDescription"
+                name="description"
+                rows="4"
+                placeholder="Nhập cấu hình, đặc điểm nổi bật..."
+                th:text="${product?.description}"
+              ></textarea>
             </div>
           </div>
 
@@ -255,21 +331,56 @@
           </div>
           <div class="row g-3 mb-4">
             <div class="col-md-4 form-group-custom">
-              <label class="form-label-custom">Giá gốc (đ)</label>
-              <input type="number" class="form-input-custom" id="productOriginalPrice" th:value="${product.originalPrice}" placeholder="Ví dụ: 29990000" min="1" required>
-              <div class="invalid-feedback-custom" id="err-productOriginalPrice" style="display:none">Giá gốc sản phẩm phải lớn hơn 0.</div>
+              <label class="form-label-custom">Giá gốc (đ) *</label>
+              <input
+                type="number"
+                class="form-input-custom"
+                id="productOriginalPrice"
+                name="originalPrice"
+                th:value="${product?.originalPrice}"
+                placeholder="Ví dụ: 29990000"
+                min="1"
+                required
+              />
+              <div
+                class="invalid-feedback-custom"
+                id="err-productOriginalPrice"
+              >
+                Giá gốc phải lớn hơn 0.
+              </div>
             </div>
-            
+
             <div class="col-md-4 form-group-custom">
               <label class="form-label-custom">Giá sale khuyến mãi (đ)</label>
-              <input type="number" class="form-input-custom" id="productSalePrice" th:value="${product.salePrice}" placeholder="Để trống nếu không giảm giá" min="0">
-              <div class="invalid-feedback-custom" id="err-productSalePrice" style="display:none">Giá sale phải nhỏ hơn giá gốc và lớn hơn 0.</div>
+              <input
+                type="number"
+                class="form-input-custom"
+                id="productSalePrice"
+                name="salePrice"
+                th:value="${product?.salePrice}"
+                placeholder="Để trống nếu không giảm giá"
+                min="0"
+              />
+              <div class="invalid-feedback-custom" id="err-productSalePrice">
+                Giá sale phải nhỏ hơn giá gốc.
+              </div>
             </div>
-            
+
             <div class="col-md-4 form-group-custom">
-              <label class="form-label-custom">Số lượng tồn kho</label>
-              <input type="number" class="form-input-custom" id="productStock" th:value="${product.stockQty}" placeholder="Ví dụ: 100" min="0" required>
-              <div class="invalid-feedback-custom" id="err-productStock" style="display:none">Số lượng tồn kho phải lớn hơn hoặc bằng 0.</div>
+              <label class="form-label-custom">Số lượng tồn kho *</label>
+              <input
+                type="number"
+                class="form-input-custom"
+                id="productStock"
+                name="stockQty"
+                th:value="${product?.stockQty}"
+                placeholder="Ví dụ: 100"
+                min="0"
+                required
+              />
+              <div class="invalid-feedback-custom" id="err-productStock">
+                Số lượng tồn kho phải >= 0.
+              </div>
             </div>
           </div>
 
@@ -280,334 +391,454 @@
           <div class="mb-4">
             <div class="upload-dropzone" id="dropzone">
               <i class="ti ti-cloud-upload upload-icon"></i>
-              <span class="upload-title">Kéo thả tệp tin vào đây hoặc click để duyệt hình ảnh</span>
-              <span class="upload-subtitle">Chấp nhận định dạng: .jpg, .jpeg, .png, .webp (Tối đa 10MB)</span>
+              <span class="upload-title"
+                >Kéo thả tệp tin vào đây hoặc click để duyệt hình ảnh</span
+              >
+              <span class="upload-subtitle"
+                >Chấp nhận định dạng: .jpg, .jpeg, .png, .webp (Tối đa
+                10MB)</span
+              >
             </div>
-            <input type="file" id="productImages" multiple accept="image/jpeg,image/png,image/webp" onchange="previewImages()" style="display: none;">
-            <div class="invalid-feedback-custom" id="err-productImages" style="display:none">Vui lòng chọn hình ảnh sản phẩm hợp lệ.</div>
-            
-            <div class="image-preview-container" id="imagePreviews">
-              <!-- Hiện các ảnh cũ nếu đang chỉnh sửa -->
-              <div th:if="${isEdit and imageUrls != null}" th:each="img, iter : ${imageUrls}" class="image-preview-item preview-old" th:id="'preview-old-' + ${iter.index}">
-                <img th:src="${img}" alt="Current image">
-                <button type="button" class="image-preview-remove" th:onclick="'removeOldImage(' + ${iter.index} + ', \'' + ${img} + '\')'">&times;</button>
+            <input
+              type="file"
+              id="imageInput"
+              name="images"
+              multiple
+              accept=".jpg,.jpeg,.png,.webp"
+              onchange="previewImages()"
+              style="display: none"
+            />
+
+            <!-- Preview ảnh mới chọn -->
+            <div class="image-preview-container" id="imagePreviews"></div>
+
+            <!-- Hiển thị ảnh hiện có (Edit mode) -->
+            <div th:if="${isEdit and product?.images != null}" class="existing-images mt-3">
+              <h5 class="form-label-custom mb-3">Ảnh hiện có của sản phẩm:</h5>
+              <div class="d-grid" style="grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px;">
+                <div th:each="img : ${product.images}" class="image-preview-item position-relative" style="aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; background: #f8fafc; display: flex; align-items: center; justify-content: center; transition: all 0.3s;">
+                  <img th:src="${img.imageUrl}" style="max-width:100%; max-height:100%; object-fit: contain;">
+                  <span th:if="${img.isPrimary}" class="position-absolute bottom-0 start-0 w-100 text-center py-1 text-white bg-primary fw-bold" style="font-size: 10px;">Ảnh chính</span>
+                  <button type="button" class="image-preview-remove" onclick="markDelete(this)" th:data-id="${img.id}">&times;</button>
+                  <input type="hidden" name="deleteImageIds" th:value="${img.id}" class="delete-flag" disabled>
+                </div>
               </div>
             </div>
-            <small th:if="${isEdit}" class="text-muted d-block mt-2" style="font-size: 12px; font-weight: 500;">
-              💡 <em>Lưu ý: Nhấp vào dấu &times; đỏ trên từng ảnh để xóa ảnh đó, hoặc chọn thêm ảnh mới để tải lên bổ sung.</em>
+            
+            <small
+              class="text-muted d-block mt-2"
+              style="font-size: 11px"
+            >
+              💡
+              <em
+                >Lưu ý: Click vào dấu &times; để chọn xóa ảnh.</em
+              >
             </small>
           </div>
 
-          <!-- BỘ 4: ĐẶC TÍNH KỸ THUẬT DẠNG ĐỘNG -->
+          <!-- BỘ 4: ĐẶC TÍNH KỸ THUẬT -->
           <div class="form-section-title">
-            <i class="ti ti-list-details"></i> Thông số kỹ thuật (Thông số cấu hình)
+            <i class="ti ti-list-details"></i> Thông số kỹ thuật
           </div>
           <div class="mb-4">
             <div id="specsContainer">
               <!-- Render specifications cũ nếu có -->
-              <div th:if="${isEdit and product.specs != null}" th:each="spec, iter : ${product.specs}" class="spec-row" th:id="'spec-row-' + ${iter.index}">
-                <input type="text" class="form-input-custom spec-key" placeholder="Tên thông số (Vd: RAM)" th:value="${spec.key}">
-                <input type="text" class="form-input-custom spec-value" placeholder="Giá trị (Vd: 8GB)" th:value="${spec.value}">
-                <button type="button" class="btn btn-outline-danger d-flex align-items-center justify-content-center" th:onclick="'removeSpecRow(' + ${iter.index} + ')'" style="height: 38px; width: 38px; border-radius: 8px;">
-                  <i class="ti ti-trash" style="font-size: 16px;"></i>
+              <div
+                th:if="${isEdit and product?.specs != null}"
+                th:each="spec, iter : ${product.specs}"
+                class="spec-row"
+                th:id="'spec-row-' + ${iter.index}"
+              >
+                <input
+                  type="text"
+                  class="form-input-custom spec-key"
+                  name="specKeys"
+                  placeholder="Tên thông số (Vd: RAM)"
+                  th:value="${spec.key}"
+                />
+                <input
+                  type="text"
+                  class="form-input-custom spec-value"
+                  name="specValues"
+                  placeholder="Giá trị (Vd: 8GB)"
+                  th:value="${spec.value}"
+                />
+                <button
+                  type="button"
+                  class="btn btn-outline-danger"
+                  th:onclick="|removeSpecRow(${iter.index})|"
+                  style="height: 38px; width: 38px; border-radius: 8px"
+                >
+                  <i class="ti ti-trash"></i>
                 </button>
               </div>
             </div>
-            
-            <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="addSpecRow()">
+
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm mt-2"
+              onclick="addSpecRow()"
+            >
               <i class="ti ti-plus"></i> Thêm thông số mới
             </button>
           </div>
 
+          <!-- BỘ 5: TRẠNG THÁI -->
+          <div class="form-section-title">
+            <i class="ti ti-toggle-right"></i> Trạng thái & Hiển thị
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <div
+                class="d-flex align-items-center justify-content-between p-3 border rounded-3 bg-light"
+              >
+                <div>
+                  <div class="fw-bold" style="font-size: 14px">
+                    Hiển thị sản phẩm
+                  </div>
+                  <div class="text-muted" style="font-size: 12px">
+                    Khách hàng có thể thấy sản phẩm
+                  </div>
+                </div>
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="productActive"
+                    name="isActive"
+                    value="true"
+                    style="width: 40px; height: 20px"
+                    th:checked="${isEdit ? product.active : true}"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div
+                class="d-flex align-items-center justify-content-between p-3 border rounded-3 bg-light"
+              >
+                <div>
+                  <div class="fw-bold" style="font-size: 14px">
+                    Sản phẩm nổi bật
+                  </div>
+                  <div class="text-muted" style="font-size: 12px">
+                    Hiển thị ở trang chủ
+                  </div>
+                </div>
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="productFeatured"
+                    name="isFeatured"
+                    value="true"
+                    style="width: 40px; height: 20px"
+                    th:checked="${isEdit ? product.featured : false}"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- PHẦN THAO TÁC GỬI -->
-          <hr class="my-4" style="border-color: var(--border);">
-          <div class="d-flex gap-3 justify-content-end">
-            <a th:href="@{/admin/products}" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 8px; font-size: 13.5px; font-weight: 600;">Hủy bỏ</a>
-            <button type="submit" id="btnSubmit" class="btn btn-primary px-4 py-2" style="border-radius: 8px; font-size: 13.5px; font-weight: 600;">
-              Lưu thông tin sản phẩm
+          <hr class="my-4" style="border-color: var(--border)" />
+          <div class="d-flex gap-3 justify-content-end align-items-center">
+            <div th:if="${isEdit}">
+              <button
+                type="button"
+                class="btn btn-outline-danger px-4 py-2"
+                th:onclick="|confirmDelete(${productId})|"
+                style="border-radius: 8px; font-weight: 600"
+              >
+                <i class="ti ti-trash"></i> Xóa sản phẩm
+              </button>
+            </div>
+            <a
+              th:href="@{/admin/products}"
+              class="btn btn-outline-secondary px-4 py-2"
+              style="border-radius: 8px; font-weight: 600"
+            >
+              <i class="ti ti-x"></i> Hủy
+            </a>
+            <button
+              type="submit"
+              id="btnSubmit"
+              class="btn btn-primary px-4 py-2"
+              style="
+                border-radius: 8px;
+                font-weight: 700;
+                background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                border: none;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              "
+            >
+              <i class="ti ti-device-floppy"></i> Lưu sản phẩm
             </button>
           </div>
         </form>
       </div>
 
-    <script>
-      let specCount = 0;
-      let nextFileId = 0;
-      const selectedFilesMap = new Map();
-      let remainImages = [];
+      <!-- MODAL XÁC NHẬN XÓA -->
+      <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content" style="border-radius: 16px">
+            <div class="modal-header border-0 pb-0">
+              <h5 class="modal-title fw-bold">⚠️ Xác nhận xóa</h5>
+            </div>
+            <div class="modal-body">
+              Bạn có chắc chắn muốn xóa sản phẩm này không? Hành động này không
+              thể hoàn tác.
+            </div>
+            <div class="modal-footer border-0">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                onclick="executeDelete()"
+              >
+                Xóa vĩnh viễn
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      document.addEventListener("DOMContentLoaded", () => {
-        // Khởi tạo remainImages với danh sách ảnh cũ đang hiển thị
-        document.querySelectorAll('#imagePreviews .preview-old img').forEach(img => {
-          remainImages.push(img.getAttribute('src'));
-        });
+      <script th:inline="javascript">
+        let specCount = 0;
+        let nextFileId = 0;
+        const selectedFilesMap = new Map();
+        let deleteTargetId = null;
 
-        // Đếm số lượng spec đã hiển thị để tránh trùng ID hàng mới
-        specCount = document.querySelectorAll('#specsContainer .spec-row').length;
-        if (specCount === 0) {
-          addSpecRow(); // Thêm một dòng spec trống đầu tiên để người dùng dễ nhập
-        }
-        
-        // Thiết lập vùng drag & drop ảnh
-        const dropzone = document.getElementById('dropzone');
-        
-        // Kích hoạt chọn file khi click vào dropzone
-        dropzone.addEventListener('click', () => {
-          document.getElementById('productImages').click();
-        });
+        document.addEventListener("DOMContentLoaded", () => {
+          specCount = document.querySelectorAll(
+            "#specsContainer .spec-row",
+          ).length;
+          if (specCount === 0) addSpecRow();
 
-        ['dragenter', 'dragover'].forEach(eventName => {
-          dropzone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            dropzone.classList.add('dragover');
-          }, false);
-        });
-        
-        ['dragleave', 'drop'].forEach(eventName => {
-          dropzone.addEventListener(eventName, (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('dragover');
-          }, false);
-        });
-        
-        dropzone.addEventListener('drop', (e) => {
-          const dt = e.dataTransfer;
-          const files = dt.files;
-          const input = document.getElementById('productImages');
-          input.files = files;
-          previewImages();
-        }, false);
-      });
+          const dropzone = document.getElementById("dropzone");
+          dropzone.addEventListener("click", () =>
+            document.getElementById("imageInput").click(),
+          );
 
-      function generateSlug(text) {
-        const id = document.getElementById('productId').value;
-        if (id) return; // Đang sửa thì không tự sinh đè slug tránh hỏng SEO cũ
-
-        const slug = text.toLowerCase()
-          .trim()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[đĐ]/g, 'd')
-          .replace(/[^a-z0-9\s-]/g, '')
-          .replace(/[\s_]+/g, '-')
-          .replace(/-+/g, '-');
-        document.getElementById('productSlug').value = slug;
-      }
-
-      function addSpecRow() {
-        const container = document.getElementById('specsContainer');
-        const rowId = specCount++;
-        const div = document.createElement('div');
-        div.className = 'spec-row';
-        div.id = 'spec-row-' + rowId;
-        div.innerHTML = `
-          <input type="text" class="form-input-custom spec-key" placeholder="Tên thông số (Vd: Dung lượng Pin)">
-          <input type="text" class="form-input-custom spec-value" placeholder="Giá trị (Vd: 5000 mAh)">
-          <button type="button" class="btn btn-outline-danger d-flex align-items-center justify-content-center" onclick="removeSpecRow(${rowId})" style="height: 38px; width: 38px; border-radius: 8px;">
-            <i class="ti ti-trash" style="font-size: 16px;"></i>
-          </button>
-        `;
-        container.appendChild(div);
-      }
-
-      function removeSpecRow(rowId) {
-        const row = document.getElementById('spec-row-' + rowId);
-        if (row) row.remove();
-      }
-
-      function previewImages() {
-        const input = document.getElementById('productImages');
-        const container = document.getElementById('imagePreviews');
-        const files = Array.from(input.files);
-
-        let isValid = true;
-        files.forEach(file => {
-          const ext = file.name.split('.').pop().toLowerCase();
-          const allowed = ['jpg', 'jpeg', 'png', 'webp'];
-          if (!allowed.includes(ext)) {
-            isValid = false;
-          }
-        });
-
-        const errEl = document.getElementById('err-productImages');
-        if (!isValid) {
-          errEl.style.display = 'flex';
-          input.value = '';
-          return;
-        } else {
-          errEl.style.display = 'none';
-        }
-
-        files.forEach(file => {
-          const fileId = nextFileId++;
-          selectedFilesMap.set(fileId, file);
-
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const item = document.createElement('div');
-            item.className = 'image-preview-item preview-new';
-            item.id = 'preview-new-' + fileId;
-            item.innerHTML = `
-              <img src="${e.target.result}" alt="Preview image">
-              <button type="button" class="image-preview-remove" onclick="removeNewImage(${fileId})">&times;</button>
-            `;
-            container.appendChild(item);
-          }
-          reader.readAsDataURL(file);
-        });
-
-        // Reset input value to allow selecting same files again
-        input.value = '';
-      }
-
-      function removeNewImage(fileId) {
-        const item = document.getElementById('preview-new-' + fileId);
-        if (item) item.remove();
-        selectedFilesMap.delete(fileId);
-        if (typeof window.showToast === 'function') {
-          window.showToast("Đã loại bỏ ảnh khỏi danh sách tải lên", "info");
-        }
-      }
-
-      function removeOldImage(index, url) {
-        const item = document.getElementById('preview-old-' + index);
-        if (item) item.remove();
-        remainImages = remainImages.filter(imgUrl => imgUrl !== url);
-        if (typeof window.showToast === 'function') {
-          window.showToast("Đã xóa ảnh", "info");
-        }
-      }
-
-      async function submitProductForm(e) {
-        e.preventDefault();
-        
-        // Reset toàn bộ thông báo lỗi cũ
-        document.querySelectorAll('.invalid-feedback-custom').forEach(el => el.style.display = 'none');
-
-        const id = document.getElementById('productId').value;
-        const name = document.getElementById('productName').value.trim();
-        const slug = document.getElementById('productSlug').value.trim();
-        const categoryId = document.getElementById('productCategory').value;
-        const brandId = document.getElementById('productBrand').value;
-        const stockQty = document.getElementById('productStock').value;
-        const originalPrice = document.getElementById('productOriginalPrice').value;
-        const salePriceInput = document.getElementById('productSalePrice').value;
-        const description = document.getElementById('productDescription').value;
-
-        // Bắt đầu kiểm tra validate phía client
-        let hasError = false;
-
-        if (!name || name.length > 255) {
-          document.getElementById('err-productName').style.display = 'flex';
-          hasError = true;
-        }
-        if (!slug) {
-          document.getElementById('err-productSlug').style.display = 'flex';
-          hasError = true;
-        }
-        if (!categoryId) {
-          document.getElementById('err-productCategory').style.display = 'flex';
-          hasError = true;
-        }
-        if (!brandId) {
-          document.getElementById('err-productBrand').style.display = 'flex';
-          hasError = true;
-        }
-        if (stockQty === '' || Number(stockQty) < 0 || !Number.isInteger(Number(stockQty))) {
-          document.getElementById('err-productStock').style.display = 'flex';
-          hasError = true;
-        }
-        if (!originalPrice || Number(originalPrice) <= 0) {
-          document.getElementById('err-productOriginalPrice').style.display = 'flex';
-          hasError = true;
-        }
-        if (salePriceInput !== '' && (Number(salePriceInput) < 0 || Number(salePriceInput) >= Number(originalPrice))) {
-          document.getElementById('err-productSalePrice').style.display = 'flex';
-          hasError = true;
-        }
-
-        if (hasError) {
-          window.showToast('Vui lòng hoàn thiện đúng các trường thông số bị lỗi!', 'warning');
-          return;
-        }
-
-        // Gom các specifications
-        const specs = [];
-        document.querySelectorAll('#specsContainer .spec-row').forEach(row => {
-          const keyInput = row.querySelector('.spec-key');
-          const valInput = row.querySelector('.spec-value');
-          if (keyInput && valInput) {
-            const key = keyInput.value.trim();
-            const val = valInput.value.trim();
-            if (key && val) {
-              specs.push({ key, value: val });
-            }
-          }
-        });
-
-        const productPayload = {
-          name,
-          slug,
-          categoryId: Number(categoryId),
-          brandId: Number(brandId),
-          stockQty: Number(stockQty),
-          originalPrice: Number(originalPrice),
-          salePrice: salePriceInput ? Number(salePriceInput) : null,
-          description,
-          isFeatured: false,
-          specs,
-          remainImages: remainImages
-        };
-
-        const formData = new FormData();
-        formData.append("product", JSON.stringify(productPayload));
-        
-        // Append ảnh mới
-        for (const file of selectedFilesMap.values()) {
-          formData.append("images", file);
-        }
-
-        const method = id ? 'PUT' : 'POST';
-        const url = id ? `/api/admin/products/${id}` : '/api/admin/products';
-
-        const submitBtn = document.getElementById('btnSubmit');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang xử lý...';
-
-        try {
-          const token = await window.getToken();
-          if (!token) {
-            window.location.href = '/login';
-            return;
-          }
-          const headers = {
-            'Authorization': `Bearer ${token}`
-          };
-
-          const res = await fetch(url, {
-            method: method,
-            headers: headers,
-            body: formData
+          ["dragenter", "dragover"].forEach((name) => {
+            dropzone.addEventListener(name, (e) => {
+              e.preventDefault();
+              dropzone.classList.add("dragover");
+            });
+          });
+          ["dragleave", "drop"].forEach((name) => {
+            dropzone.addEventListener(name, (e) => {
+              e.preventDefault();
+              dropzone.classList.remove("dragover");
+            });
+          });
+          dropzone.addEventListener("drop", (e) => {
+            const files = e.dataTransfer.files;
+            document.getElementById("imageInput").files = files;
+            previewImages();
           });
 
-          if (res.ok) {
-            window.showToast('Lưu thông tin sản phẩm thành công!', 'success');
-            setTimeout(() => {
-              window.location.href = '/admin/products';
-            }, 800);
-          } else {
-            const err = await res.json().catch(() => ({}));
-            window.showToast(err.message || 'Lỗi xảy ra từ máy chủ khi lưu sản phẩm', 'danger');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Lưu thông tin sản phẩm';
+          // Lấy Token
+          async function getToken() {
+            try {
+              const { auth } = await import("/js/firebase-config.js");
+              if (auth.currentUser) return await auth.currentUser.getIdToken();
+            } catch (e) {}
+            return null;
           }
-        } catch (err) {
-          window.showToast('Lỗi mạng, vui lòng thử lại sau.', 'danger');
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Lưu thông tin sản phẩm';
+          window.getToken = getToken;
+
+          // Auto slug
+          const nameInput = document.getElementById("productName");
+          const slugInput = document.getElementById("productSlug");
+          nameInput.addEventListener("input", () => {
+            if (
+              document.getElementById("isEditMode").value === "true" &&
+              slugInput.value
+            )
+              return;
+            const slug = nameInput.value
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/đ/g, "d")
+              .replace(/[^a-z0-9\s-]/g, "")
+              .trim()
+              .replace(/\s+/g, "-");
+            slugInput.value = slug;
+          });
+
+          updateImagesCount();
+        });
+
+        function addSpecRow() {
+          const container = document.getElementById("specsContainer");
+          const rowId = specCount++;
+          const div = document.createElement("div");
+          div.className = "spec-row";
+          div.id = "spec-row-" + rowId;
+          div.innerHTML = `
+          <input type="text" class="form-input-custom spec-key" name="specKeys" placeholder="VD: RAM">
+          <input type="text" class="form-input-custom spec-value" name="specValues" placeholder="VD: 8GB">
+          <button type="button" class="btn btn-outline-danger" onclick="removeSpecRow(${rowId})" style="height: 38px; width: 38px; border-radius: 8px;">
+            <i class="ti ti-trash"></i>
+          </button>`;
+          container.appendChild(div);
         }
-      }
-    </script>
+
+        function removeSpecRow(id) {
+          document.getElementById("spec-row-" + id)?.remove();
+        }
+
+        function previewImages() {
+          const input = document.getElementById("imageInput");
+          const container = document.getElementById("imagePreviews");
+          Array.from(input.files).forEach((file) => {
+            const fileId = nextFileId++;
+            selectedFilesMap.set(fileId, file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const item = document.createElement("div");
+              item.className = "image-preview-item preview-new position-relative";
+              item.id = "preview-new-" + fileId;
+              item.style.aspectRatio = "1";
+              item.style.borderRadius = "8px";
+              item.style.border = "1px solid var(--border-color)";
+              item.style.overflow = "hidden";
+              item.style.background = "#f8fafc";
+              item.style.display = "flex";
+              item.style.alignItems = "center";
+              item.style.justifyContent = "center";
+              item.innerHTML = `
+                <img src="${e.target.result}" style="max-width:100%; max-height:100%; object-fit: contain;">
+                <button type="button" class="image-preview-remove" onclick="removeNewImage(${fileId})">&times;</button>
+              `;
+              container.appendChild(item);
+            };
+            reader.readAsDataURL(file);
+          });
+          syncFileInput();
+        }
+
+        function removeNewImage(id) {
+          document.getElementById("preview-new-" + id)?.remove();
+          selectedFilesMap.delete(id);
+          syncFileInput();
+        }
+
+        function syncFileInput() {
+          const input = document.getElementById("imageInput");
+          const dt = new DataTransfer();
+          selectedFilesMap.forEach((file) => {
+            dt.items.add(file);
+          });
+          input.files = dt.files;
+          updateImagesCount();
+        }
+
+        function markDelete(btn) {
+          const container = btn.closest(".image-preview-item");
+          const hiddenInput = container.querySelector(".delete-flag");
+          
+          if (hiddenInput.disabled) {
+            hiddenInput.disabled = false;
+            container.style.opacity = "0.3";
+            container.style.border = "2px solid var(--danger)";
+            btn.innerHTML = "Khôi phục";
+            btn.style.background = "var(--primary)";
+          } else {
+            hiddenInput.disabled = true;
+            container.style.opacity = "1";
+            container.style.border = "1px solid var(--border-color)";
+            btn.innerHTML = "&times;";
+            btn.style.background = "rgba(239, 68, 68, 0.95)";
+          }
+          updateImagesCount();
+        }
+
+        function updateImagesCount() {
+          const existingImagesCount = document.querySelectorAll(".existing-images .delete-flag:disabled").length;
+          const newImagesCount = selectedFilesMap.size;
+          const total = existingImagesCount + newImagesCount;
+          const subtitle = document.querySelector(".upload-subtitle");
+          if (subtitle) {
+            subtitle.innerHTML = `Chấp nhận định dạng: .jpg, .jpeg, .png, .webp (Tối đa 10MB) | <b>Đã chọn: ${total} ảnh</b>`;
+          }
+        }
+
+        function confirmDelete(id) {
+          deleteTargetId = id;
+          new bootstrap.Modal(document.getElementById("deleteModal")).show();
+        }
+
+        async function executeDelete() {
+          if (!deleteTargetId) return;
+          try {
+            const token = await window.getToken();
+            const res = await fetch(`/api/admin/products/${deleteTargetId}`, {
+              method: "DELETE",
+              headers: { Authorization: "Bearer " + token },
+            });
+            if (res.ok) {
+              const data = await res.json();
+              window.showToast(data.message || "Xóa thành công", "success");
+              setTimeout(
+                () => (window.location.href = "/admin/products"),
+                1000,
+              );
+            } else {
+              const err = await res.json();
+              window.showToast(err.message || "Lỗi xóa", "danger");
+            }
+          } catch (e) {
+            window.showToast("Lỗi kết nối", "danger");
+          }
+        }
+
+        function validateForm(e) {
+          // Re-populate names on dynamically added spec rows
+          const container = document.getElementById("specsContainer");
+          container.querySelectorAll(".spec-row").forEach((row) => {
+            const kInput = row.querySelector(".spec-key");
+            const vInput = row.querySelector(".spec-value");
+            if (kInput && vInput) {
+              if (kInput.value.trim() && vInput.value.trim()) {
+                kInput.name = "specKeys";
+                vInput.name = "specValues";
+              } else {
+                kInput.removeAttribute("name");
+                vInput.removeAttribute("name");
+              }
+            }
+          });
+
+          // Validate at least 1 image
+          const existingCount = document.querySelectorAll(".existing-images .delete-flag:disabled").length;
+          const newCount = selectedFilesMap.size;
+          const total = existingCount + newCount;
+
+          if (total === 0) {
+            window.showToast("Sản phẩm phải có ít nhất 1 hình ảnh!", "danger");
+            return false;
+          }
+
+          // Disable save button to prevent double click
+          const btn = document.getElementById("btnSubmit");
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang lưu...';
+          
+          return true;
+        }
+      </script>
     </div>
   </body>
 </html>

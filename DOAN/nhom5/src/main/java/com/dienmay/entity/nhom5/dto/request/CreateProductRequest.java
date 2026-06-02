@@ -20,6 +20,7 @@ public class CreateProductRequest {
     private BigDecimal originalPrice;
     private BigDecimal salePrice;
     private Integer stockQty;
+    private Boolean isActive;
     private Boolean isFeatured;
     private List<String> remainImages;
     private List<ProductSpecRequest> specs;

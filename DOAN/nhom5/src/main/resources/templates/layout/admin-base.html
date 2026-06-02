@@ -78,6 +78,14 @@
           <span>Khuyến mãi</span>
         </a>
         <a
+          th:href="@{/admin/reviews}"
+          th:classappend="${activePage == 'reviews'} ? ' active' : ''"
+          class="menu-item"
+        >
+          <i class="ti ti-star"></i>
+          <span>Đánh giá</span>
+        </a>
+        <a
           th:href="@{/admin/contact}"
           th:classappend="${activePage == 'contact'} ? ' active' : ''"
           class="menu-item"
@@ -317,6 +325,16 @@
         loadBadge();
         setInterval(loadBadge, 30000);
       });
+    </script>
+    <script th:inline="javascript">
+      /*[Thymeleaf]*/
+      var redirectToastMsg = /*[[${toastMessage}]]*/ null;
+      var redirectToastType = /*[[${toastType}]]*/ null;
+      if (redirectToastMsg) {
+        window.addEventListener('DOMContentLoaded', function() {
+          showToast(redirectToastMsg, redirectToastType || 'success');
+        });
+      }
     </script>
   </body>
 </html>

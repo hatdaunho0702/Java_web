@@ -3,24 +3,144 @@
   th:replace="~{layout/admin-base :: layout(~{::title}, ~{::div.page-content})}"
 >
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Quản lý sản phẩm — ElectraManager</title>
   </head>
   <body>
     <div class="page-content">
+      <style>
+        .premium-filter-card {
+          background: var(--surface);
+          border: 1px solid var(--border-color);
+          border-radius: 12px;
+          padding: 1.25rem;
+          box-shadow: var(--card-shadow);
+          margin-bottom: 1.5rem;
+        }
+        .filter-label {
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--text-muted);
+          margin-bottom: 6px;
+          display: block;
+        }
+        .filter-control {
+          background: var(--bg-light);
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          padding: 8px 12px;
+          font-size: 13.5px;
+          color: var(--text-main);
+          outline: none;
+          transition: all 0.2s ease;
+          width: 100%;
+        }
+        .filter-control:focus {
+          border-color: var(--primary);
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+          background: white;
+        }
+        .btn-filter-primary {
+          background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%);
+          color: white;
+          border: none;
+          font-weight: 600;
+          border-radius: 8px;
+          padding: 8px 16px;
+          font-size: 13.5px;
+          transition: all 0.2s;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          justify-content: center;
+        }
+        .btn-filter-primary:hover {
+          opacity: 0.9;
+          transform: translateY(-1px);
+          color: white;
+        }
+        .btn-filter-secondary {
+          background: white;
+          border: 1px solid var(--border-color);
+          color: var(--text-main);
+          font-weight: 600;
+          border-radius: 8px;
+          padding: 8px 16px;
+          font-size: 13.5px;
+          transition: all 0.2s;
+          text-align: center;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          justify-content: center;
+        }
+        .btn-filter-secondary:hover {
+          background: var(--bg-light);
+          color: var(--text-main);
+        }
+      </style>
+
       <!-- Title & Action Bar -->
       <div class="action-bar">
-        <h3 class="panel-title" style="font-size: 20px; font-weight: 700;">Quản lý sản phẩm</h3>
-        <a th:href="@{/admin/products/new}" class="btn-filled-primary text-decoration-none">
+        <h3 class="panel-title" style="font-size: 20px; font-weight: 700">
+          Quản lý sản phẩm
+        </h3>
+        <a
+          th:href="@{/admin/products/new}"
+          class="btn-filled-primary text-decoration-none"
+        >
           <i class="ti ti-plus"></i> Thêm sản phẩm mới
         </a>
+      </div>
+
+      <!-- Search & Filter Panel -->
+      <div class="premium-filter-card">
+        <form th:action="@{/admin/products}" method="get" class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label for="searchKeyword" class="filter-label">Tìm kiếm theo tên</label>
+            <input type="text" id="searchKeyword" name="keyword" class="filter-control" 
+                   th:value="${keyword}" placeholder="Nhập tên sản phẩm...">
+          </div>
+          <div class="col-md-3">
+            <label for="filterCategory" class="filter-label">Danh mục</label>
+            <select id="filterCategory" name="categoryId" class="filter-control" style="height: auto;">
+              <option value="">-- Tất cả danh mục --</option>
+              <option th:each="cat : ${categories}" 
+                      th:value="${cat.id}" 
+                      th:text="${cat.name}" 
+                      th:selected="${categoryId == cat.id}"></option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="filterStatus" class="filter-label">Trạng thái hiển thị</label>
+            <select id="filterStatus" name="isActive" class="filter-control" style="height: auto;">
+              <option value="">-- Tất cả trạng thái --</option>
+              <option value="true" th:selected="${isActive == true}">Đang hiển thị</option>
+              <option value="false" th:selected="${isActive == false}">Đã ẩn</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn-filter-primary w-100">
+              <i class="ti ti-filter"></i> Lọc
+            </button>
+            <a th:href="@{/admin/products}" class="btn-filter-secondary w-100">
+              Xóa
+            </a>
+          </div>
+        </form>
       </div>
 
       <!-- Table Panel -->
       <div class="panel-card">
         <div class="panel-header">
-          <h4 class="panel-title" style="font-size: 14px; font-weight: 600; color: var(--text-muted);">Danh sách sản phẩm trong hệ thống</h4>
+          <h4
+            class="panel-title"
+            style="font-size: 14px; font-weight: 600; color: var(--text-muted)"
+          >
+            Danh sách sản phẩm trong hệ thống
+          </h4>
         </div>
         <div class="table-container">
           <table class="custom-table">
@@ -32,62 +152,161 @@
                 <th>Giá bán</th>
                 <th>Tồn kho</th>
                 <th>Trạng thái</th>
-                <th style="text-align: center;">Thao tác</th>
+                <th style="text-align: center">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               <tr th:each="p : ${products.content}">
                 <td>
-                  <img class="product-cell-img" 
-                       th:src="${p.thumbnailUrl != null ? p.thumbnailUrl : 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?auto=format&fit=crop&q=80&w=100'}" 
-                       alt="Ảnh sản phẩm">
+                  <img
+                    class="product-cell-img"
+                    th:src="${p.thumbnailUrl != null ? p.thumbnailUrl : 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?auto=format&fit=crop&q=80&w=100'}"
+                    alt="Ảnh sản phẩm"
+                  />
                 </td>
                 <td>
-                  <span style="font-weight: 700; display: block;" th:text="${p.name}">Tên sản phẩm</span>
-                  <span class="product-sku" th:text="'ID: #' + ${p.id}">ID: #1</span>
+                  <span
+                    style="font-weight: 700; display: block"
+                    th:text="${p.name}"
+                    >Tên sản phẩm</span
+                  >
+                  <span class="product-sku" th:text="'ID: #' + ${p.id}"
+                    >ID: #1</span
+                  >
                 </td>
                 <td>
-                  <span class="category-badge" th:text="${p.avgRating > 0 ? p.avgRating + ' ⭐' : 'Chưa có đánh giá'}">Chưa có đánh giá</span>
+                  <span
+                    class="category-badge"
+                    th:text="${p.avgRating > 0 ? p.avgRating + ' ⭐' : 'Chưa có đánh giá'}"
+                    >Chưa có đánh giá</span
+                  >
                 </td>
-                <td style="font-weight: 700;" th:text="${#numbers.formatDecimal(p.salePrice != null ? p.salePrice : p.originalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'">
+                <td
+                  style="font-weight: 700"
+                  th:text="${#numbers.formatDecimal(p.salePrice != null ? p.salePrice : p.originalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'"
+                >
                   0đ
                 </td>
                 <td>
-                  <span th:class="${p.stockQty < 5 ? 'stock-critical' : ''}" 
-                        th:text="${p.stockQty} + ' cái'">
+                  <span
+                    th:class="${p.stockQty < 5 ? 'stock-critical' : ''}"
+                    th:text="${p.stockQty} + ' cái'"
+                  >
                     10 cái
                   </span>
                 </td>
                 <td>
-                  <span class="badge-status" 
-                        th:classappend="${p.stockQty > 0 ? 'status-completed' : 'status-cancelled'}" 
-                        th:text="${p.stockQty > 0 ? 'Còn hàng' : 'Hết hàng'}">
+                  <span
+                    th:if="${p.active}"
+                    class="badge-status"
+                    th:classappend="${p.stockQty > 0 ? 'status-completed' : 'status-cancelled'}"
+                    th:text="${p.stockQty > 0 ? 'Còn hàng' : 'Hết hàng'}"
+                  >
                     Còn hàng
                   </span>
+                  <span
+                    th:if="${!p.active}"
+                    class="badge-status status-cancelled"
+                    style="
+                      background: #f1f5f9;
+                      color: #64748b;
+                      border-color: #cbd5e1;
+                    "
+                  >
+                    Đã ẩn
+                  </span>
                 </td>
-                <td style="text-align: center;">
-                  <a th:href="@{/admin/products/{id}/edit(id=${p.id})}" class="btn-action-sm" title="Sửa">
+                <td style="text-align: center">
+                  <a
+                    th:href="@{/admin/products/{id}/edit(id=${p.id})}"
+                    class="btn-action-sm"
+                    title="Sửa"
+                  >
                     <i class="ti ti-edit"></i> Sửa
                   </a>
-                  <button class="btn-action-sm text-danger btn-delete" 
-                          style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 6px 12px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; margin-left: 6px;" 
-                          onmouseover="this.style.background='#dc2626'; this.style.color='white';"
-                          onmouseout="this.style.background='#fef2f2'; this.style.color='#dc2626';"
-                          th:attr="data-id=${p.id}" 
-                          onclick="deleteProduct(this.getAttribute('data-id'))" 
-                          title="Xóa">
+                  <button
+                    class="btn-action-sm text-danger btn-delete"
+                    style="
+                      background: #fef2f2;
+                      border: 1px solid #fecaca;
+                      border-radius: 6px;
+                      padding: 6px 12px;
+                      font-weight: 600;
+                      font-size: 13px;
+                      cursor: pointer;
+                      transition: all 0.2s;
+                      margin-left: 6px;
+                    "
+                    onmouseover="
+                      this.style.background = '#dc2626';
+                      this.style.color = 'white';
+                    "
+                    onmouseout="
+                      this.style.background = '#fef2f2';
+                      this.style.color = '#dc2626';
+                    "
+                    th:attr="data-id=${p.id}"
+                    onclick="deleteProduct(this.getAttribute('data-id'))"
+                    title="Xóa"
+                  >
                     <i class="ti ti-trash"></i> Xóa
                   </button>
                 </td>
               </tr>
               <tr th:if="${products == null || products.content.isEmpty()}">
-                <td colspan="7" class="text-center text-muted py-4">Không có sản phẩm nào.</td>
+                <td colspan="7" class="text-center text-muted py-4">
+                  Không có sản phẩm nào.
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
+        
+        <!-- Pagination Controls -->
+        <div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3" th:if="${products != null and products.totalPages > 0}">
+          <div class="text-muted small">
+            Hiển thị <span class="fw-bold" th:text="${products.numberOfElements}">0</span>/
+            <span class="fw-bold" th:text="${products.totalElements}">0</span> sản phẩm 
+            (Trang <span class="fw-bold" th:text="${products.number + 1}">1</span>/<span class="fw-bold" th:text="${products.totalPages}">1</span>)
+          </div>
+          <nav aria-label="Product navigation" th:if="${products.totalPages > 1}">
+            <ul class="pagination mb-0" style="gap: 5px;">
+              <!-- Previous Button -->
+              <li class="page-item" th:classappend="${products.first} ? 'disabled' : ''">
+                <a class="page-link" 
+                   th:href="@{/admin/products(keyword=${keyword}, categoryId=${categoryId}, isActive=${isActive}, page=${products.number - 1})}"
+                   style="border-radius: 8px; border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; font-weight: 600; padding: 6px 12px;">
+                  <i class="ti ti-chevron-left"></i> Trước
+                </a>
+              </li>
+              
+              <!-- Page Numbers -->
+              <li class="page-item" 
+                  th:each="pageNo : ${#numbers.sequence(0, products.totalPages - 1)}"
+                  th:classappend="${pageNo == products.number} ? 'active' : ''"
+                  th:if="${pageNo >= products.number - 2 and pageNo <= products.number + 2}">
+                <a class="page-link" 
+                   th:href="@{/admin/products(keyword=${keyword}, categoryId=${categoryId}, isActive=${isActive}, page=${pageNo})}"
+                   th:text="${pageNo + 1}"
+                   style="border-radius: 8px; border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; font-weight: 600; padding: 6px 12px;"
+                   th:styleappend="${pageNo == products.number} ? 'background: var(--primary) !important; color: white !important; border-color: var(--primary) !important;' : ''">
+                  1
+                </a>
+              </li>
+              
+              <!-- Next Button -->
+              <li class="page-item" th:classappend="${products.last} ? 'disabled' : ''">
+                <a class="page-link" 
+                   th:href="@{/admin/products(keyword=${keyword}, categoryId=${categoryId}, isActive=${isActive}, page=${products.number + 1})}"
+                   style="border-radius: 8px; border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; font-weight: 600; padding: 6px 12px;">
+                  Sau <i class="ti ti-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
       </div>
-      
+
       <script>
         async function deleteProduct(id) {
           if (!confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
@@ -96,23 +315,30 @@
           try {
             const token = await window.getToken();
             if (!token) {
-              window.location.href = '/login';
+              window.location.href = "/login";
               return;
             }
             const res = await fetch(`/api/admin/products/${id}`, {
-              method: 'DELETE',
+              method: "DELETE",
               headers: {
-                'Authorization': `Bearer ${token}`
-              }
+                Authorization: `Bearer ${token}`,
+              },
             });
             if (res.ok) {
-              window.showToast("Xóa sản phẩm thành công!", "success");
+              const data = await res.json();
+              window.showToast(
+                data.message || "Xóa sản phẩm thành công!",
+                "success",
+              );
               setTimeout(() => {
                 window.location.reload();
-              }, 800);
+              }, 1500);
             } else {
               const err = await res.json().catch(() => ({}));
-              window.showToast(err.message || "Lỗi khi xóa sản phẩm từ máy chủ", "danger");
+              window.showToast(
+                err.message || "Lỗi khi xóa sản phẩm từ máy chủ",
+                "danger",
+              );
             }
           } catch (err) {
             window.showToast("Lỗi kết nối máy chủ", "danger");

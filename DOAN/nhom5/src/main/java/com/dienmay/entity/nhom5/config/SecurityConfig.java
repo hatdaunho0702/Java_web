@@ -57,7 +57,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                 "/api/auth/login",
                                 "/api/auth/register",
-                                "/api/contact")
+                                "/api/contact",
+                                "/api/ai/chat")
                         .permitAll()
                         .requestMatchers("/api/contact/my-messages").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/cart/**").authenticated()

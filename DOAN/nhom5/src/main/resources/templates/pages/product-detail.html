@@ -52,6 +52,9 @@
         let detailData = null;
 
         async function getUserToken() {
+          if (typeof window.getToken === "function") {
+            return await window.getToken();
+          }
           return localStorage.getItem("firebase_token");
         }
 
@@ -676,6 +679,19 @@
           const loadMoreBtn = document.getElementById("load-more-reviews");
           let reviewPage = 0;
 
+          async function refreshReviews() {
+            reviewPage = 0;
+            const res = await fetch(`/api/products/${productId}/reviews?page=0&size=5`);
+            if (res.ok) {
+              const data = await res.json();
+              renderReviews(data.content || []);
+              if (loadMoreBtn) {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.textContent = "Xem thêm đánh giá";
+              }
+            }
+          }
+
           loadMoreBtn?.addEventListener("click", async () => {
             reviewPage += 1;
             const res = await fetch(`/api/products/${productId}/reviews?page=${reviewPage}&size=5`);
@@ -751,6 +767,7 @@
               window.showToast(data.message || "Đã gửi đánh giá", "success");
             }
             form.reset();
+            await refreshReviews();
           });
         }
 

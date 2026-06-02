@@ -31,4 +31,13 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             @Param("productId") Long productId,
             @Param("status") ReviewStatus status
     );
+
+    @Query("""
+            SELECT r FROM Review r
+            WHERE LOWER(r.comment) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(r.product.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(r.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            """)
+    Page<Review> searchReviews(@Param("keyword") String keyword, Pageable pageable);
 }
+
