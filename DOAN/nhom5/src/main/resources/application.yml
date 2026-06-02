@@ -69,7 +69,7 @@ app:
   inventory:
     low-stock-threshold: ${inventory.low-stock-threshold}
   ai:
-    github-token: ${GITHUB_MODELS_TOKEN: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}
+    github-token: ${GITHUB_MODELS_TOKEN:}
     model: gpt-4o-mini
     endpoint: https://models.inference.ai.azure.com
 
